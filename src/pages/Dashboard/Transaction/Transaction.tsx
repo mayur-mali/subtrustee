@@ -1,5 +1,8 @@
-import { useQuery } from "@apollo/client";
-import { GET_TRANSACTIONS } from "../../../Qurries";
+import { useQuery, useLazyQuery } from "@apollo/client";
+import {
+  GET_TRANSACTIONS,
+  GET_SUBTRUSTEE_TRANSACTION_SUMMARY,
+} from "../../../Qurries";
 import {
   _Table,
   Pagination,
@@ -25,7 +28,6 @@ import { getPaymentMode } from "../../../utils/getPaymentMode";
 import MixFilter from "./components/MixFilter";
 import { IoIosArrowDown } from "react-icons/io";
 import Aword from "../../../assets/a_round.svg";
-import axios from "axios";
 import { useAuth } from "../../../context/AuthContext";
 
 export const payment_method_map: any = {
@@ -392,56 +394,71 @@ export default function Transaction() {
   console.log(transactionAmountDetails, "transactionAmountDetails");
 
   console.log(schoolId, "schoolId");
-  const GET_TRANSACTION_AMOUNT = async (
-    start_date: String,
-    end_date: String,
-    trustee_id: String,
-    school_id: string[],
-    status: String,
-    mode?: string[] | null,
-    isQrCode?: boolean,
-    gateway?: string[] | null,
-  ) => {
-    const token = localStorage.getItem("token");
-    axios
-      .post(
-        `${import.meta.env.VITE_PAYMENT_BACKEND_URL}/edviron-pg/bulk-transactions-subtrustee-report`,
-        {
-          trustee_id: trustee_id,
-          school_id: school_id,
-          start_date: start_date,
-          end_date: end_date,
-          status: status,
-          mode: isQrCode ? null : mode,
-          isQRPayment: isQrCode,
-          gateway,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        },
-      )
-      .then((response) => {
-        setTransactionAmountDetails(response.data.transactions[0]);
-      })
-      .catch((error) => {
-        console.log(error);
-      });
-  };
+
+  // GraphQL query for transaction amount details
+  const [getTransactionAmountOptimized] = useLazyQuery(
+    GET_SUBTRUSTEE_TRANSACTION_SUMMARY,
+    {
+      onCompleted: (data) => {
+        console.log("Optimized GraphQL Response received:", data);
+        try {
+          const responseData =
+            typeof data.getSubTrusteeTransactionSummary === "string"
+              ? JSON.parse(data.getSubTrusteeTransactionSummary)
+              : data.getSubTrusteeTransactionSummary;
+
+          console.log("Optimized transaction data:", responseData);
+
+          if (responseData && responseData.length > 0) {
+            const summary = responseData[0];
+            setTransactionAmountDetails({
+              totalTransactionAmount: summary.total_transaction_amount || 0,
+              totalOrderAmount: summary.total_order_amount || 0,
+              totalTransactions: summary.total_transactions || 0,
+            });
+          } else {
+            setTransactionAmountDetails({
+              totalTransactionAmount: 0,
+              totalOrderAmount: 0,
+              totalTransactions: 0,
+            });
+          }
+        } catch (error) {
+          console.error(
+            "Error processing optimized transaction amount data:",
+            error,
+          );
+          setTransactionAmountDetails({
+            totalTransactionAmount: 0,
+            totalOrderAmount: 0,
+            totalTransactions: 0,
+          });
+        }
+      },
+      onError: (error) => {
+        console.error("Optimized GraphQL error:", error);
+        setTransactionAmountDetails({
+          totalTransactionAmount: 0,
+          totalOrderAmount: 0,
+          totalTransactions: 0,
+        });
+      },
+    },
+  );
 
   useEffect(() => {
-    GET_TRANSACTION_AMOUNT(
-      urlFilters.start_date ? urlFilters.start_date : startDate,
-      urlFilters.end_date ? urlFilters.end_date : endDate,
-      user?.trustee_id,
-      selectSchool !== "" ? schoolId : "",
-      status ? status?.toUpperCase() : "SUCCESS",
-      getPaymentMode(filters.paymentMode, type),
-      getPaymentMode(filters.paymentMode, type)?.includes("qr"),
-      getPaymentMode(filters.gateway, type),
-    );
+    getTransactionAmountOptimized({
+      variables: {
+        startDate: urlFilters.start_date ? urlFilters.start_date : startDate,
+        endDate: urlFilters.end_date ? urlFilters.end_date : endDate,
+        status: status ? status?.toUpperCase() : "SUCCESS",
+        school_ids:
+          selectSchool && selectSchool !== "" ? [schoolId] : undefined,
+        mode: getPaymentMode(filters.paymentMode, type),
+        isQRPayment: getPaymentMode(filters.paymentMode, type)?.includes("qr"),
+        gateway: getPaymentMode(filters.gateway, type),
+      },
+    });
   }, [
     type,
     status,
@@ -452,6 +469,10 @@ export default function Transaction() {
     filters,
     urlFilters.end_date,
     urlFilters.start_date,
+    startDate,
+    endDate,
+    schoolId,
+    getTransactionAmountOptimized, // Updated reference
   ]);
 
   return (
@@ -480,10 +501,9 @@ export default function Transaction() {
 
             <span className="xl:text-[44px] text-3xl flex items-center">
               <LiaRupeeSignSolid />{" "}
-              {transactionAmountDetails !== null &&
-              (status?.toLowerCase() === "success" || status === null) ? (
+              {transactionAmountDetails !== null ? (
                 <span>
-                  {transactionAmountDetails?.totalTransactionAmount.toLocaleString(
+                  {transactionAmountDetails?.totalTransactionAmount?.toLocaleString(
                     "hi-in",
                   ) || 0}
                 </span>
@@ -504,10 +524,9 @@ export default function Transaction() {
           <div className="text-[#229635] font-[400] flex items-center ">
             <span className="xl:text-[44px] text-3xl flex items-center">
               <LiaRupeeSignSolid />
-              {transactionAmountDetails !== null &&
-              (status?.toLowerCase() === "success" || status === null) ? (
+              {transactionAmountDetails !== null ? (
                 <span>
-                  {transactionAmountDetails?.totalOrderAmount.toLocaleString(
+                  {transactionAmountDetails?.totalOrderAmount?.toLocaleString(
                     "hi-in",
                   ) || 0}
                 </span>

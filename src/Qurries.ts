@@ -135,6 +135,72 @@ export const GET_TRANSACTIONS = gql`
   }
 `;
 
+// export const GET_SUBTRUSTEE_BULK_TRANSACTIONS = gql`
+//   query GetSubTrusteeBulkTransactionsReport(
+//     $start_date: String
+//     $end_date: String
+//     $status: String
+//     $isQRPayment: Boolean
+//     $payment_modes: [String!]
+//     $gateway: [String!]
+//     $school_ids: [String!]
+//   ) {
+//     getSubTrusteeBulkTransactionsReport(
+//       start_date: $start_date
+//       end_date: $end_date
+//       status: $status
+//       isQRPayment: $isQRPayment
+//       payment_modes: $payment_modes
+//       gateway: $gateway
+//       school_ids: $school_ids
+//     )
+//   }
+// `;
+
+export const GET_SUBTRUSTEE_BULK_TRANSACTIONS_OPTIMIZED = gql`
+  query GetSubTrusteeBulkTransactionsReportOptimized(
+    $start_date: String
+    $end_date: String
+    $status: String
+    $isQRPayment: Boolean
+    $payment_modes: [String]
+    $gateway: [String]
+    $school_ids: [String]
+  ) {
+    getSubTrusteeBulkTransactionsReport(
+      start_date: $start_date
+      end_date: $end_date
+      status: $status
+      isQRPayment: $isQRPayment
+      payment_modes: $payment_modes
+      gateway: $gateway
+      school_ids: $school_ids
+    )
+  }
+`;
+
+export const GET_SUBTRUSTEE_TRANSACTION_SUMMARY = gql`
+  query GetSubTrusteeTransactionSummary(
+    $startDate: String
+    $endDate: String
+    $status: String
+    $isQRPayment: Boolean
+    $mode: [String!]
+    $gateway: [String!]
+    $school_ids: [String!]
+  ) {
+    getSubTrusteeTransactionSummary(
+      startDate: $startDate
+      endDate: $endDate
+      status: $status
+      isQRPayment: $isQRPayment
+      mode: $mode
+      gateway: $gateway
+      school_ids: $school_ids
+    )
+  }
+`;
+
 export const GET_SETTLEMENT_REPORTS = gql`
   query GetSettlementReportsSubTrustee {
     getSettlementReportsSubTrustee {
