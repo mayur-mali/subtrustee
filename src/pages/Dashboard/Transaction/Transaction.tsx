@@ -402,19 +402,20 @@ export default function Transaction() {
       onCompleted: (data) => {
         console.log("Optimized GraphQL Response received:", data);
         try {
-          const responseData =
-            typeof data.getSubTrusteeTransactionSummary === "string"
-              ? JSON.parse(data.getSubTrusteeTransactionSummary)
-              : data.getSubTrusteeTransactionSummary;
+          const responseData = data.getSubTrusteeTransactionSummary;
 
           console.log("Optimized transaction data:", responseData);
 
-          if (responseData && responseData.length > 0) {
-            const summary = responseData[0];
+          if (
+            responseData &&
+            responseData.transaction &&
+            responseData.transaction.length > 0
+          ) {
+            const summary = responseData.transaction[0];
             setTransactionAmountDetails({
-              totalTransactionAmount: summary.total_transaction_amount || 0,
-              totalOrderAmount: summary.total_order_amount || 0,
-              totalTransactions: summary.total_transactions || 0,
+              totalTransactionAmount: summary.totalTransactionAmount || 0,
+              totalOrderAmount: summary.totalOrderAmount || 0,
+              totalTransactions: summary.totalTransactions || 0,
             });
           } else {
             setTransactionAmountDetails({

@@ -197,7 +197,14 @@ export const GET_SUBTRUSTEE_TRANSACTION_SUMMARY = gql`
       mode: $mode
       gateway: $gateway
       school_ids: $school_ids
-    )
+    ) {
+      length
+      transaction {
+        totalTransactionAmount
+        totalOrderAmount
+        totalTransactions
+      }
+    }
   }
 `;
 
