@@ -421,3 +421,50 @@ export const LOGIN_TO_MERCHANT_WITH_TRUSTEE = gql`
     generateMerchantLoginTokenForSubtrustee(email: $email)
   }
 `;
+
+export const GET_REPORTS = gql`
+  query GetMerchantReportLogs($page: Int!, $limit: Int!, $type: String) {
+    getMerchantReportsLogs(page: $page, limit: $limit, type: $type) {
+      totalCount
+      totalPages
+      limit
+      reports {
+        _id
+        type
+        url
+        status
+        start_date
+        end_date
+        createdAt
+        updatedAt
+      }
+    }
+  }
+`;
+
+export const GENERATE_REPORT = gql`
+  mutation GenerateReport(
+    $startDate: String
+    $endDate: String
+    $type: String
+    $vendor_list: [String!]
+    $dynamic_values: [String!]
+  ) {
+    generateMerchantReportLog(
+      startDate: $startDate
+      endDate: $endDate
+      type: $type
+      vendor_list: $vendor_list
+      dynamic_values: $dynamic_values
+    )
+  }
+`;
+
+export const GET_VENDORS_FOR_REPORT = gql`
+  query GetVendorsForReport {
+    getVendorsForMerchantReport {
+      vendor_id
+      name
+    }
+  }
+`;

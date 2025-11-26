@@ -17,7 +17,7 @@ import { onError } from "@apollo/client/link/error";
 import { AuthProvider } from "./context/AuthContext.tsx";
 
 const httpLink = createHttpLink({
-  uri: import.meta.env.VITE_BACKEND_URL + "/graphql",
+  uri: import.meta.env.REACT_APP_BACKEND_URL + "/graphql",
 });
 
 const authLink = setContext((_, { headers }) => {
@@ -45,9 +45,11 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
       } else {
         const token = localStorage.getItem("token");
 
+        const baseBackendUrl =
+          import.meta.env.REACT_APP_BACKEND_URL || "http://localhost:4000";
         const config = {
           method: "post",
-          url: `http://localhost:4002/main-backend/send-queryError-mail`,
+          url: `${baseBackendUrl}/main-backend/send-queryError-mail`,
           headers: {
             "Content-Type": "application/json",
             authorization: `Bearer ${token}`,
