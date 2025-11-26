@@ -421,3 +421,20 @@ export const LOGIN_TO_MERCHANT_WITH_TRUSTEE = gql`
     generateMerchantLoginTokenForSubtrustee(email: $email)
   }
 `;
+
+export const GET_BATCH_TRANSACTION = gql`
+  query GetSubtrusteeBatchTransactionReport($year: String!) {
+    getSubtrusteeBatchTransactionReport(year: $year) {
+      _id
+      trustee_id
+      total_order_amount
+      total_transaction_amount
+      total_transactions
+      month
+      year
+      status
+      createdAt
+      updatedAt
+    }
+  }
+`;

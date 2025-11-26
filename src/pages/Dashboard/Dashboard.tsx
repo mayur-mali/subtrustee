@@ -7,10 +7,22 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../components/navigation/Navbar";
+import { toast } from "react-toastify";
 
+export const handleCopyContent = (content: any) => {
+  navigator.clipboard
+    .writeText(content)
+    .then(() => {
+      toast.success("Copied to clipboard");
+    })
+    .catch((err) => {
+      toast.error("Error while copying");
+    });
+};
 function Dashboard() {
   const [menu, setMenu] = useState(false);
   const { logout } = useAuth();
+
   return (
     <div className="dashboard flex w-full">
       <div className="h-full ">

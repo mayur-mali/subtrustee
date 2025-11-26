@@ -13,6 +13,7 @@ import ToolTip from "../../../components/generics/ToolTip";
 import { MdContentCopy } from "react-icons/md";
 import { IoSearchOutline } from "react-icons/io5";
 import React, { useState } from "react";
+import { handleCopyContent } from "../../Dashboard/Dashboard";
 export default function Institute() {
   const [page, setPage] = useState(1);
   // const [urlFilters, setUrlFilters] = useTransactionFilters();
@@ -145,9 +146,9 @@ export default function Institute() {
                 </ToolTip>
               </Link>
               <button
-              // onClick={() => {
-              //   handleCopyContent(school.school_id);
-              // }}
+                onClick={() => {
+                  handleCopyContent(school.school_id);
+                }}
               >
                 <ToolTip text="Copy Institute ID">
                   <MdContentCopy
