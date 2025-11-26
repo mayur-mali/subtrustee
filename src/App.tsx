@@ -19,6 +19,7 @@ import TransactionsOfSettlement from "./pages/Dashboard/Settlement/TransactionsO
 import VendorTransaction from "./pages/Dashboard/Payments/VendorTab/VendorTransaction";
 import VendorSettlement from "./pages/Dashboard/Payments/VendorTab/VendorSettlement";
 import VendorTransactionReceipt from "./pages/Dashboard/Payments/VendorTab/VendorTransactionReceipt";
+import Reports from "./components/Reports/Reports";
 
 function App() {
   return (
@@ -40,6 +41,7 @@ function App() {
             </ProtectedRoute>
           }
         >
+          <Route path="reports" element={<Reports />} />
           <Route index element={<Overview />} />
           <Route path="institute" element={<Institute />} />
           <Route path="payments" element={<PaymentLayout menu={true} />}>
