@@ -19,6 +19,7 @@ import LottiePlayer from "../../components/Lottie/LottiePlayer";
 import { useMutation, useQuery } from "@apollo/client";
 import {
   GENERATE_REPORT,
+  GET_ALL_SCHOOLS_QUERY_FOR_REPORT,
   GET_REPORTS,
   GET_VENDORS_FOR_REPORT,
 } from "../../Qurries";
@@ -88,6 +89,19 @@ export default function Reports() {
     fetchPolicy: "network-only",
     notifyOnNetworkStatusChange: true,
   });
+  const { data: schoolsData } = useQuery(GET_ALL_SCHOOLS_QUERY_FOR_REPORT, {
+    fetchPolicy: "network-only",
+  });
+
+  const [selectedSchoolIds, setSelectedSchoolIds] = useState<string[]>([]);
+  const { data: vendorsData, refetch: refetchVendors } = useQuery(
+    GET_VENDORS_FOR_REPORT,
+    {
+      variables: { school: selectedSchoolIds },
+      skip: selectedSchoolIds.length === 0,
+      fetchPolicy: "network-only",
+    },
+  );
 
   const [selectedVendorIds, setSelectedVendorIds] = useState<string[]>([]);
   const [SelectedFields, setSelectedFields] = useState<string[]>([]);
@@ -114,16 +128,10 @@ export default function Reports() {
     format: "",
     email: "",
     type: "",
+    school_list: [] as string[],
     vendor_list: [] as string[],
     SelectedFields: [] as string[],
   });
-
-  const { data: vendorData, loading: vendorLoading } = useQuery(
-    GET_VENDORS_FOR_REPORT,
-    {
-      skip: reportData.type !== "VENDOR_TRANSACTION_REPORT",
-    },
-  );
 
   useEffect(() => {
     if (!openModal) {
@@ -135,6 +143,7 @@ export default function Reports() {
         format: "",
         email: "",
         type: "",
+        school_list: [],
         vendor_list: [],
         SelectedFields: [],
       });
@@ -237,41 +246,84 @@ export default function Reports() {
               Please select the report you want to download.
             </p>
           </div>
+          {(reportData.type === "TRANSACTION_REPORT" ||
+            reportData.type === "VENDOR_TRANSACTION_REPORT") && (
+            <div className="flex flex-col px-4 bg-gray-100">
+              <label className="my-2">Select Schools</label>
+
+              <Select
+                placeholder="Select Schools"
+                isMulti
+                value={selectedSchoolIds.map((id) => ({
+                  value: id,
+                  label:
+                    schoolsData?.getAllSubTrusteeSchools?.find(
+                      (s: any) => s.school_id === id,
+                    )?.school_name ?? "",
+                }))}
+                onChange={(options) => {
+                  const ids = options ? options.map((o: any) => o.value) : [];
+
+                  setSelectedSchoolIds(ids);
+                  setSelectedVendorIds([]);
+
+                  setReportData((prev) => ({
+                    ...prev,
+                    school_list: ids,
+                    vendor_list: [],
+                  }));
+
+                  if (
+                    ids.length &&
+                    ids.length > 0 &&
+                    reportData.type === "VENDOR_TRANSACTION_REPORT"
+                  )
+                    refetchVendors({ school: ids });
+                }}
+                options={
+                  schoolsData?.getAllSubTrusteeSchools?.map((s: any) => ({
+                    value: s.school_id,
+                    label: s.school_name,
+                  })) || []
+                }
+              />
+            </div>
+          )}
 
           {reportData.type === "VENDOR_TRANSACTION_REPORT" && (
             <div className="flex flex-col px-4 bg-gray-100">
-              <label className="my-2">Select Vendors</label>
+              <label className="my-2">Select Vendors (optional)</label>
 
               <Select
+                placeholder={
+                  selectedSchoolIds.length
+                    ? "Select Vendors"
+                    : "Select schools first"
+                }
                 isMulti
-                isLoading={vendorLoading}
-                placeholder="Select Vendors"
-                value={selectedVendorIds
-                  .map((id) => {
-                    const vendor = vendorData?.getVendorsForMerchantReport.find(
+                isDisabled={selectedSchoolIds.length === 0}
+                value={selectedVendorIds.map((id) => ({
+                  value: id,
+                  label:
+                    vendorsData?.getVendorsForReport?.find(
                       (v: any) => v.vendor_id === id,
-                    );
-                    return vendor
-                      ? { value: vendor.vendor_id, label: vendor.name }
-                      : null;
-                  })
-                  .filter(Boolean)}
+                    )?.name ?? "",
+                }))}
                 onChange={(options) => {
-                  const selected = options
-                    ? options.map((opt) => opt?.value)
-                    : [];
-                  setSelectedVendorIds(selected);
+                  const ids = options ? options.map((o: any) => o.value) : [];
+                  setSelectedVendorIds(ids);
+
                   setReportData((prev) => ({
                     ...prev,
-                    vendor_list: selected,
+                    vendor_list: ids,
                   }));
                 }}
-                options={vendorData?.getVendorsForMerchantReport?.map(
-                  (v: any) => ({
+                options={
+                  vendorsData?.getVendorsForReport?.map((v: any) => ({
                     value: v.vendor_id,
                     label: v.name,
-                  }),
-                )}
+                  })) || []
+                }
               />
             </div>
           )}
@@ -499,6 +551,9 @@ export default function Reports() {
                       type: reportData.type,
                       format: reportData.format,
                       name: reportData.name,
+                      school_list: reportData.school_list.length
+                        ? reportData.school_list
+                        : undefined,
                       vendor_list: reportData.vendor_list.length
                         ? reportData.vendor_list
                         : undefined,
@@ -520,6 +575,7 @@ export default function Reports() {
                         format: "",
                         type: "",
                         email: "",
+                        school_list: [],
                         vendor_list: [],
                         SelectedFields: [],
                       });
@@ -564,7 +620,7 @@ export default function Reports() {
               </button>
               <button
                 onClick={() => setModal(true)}
-                className="h-9  flex items-center gap-x-2 bg-edviron_black hover:bg-edviron_black/90 text-sm rounded-md text-white px-6"
+                className="h-9 flex items-center gap-x-2 bg-[#1E1B59] hover:bg-[#1E1B59] text-white text-sm rounded-md px-6"
               >
                 <FiDownload className="text-lg" />
                 Download Report
@@ -589,7 +645,7 @@ export default function Reports() {
             "Created At",
             "Download",
           ],
-          ...(data?.getMerchantReportsLogs?.reports.map(
+          ...(data?.getSubTrusteeReportsLogs?.reports.map(
             (item: any, index: number) => [
               (currentPage - 1) * itemsPerRow.name + 1 + index,
               `${new Date(item.start_date).toDateString()} - ${new Date(
@@ -626,7 +682,7 @@ export default function Reports() {
           <div className="flex justify-center items-center">
             <Pagination
               currentPage={currentPage}
-              totalPages={Math.ceil(data?.getMerchantReportsLogs?.totalPages)}
+              totalPages={Math.ceil(data?.getSubTrusteeReportsLogs?.totalPages)}
               onPageChange={handlePageChange}
             />
           </div>

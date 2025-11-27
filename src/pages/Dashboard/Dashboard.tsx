@@ -32,16 +32,17 @@ function Dashboard() {
             name="Institute"
             to="/institute"
           />
-          <SidebarItem
-            icon={<CgCopy className={"text-lg"} />}
-            name="Reports"
-            to="/reports"
-          />
 
           <SidebarItem
             icon={<CiReceipt className={"text-lg"} />}
             name="Payments"
             to="/payments"
+          />
+
+          <SidebarItem
+            icon={<CgCopy className={"text-lg"} />}
+            name="Reports"
+            to="/reports"
           />
 
           <SidebarItem
