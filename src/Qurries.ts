@@ -481,3 +481,20 @@ export const GET_VENDORS_FOR_REPORT = gql`
     }
   }
 `;
+
+export const GET_BATCH_TRANSACTION = gql`
+  query GetSubtrusteeBatchTransactionReport($year: String!) {
+    getSubtrusteeBatchTransactionReport(year: $year) {
+      _id
+      trustee_id
+      total_order_amount
+      total_transaction_amount
+      total_transactions
+      month
+      year
+      status
+      createdAt
+      updatedAt
+    }
+  }
+`;
