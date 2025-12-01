@@ -7,6 +7,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import Navbar from "../../components/navigation/Navbar";
+import { CgCopy } from "react-icons/cg";
 
 function Dashboard() {
   const [menu, setMenu] = useState(false);
@@ -36,6 +37,12 @@ function Dashboard() {
             icon={<CiReceipt className={"text-lg"} />}
             name="Payments"
             to="/payments"
+          />
+
+          <SidebarItem
+            icon={<CgCopy className={"text-lg"} />}
+            name="Reports"
+            to="/reports"
           />
 
           <SidebarItem

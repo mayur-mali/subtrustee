@@ -421,3 +421,63 @@ export const LOGIN_TO_MERCHANT_WITH_TRUSTEE = gql`
     generateMerchantLoginTokenForSubtrustee(email: $email)
   }
 `;
+
+export const GET_REPORTS = gql`
+  query GetSubTrusteeReportsLogs($page: Int!, $limit: Int!, $type: String) {
+    getSubTrusteeReportsLogs(page: $page, limit: $limit, type: $type) {
+      totalCount
+      totalPages
+      limit
+      reports {
+        _id
+        type
+        url
+        status
+        start_date
+        end_date
+        createdAt
+        updatedAt
+      }
+    }
+  }
+`;
+
+export const GENERATE_REPORT = gql`
+  mutation GenerateReport(
+    $startDate: String
+    $endDate: String
+    $type: String
+    $school_id: String
+    $school_list: [String!]
+    $vendor_list: [String!]
+    $dynamic_values: [String!]
+  ) {
+    generateSubTrusteeReport(
+      startDate: $startDate
+      endDate: $endDate
+      type: $type
+      school_id: $school_id
+      school_list: $school_list
+      vendor_list: $vendor_list
+      dynamic_values: $dynamic_values
+    )
+  }
+`;
+
+export const GET_ALL_SCHOOLS_QUERY_FOR_REPORT = gql`
+  query GetSchoolQueryForReport {
+    getAllSubTrusteeSchools {
+      school_name
+      school_id
+    }
+  }
+`;
+
+export const GET_VENDORS_FOR_REPORT = gql`
+  query GetVendorsForReport($school: [String!]) {
+    getVendorsForReport(school: $school) {
+      vendor_id
+      name
+    }
+  }
+`;
