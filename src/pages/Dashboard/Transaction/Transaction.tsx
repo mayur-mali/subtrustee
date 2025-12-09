@@ -967,6 +967,7 @@ export default function Transaction() {
                 "Vendor Amount",
                 "Gateway",
                 "Capture Status",
+                "Bank Reference",
               ],
               ...transactionData?.map((row: any) => [
                 <div>{row?.serialNumber}</div>,
@@ -1105,6 +1106,15 @@ export default function Transaction() {
                 >
                   <div className="truncate " key={row.orderID}>
                     {row?.capture_status || "NA"}
+                  </div>
+                </Link>,
+                <Link
+                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                >
+                  <div className="truncate" key={row.orderID}>
+                    {row.bank_reference && row.bank_reference !== ""
+                      ? row.bank_reference
+                      : "NA"}
                   </div>
                 </Link>,
               ]),
