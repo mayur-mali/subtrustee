@@ -44,6 +44,8 @@ function VendorTransaction() {
   // const [schoolId, setSchoolId] = useState<string>("");
   const [schoolId, setSchoolId] = useState<any>([]);
   const [selectSchool, setSelectSchool] = useState<any[]>([]);
+  const [vendorId, setVendorId] = useState<string | null>(null);
+  const [selectVendor, setSelectVendor] = useState<string | null>(null);
   const [refetching, setRefetching] = useState(false);
   const { startDate, endDate } = getStartAndEndOfMonth();
   const [urlFilters, setUrlFilters] = useTransactionFilters();
@@ -141,6 +143,7 @@ function VendorTransaction() {
     order_id,
     payment_modes,
     gateway,
+    vendor_id,
   }: {
     start_date?: any;
     end_date?: any;
@@ -152,6 +155,7 @@ function VendorTransaction() {
     order_id?: string;
     payment_modes?: string[] | null;
     gateway?: string[] | null;
+    vendor_id?: string;
   }) => {
     try {
       setRefetching(true);
@@ -166,6 +170,7 @@ function VendorTransaction() {
         school_id: school_id,
         custom_id,
         order_id,
+        vendor_id,
       });
       if (data?.data?.getAllSubtrusteeVendorTransaction?.vendorsTransaction) {
         setRefetching(false);
@@ -227,6 +232,23 @@ function VendorTransaction() {
         updatedSchoolIds && updatedSchoolIds.length > 0
           ? updatedSchoolIds
           : null,
+      vendor_id: vendorId || null,
+    });
+  };
+
+  const removeVendorFilter = () => {
+    setVendorId(null);
+    setSelectVendor(null);
+    refetchDataFetch({
+      start_date: isDateRangeIsSelected
+        ? formatDate(selectedRange.startDate)
+        : startDate,
+      end_date: isDateRangeIsSelected
+        ? formatDate(selectedRange.endDate)
+        : endDate,
+      status: status?.toUpperCase(),
+      school_id: schoolId && schoolId.length > 0 ? schoolId : null,
+      vendor_id: null,
     });
   };
   return (
@@ -483,12 +505,18 @@ function VendorTransaction() {
                   <div className="w-full">
                     <MixFilter
                       setSelectSchool={(id: any) => {
-                        const updatedSchoolIds = [...selectSchool, id];
-                        setSelectSchool(updatedSchoolIds);
+                        const updatedSchoolNames = [...selectSchool, id];
+                        setSelectSchool(updatedSchoolNames);
                       }}
                       setSchoolId={(id: any) => {
                         const updatedSchoolIds = [...schoolId, id];
                         setSchoolId(updatedSchoolIds);
+                      }}
+                      setSelectVendor={(vendorName: any) => {
+                        setSelectVendor(vendorName);
+                      }}
+                      setVendorId={(newVendorId: any) => {
+                        setVendorId(newVendorId);
                       }}
                       // setSchoolId={setSchoolId}
                       paymentModes={Object.keys(filters.paymentMode).filter(
@@ -514,6 +542,7 @@ function VendorTransaction() {
                           status: status?.toUpperCase(),
                           school_id:
                             schoolId && schoolId.length > 0 ? schoolId : null,
+                          vendor_id: vendorId || null,
                           gateway: null,
                         });
                       }}
@@ -524,6 +553,8 @@ function VendorTransaction() {
                           school_id:
                             schoolId && schoolId.length > 0 ? schoolId : null,
                           school_name: selectSchool || null,
+                          vendor_id: vendorId || null,
+                          vendor_name: selectVendor || null,
                           payment_modes: getPaymentMode(
                             filters.paymentMode,
                             type,
@@ -540,6 +571,7 @@ function VendorTransaction() {
                           status: status?.toUpperCase(),
                           school_id:
                             schoolId && schoolId.length > 0 ? schoolId : null,
+                          vendor_id: vendorId || null,
                           // school_id: selectSchool === "" ? null : schoolId,
                           payment_modes: getPaymentMode(
                             filters.paymentMode,
@@ -663,6 +695,24 @@ function VendorTransaction() {
                           </span>
                         </div>
                       ),
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2 max-w-full overflow-hidden">
+                  {selectVendor && (
+                    <div className="bg-[#6687FFCC] text-sm m-2 rounded-lg px-2 h-10 flex items-center gap-x-2 min-w-max max-w-[8em] sm:max-w-[10em] md:max-w-[12em] lg:max-w-[14em] xl:max-w-[16em]">
+                      <span className="text-white truncate pl-2">
+                        {selectVendor}
+                      </span>
+                      <span>
+                        <FaX
+                          className="text-white cursor-pointer h-3"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeVendorFilter();
+                          }}
+                        />
+                      </span>
+                    </div>
                   )}
                 </div>
                 {/* {selectSchool !== "" && (
