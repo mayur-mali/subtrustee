@@ -505,8 +505,8 @@ function VendorTransaction() {
                   <div className="w-full">
                     <MixFilter
                       setSelectSchool={(id: any) => {
-                        const updatedSchoolNames = [...selectSchool, id];
-                        setSelectSchool(updatedSchoolNames);
+                        const updatedSchoolIds = [...selectSchool, id];
+                        setSelectSchool(updatedSchoolIds);
                       }}
                       setSchoolId={(id: any) => {
                         const updatedSchoolIds = [...schoolId, id];
