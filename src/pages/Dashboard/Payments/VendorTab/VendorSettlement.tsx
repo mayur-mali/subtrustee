@@ -15,6 +15,7 @@ import TransactionDateFilter, {
 import { HiMiniXMark } from "react-icons/hi2";
 import { endOfDay, startOfDay } from "date-fns";
 import Institute from "../../Transaction/components/AllFilter/Institute";
+import Vendor from "../../Transaction/components/AllFilter/Vendor";
 import { CustomDropdownIndicator } from "../../Settlement/Settlement";
 import Select from "react-select";
 import { IoSearchOutline } from "react-icons/io5";
@@ -37,6 +38,8 @@ function VendorSettlement() {
   const [refetching, setRefetching] = useState(false);
   const { startDate, endDate } = getStartAndEndOfMonth();
   const [searchFilter, setSearchFilter] = useState<any>("");
+  const [selectVendor, setSelectVendor] = useState("");
+  const [vendorId, setVendorId] = useState<any>(null);
 
   const { data, loading, refetch } = useQuery(
     GET_ALL_VENDOR_SUBTRUSTEE_SETTLEMENT,
@@ -109,10 +112,10 @@ function VendorSettlement() {
         : endDate,
       status: status?.toUpperCase(),
       school_id: schoolId && schoolId.length > 0 ? schoolId : [],
-      vendor_id: searchFilter === "vendor_id" ? searchText : null,
+      vendor_id: searchFilter === "vendor_id" ? searchText : vendorId,
       utr: searchFilter === "utr" ? searchText : null,
     });
-  }, [status, schoolId, itemsPerRow, currentPage]);
+  }, [status, schoolId, itemsPerRow, currentPage, vendorId]);
 
   const handlePageChange = (page: any) => {
     setCurrentPage(page);
@@ -275,11 +278,19 @@ function VendorSettlement() {
                     setSelectedRange={setSelectedRange}
                     setIsDateRangeIsSelected={setIsDateRangeIsSelected}
                   />
-
                   <div className="w-full ml-2">
                     <Institute
                       setSelectSchool={setSelectSchool}
                       setSchoolId={setSchoolId}
+                    />
+                  </div>
+
+                  <div className="w-full ml-2">
+                    <Vendor
+                      setSelectVendor={setSelectVendor}
+                      setVendorId={setVendorId}
+                      menuIsOpen={undefined}
+                      schoolId={null}
                     />
                   </div>
                 </div>
@@ -374,6 +385,7 @@ function VendorSettlement() {
                               ? formatDate(selectedRange.endDate)
                               : endDate,
                             status: status?.toUpperCase(),
+                            vendor_id: vendorId,
                           });
                           setSelectSchool("");
                           setSchoolId("");
@@ -381,6 +393,7 @@ function VendorSettlement() {
                           refetchDataFetch({
                             start_date: startDate,
                             end_date: endDate,
+                            vendor_id: vendorId,
                           });
                           setSelectSchool("");
                           setSchoolId("");
@@ -389,6 +402,44 @@ function VendorSettlement() {
                       className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
                     >
                       {selectSchool} <HiMiniXMark className=" text-lg ml-1" />
+                    </button>
+                  </div>
+                )}
+                {selectVendor !== "" && (
+                  <div className=" text-sm m-2  max-w-fit ">
+                    <button
+                      onClick={() => {
+                        if (
+                          status ||
+                          isDateRangeIsSelected ||
+                          type ||
+                          selectSchool
+                        ) {
+                          refetchDataFetch({
+                            start_date: isDateRangeIsSelected
+                              ? formatDate(selectedRange.startDate)
+                              : startDate,
+                            end_date: isDateRangeIsSelected
+                              ? formatDate(selectedRange.endDate)
+                              : endDate,
+                            status: status?.toUpperCase(),
+                            school_id:
+                              schoolId && schoolId.length > 0 ? schoolId : [],
+                          });
+                          setSelectVendor("");
+                          setVendorId(null);
+                        } else {
+                          refetchDataFetch({
+                            start_date: startDate,
+                            end_date: endDate,
+                          });
+                          setSelectVendor("");
+                          setVendorId(null);
+                        }
+                      }}
+                      className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
+                    >
+                      {selectVendor} <HiMiniXMark className=" text-lg ml-1" />
                     </button>
                   </div>
                 )}
