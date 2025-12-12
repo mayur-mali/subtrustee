@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { IoIosArrowDown, IoIosArrowForward } from "react-icons/io";
 import { IoSearch } from "react-icons/io5";
+import Vendor from "./Vendor";
 interface CheckboxProps {
   id: string;
   label: string;
@@ -74,6 +75,7 @@ function AllFilters(props: any) {
     status: true,
     mode: false,
     school: false,
+    vendor: false,
   });
   const [schoolData, setSchoolData] = useState<any>([...props.schoolData]);
   const checkboxItemsStatus = [
@@ -159,6 +161,15 @@ function AllFilters(props: any) {
           } rounded-xl p-1 flex items-center mb-4 `}
         >
           <span className="pl-2 ">Institute</span>
+          <IoIosArrowForward className="w-4 h-4 ml-auto block" />
+        </button>
+        <button
+          onClick={() => toggleDropdown("vendor")}
+          className={`w-full text-xs ${
+            filterOpt.vendor ? "bg-[#DADBFC]" : ""
+          } rounded-xl p-1 flex items-center mb-4 `}
+        >
+          <span className="pl-2 ">Vendor</span>
           <IoIosArrowForward className="w-4 h-4 ml-auto block" />
         </button>
       </div>
@@ -288,6 +299,61 @@ function AllFilters(props: any) {
             })}
           </div>
         }
+      </div>
+      <div
+        className={`${
+          filterOpt.vendor
+            ? "w-full flex flex-col items-center min-w-[18rem]"
+            : "hidden"
+        }`}
+      >
+        <div className="w-[90%] mt-4">
+          <Vendor
+            setSelectVendor={(vendorName: string) =>
+              props.setVendorFilter((pre: any) => ({
+                ...pre,
+                name: vendorName,
+              }))
+            }
+            setVendorId={(vendorId: string) =>
+              props.setVendorFilter((pre: any) => ({
+                ...pre,
+                id: vendorId,
+                size: vendorId ? pre.size + 1 : pre.size - 1,
+              }))
+            }
+            menuIsOpen={filterOpt.vendor}
+            schoolId={
+              props.schoolFilter
+                ? Object.keys(props.schoolFilter).filter(
+                    (key) => key !== "size",
+                  )
+                : []
+            }
+          />
+        </div>
+        <div className="flex mt-4 ml-auto gap-2">
+          <button
+            onClick={() =>
+              props.setVendorFilter((pre: any) => ({
+                size: 0,
+                id: null,
+                name: null,
+              }))
+            }
+            className="border px-4 py-1 rounded-md text-sm text-[#6687FF] border-edviron_black"
+          >
+            Clear
+          </button>
+          <button
+            onClick={() => {
+              // Apply button action
+            }}
+            className="border px-4 py-1 rounded-md text-sm text-white bg-edviron_black"
+          >
+            Apply
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -4,10 +4,13 @@ import { IoIosArrowForward } from "react-icons/io";
 // import Status from "./AllFilter/Status";
 import Mode, { GatewayMode } from "./AllFilter/Mode";
 import Institute from "./AllFilter/Institute";
+import Vendor from "./AllFilter/Vendor";
 
 function MixFilter({
   setSelectSchool,
   setSchoolId,
+  setSelectVendor,
+  setVendorId,
   setType,
   onCancel,
   onApply,
@@ -85,6 +88,18 @@ function MixFilter({
                 <span>Gateway</span>
                 <IoIosArrowForward className="w-4 h-4 ml-auto block" />
               </button>
+              <button
+                onClick={() => {
+                  setActiveTab(4);
+                }}
+                className={
+                  "flex items-center w-full   rounded-full px-2 py-1 " +
+                  (activTab === 4 ? " bg-[#DADBFC]" : " ")
+                }
+              >
+                <span>Vendor</span>
+                <IoIosArrowForward className="w-4 h-4 ml-auto block" />
+              </button>
             </div>
             <div className="flex flex-col w-full">
               <div className="flex-1">
@@ -104,6 +119,14 @@ function MixFilter({
                   <GatewayMode
                     filter={filters?.gateway}
                     setFilters={setFilters}
+                  />
+                )}
+                {activTab === 4 && (
+                  <Vendor
+                    setSelectVendor={setSelectVendor}
+                    setVendorId={setVendorId}
+                    menuIsOpen={activTab === 4}
+                    schoolId={[]}
                   />
                 )}
               </div>
