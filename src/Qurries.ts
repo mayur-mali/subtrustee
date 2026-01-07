@@ -287,6 +287,7 @@ export const GET_SINGLE_SUBTRUSTEE_TRANSACTION_INFO = gql`
       virtual_account_number
       utr_number
       settlement_transfer_time
+      payment_origin
     }
   }
 `;
@@ -412,6 +413,7 @@ export const GET_SINGLE_VENDOR_TRANSACTION = gql`
       transaction_amount
       payment_detail
       details
+      payment_origin
     }
   }
 `;
