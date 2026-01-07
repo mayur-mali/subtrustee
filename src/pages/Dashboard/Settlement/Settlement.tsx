@@ -285,6 +285,7 @@ const Settlement = () => {
           pagination={false}
           copyContent={[11]}
           filter={[debouncedSearch]}
+          isCustomFilter={true}
           searchBox={
             <div className="flex flex-col w-full">
               <div className="flex xl:!flex-row flex-col gap-2  w-full xl:items-center items-start mb-2 justify-between">
