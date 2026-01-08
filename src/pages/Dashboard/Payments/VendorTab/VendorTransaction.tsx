@@ -233,6 +233,8 @@ function VendorTransaction() {
           ? updatedSchoolIds
           : null,
       vendor_id: vendorId || null,
+      payment_modes: getPaymentMode(filters.paymentMode, type),
+      gateway: getPaymentMode(filters.gateway, type),
     });
   };
 
@@ -249,6 +251,8 @@ function VendorTransaction() {
       status: status?.toUpperCase(),
       school_id: schoolId && schoolId.length > 0 ? schoolId : null,
       vendor_id: null,
+      payment_modes: getPaymentMode(filters.paymentMode, type),
+      gateway: getPaymentMode(filters.gateway, type),
     });
   };
   return (
@@ -643,29 +647,21 @@ function VendorTransaction() {
                           endDate: endOfDay(new Date()),
                           key: "selection",
                         });
-                        if (status || schoolId) {
-                          refetchDataFetch({
-                            start_date: formatDate(selectedRange.startDate),
-                            end_date: formatDate(selectedRange.endDate),
-                            status: status?.toUpperCase(),
-                            school_id:
-                              schoolId && schoolId.length > 0 ? schoolId : null,
-                            payment_modes: getPaymentMode(
-                              filters.paymentMode,
-                              type,
-                            ),
-                            gateway: getPaymentMode(filters.gateway, type),
-                          });
-                          setDateRange("");
-                          setIsDateRangeIsSelected(false);
-                        } else {
-                          refetchDataFetch({
-                            start_date: startDate,
-                            end_date: endDate,
-                          });
-                          setDateRange("");
-                          setIsDateRangeIsSelected(false);
-                        }
+                        refetchDataFetch({
+                          start_date: startDate,
+                          end_date: endDate,
+                          status: status?.toUpperCase(),
+                          school_id:
+                            schoolId && schoolId.length > 0 ? schoolId : null,
+                          vendor_id: vendorId || null,
+                          payment_modes: getPaymentMode(
+                            filters.paymentMode,
+                            type,
+                          ),
+                          gateway: getPaymentMode(filters.gateway, type),
+                        });
+                        setDateRange("");
+                        setIsDateRangeIsSelected(false);
                       }}
                       className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
                     >

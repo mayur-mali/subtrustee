@@ -781,6 +781,8 @@ export default function Transaction() {
                               : endDate,
                             status: status?.toUpperCase(),
                             school_id: schoolId === "" ? null : schoolId,
+                            payment_modes: null,
+                            gateway: null,
                           });
 
                           setFilters({
