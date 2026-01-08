@@ -89,7 +89,6 @@ export const CustomDropdownIndicator = () => {
 // }
 
 export default function Transaction() {
-  const [transactionData, setTransactionData] = useState<any>([]);
   const [urlFilters, setUrlFilters] = useTransactionFilters();
   const [currentPage, setCurrentPage] = useState<any>(
     Number(urlFilters.page) || 1,
@@ -97,62 +96,6 @@ export default function Transaction() {
   const [itemsPerRow, setItemsPerRow] = useState<any>({
     name: Number(urlFilters.limit) || 10,
   });
-  const { startDate, endDate } = getStartAndEndOfMonth();
-  const {
-    data: transactionReport,
-    loading: transactionReportLoading,
-    refetch,
-  } = useQuery(GET_TRANSACTIONS, {
-    variables: {
-      startDate: urlFilters.start_date ? urlFilters.start_date : startDate,
-      endDate: urlFilters?.end_date ? urlFilters.end_date : endDate,
-      page: currentPage.toString(),
-      //status: status.toUpperCase(),
-      //school_id: schoolId,
-      limit: itemsPerRow.name.toString(),
-    },
-  });
-
-  useEffect(() => {
-    if (transactionReport?.getSubtrusteeTransactionReport?.transactionReport) {
-      const formattedData =
-        transactionReport?.getSubtrusteeTransactionReport?.transactionReport.map(
-          (row: any, index: number) => {
-            const gatewayKey = row.gateway?.toUpperCase();
-            const gatewayname =
-              gatewayKey && gatewayName[gatewayKey as keyof typeof gatewayName]
-                ? gatewayName[gatewayKey as keyof typeof gatewayName] ===
-                  "Pending"
-                  ? "NA"
-                  : gatewayName[gatewayKey as keyof typeof gatewayName]
-                : "NA";
-
-            return {
-              schoolName: row.school_name,
-              transactionTime: row.createdAt,
-              orderID: row.collect_id,
-              transactionAmount:
-                row.transaction_amount === null ? "--" : row.transaction_amount,
-              paymentMode:
-                row.payment_method === "" || row.payment_method === null
-                  ? "NA"
-                  : payment_method_map[row.payment_method],
-              orderAmount: row.order_amount === null ? "--" : row.order_amount,
-              transactionStatus:
-                row.status === null ? "NA" : row.status?.toLowerCase(),
-              schoolId: row.school_id === null ? "NA" : row.school_id,
-              ...row,
-              serialNumber: (currentPage - 1) * itemsPerRow.name + 1 + index,
-              gateway: gatewayname,
-              isVBAPaymentComplete: row?.isVBAPaymentComplete,
-              student_id: row?.student_id,
-            };
-          },
-        );
-
-      setTransactionData(formattedData);
-    }
-  }, [transactionReport]);
 
   const [searchText, setSearchText] = useState<string>("");
   const [isCustomSearch, setIsCustomSearch] = useState(false);
@@ -246,6 +189,69 @@ export default function Transaction() {
         : false,
     },
   });
+
+  const [transactionData, setTransactionData] = useState<any>([]);
+
+  const { startDate, endDate } = getStartAndEndOfMonth();
+  const {
+    data: transactionReport,
+    loading: transactionReportLoading,
+    refetch,
+  } = useQuery(GET_TRANSACTIONS, {
+    variables: {
+      startDate: urlFilters.start_date ? urlFilters.start_date : startDate,
+      endDate: urlFilters?.end_date ? urlFilters.end_date : endDate,
+      page: currentPage.toString(),
+      status: status?.toUpperCase(),
+      school_id: selectSchool === "" ? null : schoolId,
+      limit: itemsPerRow.name.toString(),
+      payment_modes: getPaymentMode(filters.paymentMode, type),
+      isQRCode: getPaymentMode(filters.paymentMode, type)?.includes("qr"),
+      gateway: getPaymentMode(filters.gateway, type),
+    },
+    fetchPolicy: "network-only",
+  });
+
+  useEffect(() => {
+    if (transactionReport?.getSubtrusteeTransactionReport?.transactionReport) {
+      const formattedData =
+        transactionReport?.getSubtrusteeTransactionReport?.transactionReport.map(
+          (row: any, index: number) => {
+            const gatewayKey = row.gateway?.toUpperCase();
+            const gatewayname =
+              gatewayKey && gatewayName[gatewayKey as keyof typeof gatewayName]
+                ? gatewayName[gatewayKey as keyof typeof gatewayName] ===
+                  "Pending"
+                  ? "NA"
+                  : gatewayName[gatewayKey as keyof typeof gatewayName]
+                : "NA";
+
+            return {
+              schoolName: row.school_name,
+              transactionTime: row.createdAt,
+              orderID: row.collect_id,
+              transactionAmount:
+                row.transaction_amount === null ? "--" : row.transaction_amount,
+              paymentMode:
+                row.payment_method === "" || row.payment_method === null
+                  ? "NA"
+                  : payment_method_map[row.payment_method],
+              orderAmount: row.order_amount === null ? "--" : row.order_amount,
+              transactionStatus:
+                row.status === null ? "NA" : row.status?.toLowerCase(),
+              schoolId: row.school_id === null ? "NA" : row.school_id,
+              ...row,
+              serialNumber: (currentPage - 1) * itemsPerRow.name + 1 + index,
+              gateway: gatewayname,
+              isVBAPaymentComplete: row?.isVBAPaymentComplete,
+              student_id: row?.student_id,
+            };
+          },
+        );
+
+      setTransactionData(formattedData);
+    }
+  }, [transactionReport]);
 
   const refetchDataFetch = async ({
     start_date,
@@ -398,6 +404,7 @@ export default function Transaction() {
             copyContent={[4, 5]}
             filter={[searchText]}
             loading={refetchLoading || transactionReportLoading}
+            isCustomFilter={true}
             searchBox={
               <div className="w-full ">
                 <div className="flex xl:!flex-row flex-col justify-between gap-2  w-full xl:items-center items-start mb-2">

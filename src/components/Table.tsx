@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import "../App.css";
 import { MdOutlineContentCopy as PasteBtn } from "react-icons/md";
+import { FaFilter } from "react-icons/fa6";
 import { toast } from "react-toastify";
 import Select from "./Select/Select";
 import CopyRight from "./CopyRight";
@@ -171,12 +172,33 @@ export const _Table = ({
   minHeight,
   copyRight = true,
   loading = false,
+  isCustomFilter,
 }: any) => {
   const [csv_link, set_csv_link] = React.useState("");
   const refs: any = useRef<any>([]);
   const column = srNo ? ["S. No", ...data[0]] : data[0];
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerRow, setItemsPerRow] = useState({ name: 10 });
+
+  // ⭐ NEW STATES FOR EXPORT MODAL
+  const gateways = ["razorpay", "cashfree", "easebuzz"];
+  const alwaysHideWhenGatewaySelected = [
+    "Partner Address",
+    "RM Manager Name",
+    "RM Manager Email",
+    "RM Name",
+    "RM Email",
+    "Tech Poc Name",
+    "Tech Poc Email",
+  ].map((c) => c.toLowerCase());
+  const [selectedGateway, setSelectedGateway] = useState<string[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [selectedColumns, setSelectedColumns] = useState<string[]>(
+    column.filter((c) => c !== "S. No"),
+  );
+  const [tempSelectedColumns, setTempSelectedColumns] = useState<string[]>(
+    column.filter((c) => c !== "S. No"),
+  );
 
   const items = data?.slice(1);
   const totalPages = Math.ceil(items.length / itemsPerRow?.name);
@@ -189,9 +211,28 @@ export const _Table = ({
   const indexOfFirstItem = indexOfLastItem - itemsPerRow?.name;
   const currentItems = items.slice(indexOfFirstItem, indexOfLastItem);
   const currentItemsArray = pagination ? currentItems : data?.slice(1);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [filter, itemsPerRow]);
+
+  // ⭐ NEW FUNCTION TO CHECK IF COLUMN SHOULD BE HIDDEN
+  const shouldHideGatewayColumn = (colName: string) => {
+    const lower = colName.toLowerCase();
+    if (
+      selectedGateway.length > 0 &&
+      alwaysHideWhenGatewaySelected.includes(lower)
+    ) {
+      return true;
+    }
+    const isGatewayColumn = gateways.some((gw) => lower.includes(gw));
+
+    if (!isGatewayColumn) return false;
+
+    const matchesSelected = selectedGateway.some((gw) => lower.includes(gw));
+
+    return selectedGateway.length > 0 && !matchesSelected;
+  };
 
   useEffect(() => {
     if (!refs?.current || !column?.length) return;
@@ -207,12 +248,14 @@ export const _Table = ({
       }
       return res;
     };
+
     function removeButtons(node: HTMLElement) {
       const buttons = node.querySelectorAll("button");
       buttons.forEach((btn) => btn.remove());
     }
 
-    const dataArray = [
+    // ⭐ UPDATED - Apply column and gateway filtering to Excel data
+    const allData = [
       column,
       ...refs.current.map((r: any) => {
         if (!r) return column.map(() => "");
@@ -224,6 +267,31 @@ export const _Table = ({
         });
       }),
     ];
+
+    // ⭐ Gateway filtering for Excel
+    const selectedCols = ["S. No", ...selectedColumns];
+
+    const filteredIndices = column
+      .map((col, i) => {
+        const colLower = col.toLowerCase();
+        const matchesGW = selectedGateway.some((gw) => colLower.includes(gw));
+
+        if (
+          selectedGateway.length > 0 &&
+          !matchesGW &&
+          gateways.some((g) => colLower.includes(g))
+        )
+          return -1;
+
+        return selectedCols.includes(col) ? i : -1;
+      })
+      .filter((i) => i !== -1);
+
+    const filteredData = allData.map((row, rowIndex) =>
+      filteredIndices.map((i) =>
+        i === 0 ? (rowIndex === 0 ? "S. No" : rowIndex) : row[i],
+      ),
+    );
 
     const getMaxColumnWidths = (data: any[]) => {
       const colCount = data[0].length;
@@ -238,11 +306,11 @@ export const _Table = ({
       return maxWidths;
     };
 
-    const colWidths = getMaxColumnWidths(dataArray).map((w) => ({
+    const colWidths = getMaxColumnWidths(filteredData).map((w) => ({
       wch: w + 5,
     }));
 
-    const ws = XLSX.utils.aoa_to_sheet(dataArray);
+    const ws = XLSX.utils.aoa_to_sheet(filteredData);
     ws["!cols"] = colWidths;
 
     const wb = XLSX.utils.book_new();
@@ -258,7 +326,7 @@ export const _Table = ({
     set_csv_link(url);
 
     return () => URL.revokeObjectURL(url);
-  }, [data, currentPage, itemsPerRow?.name]);
+  }, [data, currentPage, itemsPerRow?.name, selectedColumns, selectedGateway]); // ⭐ Added dependencies
 
   const renderTableHeader = () => {
     return (
@@ -268,14 +336,20 @@ export const _Table = ({
           refs.current[0] = e;
         }}
       >
-        {column.map((item: any, i: any) => (
-          <th
-            className="py-3 first:px-6 px-4 max-w-[15rem] text-left font-medium"
-            key={i}
-          >
-            {item}
-          </th>
-        ))}
+        {column.map((item: any, i: any) => {
+          // ⭐ UPDATED - Apply column filtering
+          if (shouldHideGatewayColumn(item)) return null;
+          if (item !== "S. No" && !selectedColumns.includes(item)) return null;
+
+          return (
+            <th
+              className="py-3 first:px-6 px-4 max-w-[15rem] text-left font-medium"
+              key={i}
+            >
+              {item}
+            </th>
+          );
+        })}
       </tr>
     );
   };
@@ -297,6 +371,13 @@ export const _Table = ({
             if (!item) {
               return;
             }
+
+            const colName = column[i];
+
+            // ⭐ UPDATED - Apply column filtering
+            if (shouldHideGatewayColumn(colName)) return null;
+            if (colName !== "S. No" && !selectedColumns.includes(colName))
+              return null;
 
             return (
               <td className="py-3 pl-4 pr-4 text-left " key={i}>
@@ -343,13 +424,37 @@ export const _Table = ({
         toast.error("Error while copying");
       });
   };
+
+  // ⭐ NEW FUNCTIONS FOR EXPORT MODAL
+  const toggleSelectAll = () => {
+    const colsWithoutSrNo = column.filter((c) => c !== "S. No");
+    setTempSelectedColumns(
+      tempSelectedColumns.length === colsWithoutSrNo.length
+        ? []
+        : colsWithoutSrNo,
+    );
+  };
+
+  const handleColumnToggle = (col: string) => {
+    setTempSelectedColumns((prev) =>
+      prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col],
+    );
+  };
+
+  const handleSaveColumns = () => {
+    setSelectedColumns(tempSelectedColumns);
+    setIsModalOpen(false);
+  };
+
   return (
     <div
       className={
         "flex w-full flex-col pb-0  rounded-[8px] " +
         (bgColor && bgColor ? bgColor : " bg-[#F6F8FA]") +
-        (boxPadding && boxPadding ? boxPadding : " p-5")
+        (boxPadding && boxPadding ? boxPadding : " p-5") +
+        " relative"
       }
+      style={{ zIndex: 1 }}
     >
       <div
         className={
@@ -361,17 +466,32 @@ export const _Table = ({
           <div className="w-full">
             <div className="text-[18px] flex justify-between items-center text-[#1B163B] font-semibold ml-4">
               {heading}
-              {exportBtn && (
-                <a
-                  download={typeof heading !== "string" ? csv_name : heading}
-                  href={csv_link}
-                  className="focus:outline-none outline-none"
-                >
-                  <button className=" font-normal py-2 text-sm px-6 border border-edviron_black text-[#6687FF] rounded-[4px]">
-                    Export
+              <div className="flex gap-2">
+                {/* ⭐ ADDED FILTER BUTTON */}
+                {isCustomFilter && (
+                  <button
+                    onClick={() => {
+                      setIsModalOpen(true);
+                      setTempSelectedColumns(selectedColumns);
+                    }}
+                    className="font-normal py-2 text-sm px-6 border text-[#6687FF] border-edviron_black rounded-[4px]"
+                  >
+                    <FaFilter />
                   </button>
-                </a>
-              )}
+                )}
+
+                {exportBtn && csv_link && (
+                  <a
+                    download={typeof heading !== "string" ? csv_name : heading}
+                    href={csv_link}
+                    className="focus:outline-none outline-none"
+                  >
+                    <button className="font-normal py-2 text-sm px-6 border text-[#6687FF] border-edviron_black rounded-[4px]">
+                      Export
+                    </button>
+                  </a>
+                )}
+              </div>
             </div>
             {description && description}
           </div>
@@ -433,6 +553,91 @@ export const _Table = ({
         )}
       </div>
       {copyRight && <CopyRight />}
+
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100">
+          <div className="bg-white shadow-xl rounded-lg p-6 w-[25rem] max-h-[80vh] overflow-y-auto">
+            <h2 className="text-lg font-semibold text-[#1B163B] mb-4">
+              Select Columns to Export
+            </h2>
+
+            {/* ⭐ GATEWAY FILTER UI
+            <div className="mt-4 border-t pt-3">
+              <h3 className="text-sm font-semibold text-[#1B163B] mb-2">
+                Filter by Gateway
+              </h3>
+
+              <div className="flex gap-x-4 border-b pb-3 mb-3">
+                {gateways.map((gw) => (
+                  <div key={gw} className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      className="mr-2"
+                      checked={selectedGateway.includes(gw)}
+                      onChange={() =>
+                        setSelectedGateway((prev) =>
+                          prev.includes(gw)
+                            ? prev.filter((g) => g !== gw)
+                            : [...prev, gw],
+                        )
+                      }
+                    />
+                    <label className="text-sm capitalize text-[#1B163B]">
+                      {gw}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div> */}
+
+            {/* COLUMN LIST */}
+            <div className="max-h-80 min-h-60 overflow-y-auto">
+              <div className="flex items-center mb-3">
+                <input
+                  type="checkbox"
+                  checked={
+                    tempSelectedColumns.length ===
+                    column.filter((c) => c !== "S. No").length
+                  }
+                  onChange={toggleSelectAll}
+                  className="mr-2"
+                />
+                <label className="text-sm text-[#1B163B]">Select All</label>
+              </div>
+
+              {column
+                .filter((col) => col !== "S. No")
+                .map((col, idx) => (
+                  <div key={idx} className="flex items-center mb-2">
+                    <input
+                      type="checkbox"
+                      checked={tempSelectedColumns.includes(col)}
+                      onChange={() => handleColumnToggle(col)}
+                      className="mr-2"
+                    />
+                    <label className="text-sm text-[#1B163B]">{col}</label>
+                  </div>
+                ))}
+            </div>
+
+            <div className="mt-4 flex justify-end gap-3">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-sm px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={handleSaveColumns}
+                className="font-normal py-2 text-sm px-6 border text-white bg-[#1B163B] rounded-md hover:opacity-90"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
