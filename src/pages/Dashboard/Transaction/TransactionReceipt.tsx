@@ -36,6 +36,7 @@ import Aword from "../../../assets/a_round.svg";
 import { extractRemainingPart } from "../../../utils/helper";
 import { gatewayName, payment_method_map } from "./Transaction";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { formatPaymentOrigin } from "../../../utils/formatPaymentOrigin";
 
 export function PaymentSmallCard({ title, value, icon }: any) {
   return (
@@ -623,7 +624,12 @@ function TransactionReceipt() {
               Additional details
             </p>
             <div className="p-8 border border-[#E7EDFB]  h-[80%] rounded-lg grid grid-cols-2 gap-6">
-              NA
+              <PaymentSmallCard
+                title="Payment Origin"
+                value={
+                  formatPaymentOrigin(transactionInfo?.payment_origin).label
+                }
+              />
             </div>
           </div>
           {transactionInfo?.error_details && (
