@@ -9,6 +9,38 @@ export function GatewayMode({ filter, setFilters }: any) {
         <input
           type="checkbox"
           onChange={() =>
+            handleCheckboxChange("gateway", "PHONEPE", setFilters)
+          }
+          id={"phonepe"}
+          name={"phonepe"}
+          checked={filter?.PHONEPE}
+        />
+        <label
+          htmlFor={"phonepe"}
+          className={filter?.PHONEPE ? "text-black " : " text-gray-400"}
+        >
+          PhonePe
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() => handleCheckboxChange("gateway", "HDFC", setFilters)}
+          id={"hdfc"}
+          name={"hdfc"}
+          checked={filter?.HDFC}
+        />
+        <label
+          htmlFor={"hdfc"}
+          className={filter?.HDFC ? "text-black " : " text-gray-400"}
+        >
+          HDFC
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
             handleCheckboxChange("gateway", "EDVIRON_PG", setFilters)
           }
           id={"cashfree"}
@@ -20,6 +52,42 @@ export function GatewayMode({ filter, setFilters }: any) {
           className={filter?.EDVIRON_PG ? "text-black " : " text-gray-400"}
         >
           Cashfree
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange("gateway", "EDVIRON_PAY_U", setFilters)
+          }
+          id={"payu"}
+          name={"payu"}
+          checked={filter?.EDVIRON_PAY_U}
+        />
+        <label
+          htmlFor={"payu"}
+          className={filter?.EDVIRON_PAY_U ? "text-black " : " text-gray-400"}
+        >
+          PayU
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange("gateway", "EDVIRON_CCAVENUE", setFilters)
+          }
+          id={"ccavenue"}
+          name={"ccavenue"}
+          checked={filter?.EDVIRON_CCAVENUE}
+        />
+        <label
+          htmlFor={"ccavenue"}
+          className={
+            filter?.EDVIRON_CCAVENUE ? "text-black " : " text-gray-400"
+          }
+        >
+          CCAvenue
         </label>
       </div>
       <div className="flex items-center gap-x-2">
@@ -45,6 +113,146 @@ export function GatewayMode({ filter, setFilters }: any) {
         <input
           type="checkbox"
           onChange={() =>
+            handleCheckboxChange("gateway", "PENDING", setFilters)
+          }
+          id={"pending"}
+          name={"pending"}
+          checked={filter?.PENDING}
+        />
+        <label
+          htmlFor={"pending"}
+          className={filter?.PENDING ? "text-black " : " text-gray-400"}
+        >
+          Pending
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange("gateway", "EXPIRED", setFilters)
+          }
+          id={"expired"}
+          name={"expired"}
+          checked={filter?.EXPIRED}
+        />
+        <label
+          htmlFor={"expired"}
+          className={filter?.EXPIRED ? "text-black " : " text-gray-400"}
+        >
+          Expired
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange("gateway", "EDVIRON_HDFC_RAZORPAY", setFilters)
+          }
+          id={"hdfc-razorpay"}
+          name={"hdfc-razorpay"}
+          checked={filter?.EDVIRON_HDFC_RAZORPAY}
+        />
+        <label
+          htmlFor={"hdfc-razorpay"}
+          className={
+            filter?.EDVIRON_HDFC_RAZORPAY ? "text-black " : " text-gray-400"
+          }
+        >
+          HDFC Razorpay
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange("gateway", "SMART_GATEWAY", setFilters)
+          }
+          id={"smart-gateway"}
+          name={"smart-gateway"}
+          checked={filter?.SMART_GATEWAY}
+        />
+        <label
+          htmlFor={"smart-gateway"}
+          className={filter?.SMART_GATEWAY ? "text-black " : " text-gray-400"}
+        >
+          Smart Gateway
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange("gateway", "PAYTM_POS", setFilters)
+          }
+          id={"paytm-pos"}
+          name={"paytm-pos"}
+          checked={filter?.PAYTM_POS}
+        />
+        <label
+          htmlFor={"paytm-pos"}
+          className={filter?.PAYTM_POS ? "text-black " : " text-gray-400"}
+        >
+          Paytm POS
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange("gateway", "MOSAMBEE_POS", setFilters)
+          }
+          id={"mosambee-pos"}
+          name={"mosambee-pos"}
+          checked={filter?.MOSAMBEE_POS}
+        />
+        <label
+          htmlFor={"mosambee-pos"}
+          className={filter?.MOSAMBEE_POS ? "text-black " : " text-gray-400"}
+        >
+          Mosambee POS
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange("gateway", "EDVIRON_NTTDATA", setFilters)
+          }
+          id={"nttdata"}
+          name={"nttdata"}
+          checked={filter?.EDVIRON_NTTDATA}
+        />
+        <label
+          htmlFor={"nttdata"}
+          className={filter?.EDVIRON_NTTDATA ? "text-black " : " text-gray-400"}
+        >
+          NTT Data
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange("gateway", "EDVIRON_WORLDLINE", setFilters)
+          }
+          id={"worldline"}
+          name={"worldline"}
+          checked={filter?.EDVIRON_WORLDLINE}
+        />
+        <label
+          htmlFor={"worldline"}
+          className={
+            filter?.EDVIRON_WORLDLINE ? "text-black " : " text-gray-400"
+          }
+        >
+          Worldline
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
             handleCheckboxChange("gateway", "EDVIRON_RAZORPAY", setFilters)
           }
           id={"razorpay"}
@@ -58,6 +266,63 @@ export function GatewayMode({ filter, setFilters }: any) {
           }
         >
           RazorPay
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange(
+              "gateway",
+              "EDVIRON_RAZORPAY_SEAMLESS",
+              setFilters,
+            )
+          }
+          id={"razorpay-seamless"}
+          name={"razorpay-seamless"}
+          checked={filter?.EDVIRON_RAZORPAY_SEAMLESS}
+        />
+        <label
+          htmlFor={"razorpay-seamless"}
+          className={
+            filter?.EDVIRON_RAZORPAY_SEAMLESS ? "text-black " : " text-gray-400"
+          }
+        >
+          Razorpay Seamless
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange("gateway", "EDVIRON_GATEPAY", setFilters)
+          }
+          id={"gatepay"}
+          name={"gatepay"}
+          checked={filter?.EDVIRON_GATEPAY}
+        />
+        <label
+          htmlFor={"gatepay"}
+          className={filter?.EDVIRON_GATEPAY ? "text-black " : " text-gray-400"}
+        >
+          Gatepay
+        </label>
+      </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange("gateway", "EDVIRON_PAY", setFilters)
+          }
+          id={"edviron-pay"}
+          name={"edviron-pay"}
+          checked={filter?.EDVIRON_PAY}
+        />
+        <label
+          htmlFor={"edviron-pay"}
+          className={filter?.EDVIRON_PAY ? "text-black " : " text-gray-400"}
+        >
+          Edviron Pay
         </label>
       </div>
     </div>
