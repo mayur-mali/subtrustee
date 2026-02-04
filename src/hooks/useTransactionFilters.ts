@@ -13,6 +13,7 @@ export function useTransactionFilters() {
     status: searchParams.get("status") || "",
     page: searchParams.get("page") || 1,
     limit: searchParams.get("limit") || 10,
+    product: searchParams.get("product") || "",
   };
 
   function setUrlFilters(newFilters: any) {

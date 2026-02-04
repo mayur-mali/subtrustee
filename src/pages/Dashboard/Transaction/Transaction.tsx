@@ -188,6 +188,23 @@ export default function Transaction() {
         ? true
         : false,
     },
+    product: {
+      NORMAL: urlFilters.product.split(",").includes("NORMAL") ? true : false,
+      COLLECT_NOW: urlFilters.product.split(",").includes("COLLECT_NOW")
+        ? true
+        : false,
+      FORM_PAYMENT: urlFilters.product.split(",").includes("FORM_PAYMENT")
+        ? true
+        : false,
+      CANTEEN_TRANSACTION: urlFilters.product
+        .split(",")
+        .includes("CANTEEN_TRANSACTION")
+        ? true
+        : false,
+      AUTO_DEBIT: urlFilters.product.split(",").includes("AUTO_DEBIT")
+        ? true
+        : false,
+    },
   });
 
   const [transactionData, setTransactionData] = useState<any>([]);
@@ -264,6 +281,7 @@ export default function Transaction() {
     payment_modes,
     isQrCode,
     gateway,
+    products,
   }: {
     start_date?: any;
     end_date?: any;
@@ -275,6 +293,7 @@ export default function Transaction() {
     payment_modes?: string[] | null;
     isQrCode?: boolean;
     gateway?: string[] | null;
+    products?: string[] | null;
   }) => {
     setRefetchLoading(true);
 
@@ -292,6 +311,7 @@ export default function Transaction() {
         payment_modes: isQrCode ? null : payment_modes,
         isQRCode: isQrCode,
         gateway,
+        products,
       });
       if (res) {
         setRefetchLoading(false);
@@ -372,6 +392,7 @@ export default function Transaction() {
           : null,
       isQrCode: getPaymentMode(filters.paymentMode, type)?.includes("qr"),
       gateway: getPaymentMode(filters.gateway, type),
+      products: getPaymentMode(filters.product, type),
     });
 
     setUrlFilters({
@@ -379,7 +400,7 @@ export default function Transaction() {
       page: currentPage,
       limit: itemsPerRow.name,
     });
-  }, [currentPage, itemsPerRow]);
+  }, [currentPage, itemsPerRow, urlFilters.start_date, urlFilters.end_date]);
 
   useEffect(() => {
     if (
@@ -426,6 +447,7 @@ export default function Transaction() {
                           refetchDataFetch({
                             start_date: startDate,
                             end_date: endDate,
+                            products: getPaymentMode(filters.product, type),
                           });
                         }}
                         className="text-[#1E1B59] cursor-pointer text-md mr-2 shrink-0"
@@ -544,6 +566,7 @@ export default function Transaction() {
                                   type,
                                 )?.includes("qr"),
                                 gateway: getPaymentMode(filters.gateway, type),
+                                products: getPaymentMode(filters.product, type),
                               });
                             }
                           }}
@@ -630,6 +653,7 @@ export default function Transaction() {
                               type,
                             )?.includes("qr"),
                             gateway: getPaymentMode(filters.gateway, type),
+                            products: getPaymentMode(filters.product, type),
                           });
                         }}
                         placeholder={
@@ -678,6 +702,9 @@ export default function Transaction() {
                         gateway={Object.keys(filters.gateway).filter(
                           (key) => filters.gateway[key],
                         )}
+                        product={Object.keys(filters.product).filter(
+                          (key) => filters.product[key],
+                        )}
                         setType={setType}
                         onCancel={() => {
                           setUrlFilters({
@@ -686,6 +713,7 @@ export default function Transaction() {
                             payment_modes: null,
 
                             gateway: null,
+                            product: null,
                           });
                           refetchDataFetch({
                             start_date: isDateRangeIsSelected
@@ -704,6 +732,7 @@ export default function Transaction() {
                               type,
                             )?.includes("qr"),
                             gateway: getPaymentMode(filters.gateway, type),
+                            products: getPaymentMode(filters.product, type),
                           });
                         }}
                         onApply={() => {
@@ -718,6 +747,7 @@ export default function Transaction() {
                             ),
 
                             gateway: getPaymentMode(filters.gateway, type),
+                            product: getPaymentMode(filters.product, type),
                           });
                           refetchDataFetch({
                             start_date: isDateRangeIsSelected
@@ -740,6 +770,7 @@ export default function Transaction() {
                               type,
                             )?.includes("qr"),
                             gateway: getPaymentMode(filters.gateway, type),
+                            products: getPaymentMode(filters.product, type),
                           });
                         }}
                         filters={filters}
@@ -765,7 +796,8 @@ export default function Transaction() {
                 <div className="flex items-center">
                   {(type !== "" ||
                     urlFilters.payment_modes !== "" ||
-                    urlFilters.gateway !== "") && (
+                    urlFilters.gateway !== "" ||
+                    urlFilters.product !== "") && (
                     <div className=" text-sm m-2  max-w-fit ">
                       <button
                         onClick={async () => {
@@ -776,6 +808,7 @@ export default function Transaction() {
                             gateway: null,
                             page: 1,
                             limit: itemsPerRow.name,
+                            product: null,
                           });
                           setCurrentPage(1);
 
@@ -788,6 +821,7 @@ export default function Transaction() {
                               : endDate,
                             status: status?.toUpperCase(),
                             school_id: schoolId === "" ? null : schoolId,
+                            products: null,
                           });
 
                           setFilters({
@@ -806,6 +840,13 @@ export default function Transaction() {
                             gateway: {
                               EDVIRON_PG: false,
                               EDVIRON_EASEBUZZ: false,
+                            },
+                            product: {
+                              NORMAL: false,
+                              COLLECT_NOW: false,
+                              FORM_PAYMENT: false,
+                              CANTEEN_TRANSACTION: false,
+                              AUTO_DEBIT: false,
                             },
                           });
                         }}
@@ -850,6 +891,7 @@ export default function Transaction() {
                               type,
                             )?.includes("qr"),
                             gateway: getPaymentMode(filters.gateway, type),
+                            products: getPaymentMode(filters.product, type),
                           });
                           setDateRange("");
                           setIsDateRangeIsSelected(false);
@@ -900,6 +942,7 @@ export default function Transaction() {
                               type,
                             )?.includes("qr"),
                             gateway: getPaymentMode(filters.gateway, type),
+                            products: getPaymentMode(filters.product, type),
                           });
                           setSelectSchool("");
                           setSchoolId(null);
@@ -935,6 +978,7 @@ export default function Transaction() {
                               type,
                             )?.includes("qr"),
                             gateway: getPaymentMode(filters.gateway, type),
+                            products: getPaymentMode(filters.product, type),
                           });
                           setStatus(null);
                           setUrlFilters({

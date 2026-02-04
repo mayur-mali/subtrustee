@@ -5,7 +5,7 @@ import { IoIosArrowForward } from "react-icons/io";
 import Mode, { GatewayMode } from "./AllFilter/Mode";
 import Institute from "./AllFilter/Institute";
 import Vendor from "./AllFilter/Vendor";
-
+import Product from "./AllFilter/Product";
 function MixFilter({
   setSelectSchool,
   setSchoolId,
@@ -18,6 +18,7 @@ function MixFilter({
   setFilters,
   paymentModes,
   gateway,
+  product,
 }: any) {
   const [openFilter, setOpenFilter] = useState(false);
   const [activTab, setActiveTab] = useState(1);
@@ -100,6 +101,18 @@ function MixFilter({
                 <span>Vendor</span>
                 <IoIosArrowForward className="w-4 h-4 ml-auto block" />
               </button>
+              <button
+                onClick={() => {
+                  setActiveTab(5);
+                }}
+                className={
+                  "flex items-center w-full   rounded-full px-2 py-1 " +
+                  (activTab === 5 ? " bg-[#DADBFC]" : " ")
+                }
+              >
+                <span>Product</span>
+                <IoIosArrowForward className="w-4 h-4 ml-auto block" />
+              </button>
             </div>
             <div className="flex flex-col w-full">
               <div className="flex-1">
@@ -129,6 +142,9 @@ function MixFilter({
                     schoolId={[]}
                   />
                 )}
+                {activTab === 5 && (
+                  <Product filter={filters?.product} setFilters={setFilters} />
+                )}
               </div>
               <div className="flex justify-end items-center my-2">
                 <button
@@ -145,7 +161,11 @@ function MixFilter({
 
                 <button
                   onClick={() => {
-                    if (!paymentModes.length && !gateway.length) {
+                    if (
+                      !paymentModes.length &&
+                      !gateway.length &&
+                      !product.length
+                    ) {
                       onApply();
                     } else {
                       setType("Custom Filter");
