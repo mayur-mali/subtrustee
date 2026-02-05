@@ -135,8 +135,6 @@ function VendorTransaction() {
         .includes("EDVIRON_EASEBUZZ")
         ? true
         : false,
-      PENDING: urlFilters.gateway.split(",").includes("PENDING") ? true : false,
-      EXPIRED: urlFilters.gateway.split(",").includes("EXPIRED") ? true : false,
       EDVIRON_HDFC_RAZORPAY: urlFilters.gateway
         .split(",")
         .includes("EDVIRON_HDFC_RAZORPAY")

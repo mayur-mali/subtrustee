@@ -113,40 +113,6 @@ export function GatewayMode({ filter, setFilters }: any) {
         <input
           type="checkbox"
           onChange={() =>
-            handleCheckboxChange("gateway", "PENDING", setFilters)
-          }
-          id={"pending"}
-          name={"pending"}
-          checked={filter?.PENDING}
-        />
-        <label
-          htmlFor={"pending"}
-          className={filter?.PENDING ? "text-black " : " text-gray-400"}
-        >
-          Pending
-        </label>
-      </div>
-      <div className="flex items-center gap-x-2">
-        <input
-          type="checkbox"
-          onChange={() =>
-            handleCheckboxChange("gateway", "EXPIRED", setFilters)
-          }
-          id={"expired"}
-          name={"expired"}
-          checked={filter?.EXPIRED}
-        />
-        <label
-          htmlFor={"expired"}
-          className={filter?.EXPIRED ? "text-black " : " text-gray-400"}
-        >
-          Expired
-        </label>
-      </div>
-      <div className="flex items-center gap-x-2">
-        <input
-          type="checkbox"
-          onChange={() =>
             handleCheckboxChange("gateway", "EDVIRON_HDFC_RAZORPAY", setFilters)
           }
           id={"hdfc-razorpay"}
