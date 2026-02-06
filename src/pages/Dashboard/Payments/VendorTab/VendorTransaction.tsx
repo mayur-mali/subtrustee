@@ -867,6 +867,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -887,6 +891,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -899,6 +907,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -911,6 +923,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -925,6 +941,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -935,6 +955,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -946,6 +970,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -960,6 +988,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -986,6 +1018,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -1007,6 +1043,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -1028,6 +1068,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
