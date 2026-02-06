@@ -44,11 +44,24 @@ export const payment_method_map: any = {
 };
 
 export const gatewayName = {
-  EDVIRON_PG: "Cashfree",
-  EDVIRON_EASEBUZZ: "Easebuzz",
-  EDVIRON_RAZORPAY: "Razorpay",
-  EDVIRON_PAY_U: "PayU",
-  PENDING: "Pending",
+  PHONEPE: "PHONEPE",
+  HDFC: "HDFC",
+  EDVIRON_PG: "CASHFREE",
+  EDVIRON_PAY_U: "PAY U",
+  EDVIRON_CCAVENUE: "CCAVENUE",
+  EDVIRON_EASEBUZZ: "EASEBUZZ",
+  PENDING: "PENDING",
+  EXPIRED: "EXPIRED",
+  EDVIRON_HDFC_RAZORPAY: "HDFC RAZORPAY",
+  SMART_GATEWAY: "SMART GATEWAY",
+  PAYTM_POS: "PAYTM POS",
+  MOSAMBEE_POS: "MOSAMBEE POS",
+  EDVIRON_NTTDATA: "NTT DATA",
+  EDVIRON_WORLDLINE: "WORLDLINE",
+  EDVIRON_RAZORPAY: "RAZORPAY",
+  EDVIRON_RAZORPAY_SEAMLESS: "RAZORPAY SEAMLESS",
+  EDVIRON_GATEPAY: "GATEPAY",
+  EDVIRON_PAY: "EDVIRON PAY",
 };
 
 export const handleCheckboxChange = (
@@ -174,7 +187,17 @@ export default function Transaction() {
         : false,
     },
     gateway: {
+      PHONEPE: urlFilters.gateway.split(",").includes("PHONEPE") ? true : false,
+      HDFC: urlFilters.gateway.split(",").includes("HDFC") ? true : false,
       EDVIRON_PG: urlFilters.gateway.split(",").includes("EDVIRON_PG")
+        ? true
+        : false,
+      EDVIRON_PAY_U: urlFilters.gateway.split(",").includes("EDVIRON_PAY_U")
+        ? true
+        : false,
+      EDVIRON_CCAVENUE: urlFilters.gateway
+        .split(",")
+        .includes("EDVIRON_CCAVENUE")
         ? true
         : false,
       EDVIRON_EASEBUZZ: urlFilters.gateway
@@ -182,9 +205,42 @@ export default function Transaction() {
         .includes("EDVIRON_EASEBUZZ")
         ? true
         : false,
+      EDVIRON_HDFC_RAZORPAY: urlFilters.gateway
+        .split(",")
+        .includes("EDVIRON_HDFC_RAZORPAY")
+        ? true
+        : false,
+      SMART_GATEWAY: urlFilters.gateway.split(",").includes("SMART_GATEWAY")
+        ? true
+        : false,
+      PAYTM_POS: urlFilters.gateway.split(",").includes("PAYTM_POS")
+        ? true
+        : false,
+      MOSAMBEE_POS: urlFilters.gateway.split(",").includes("MOSAMBEE_POS")
+        ? true
+        : false,
+      EDVIRON_NTTDATA: urlFilters.gateway.split(",").includes("EDVIRON_NTTDATA")
+        ? true
+        : false,
+      EDVIRON_WORLDLINE: urlFilters.gateway
+        .split(",")
+        .includes("EDVIRON_WORLDLINE")
+        ? true
+        : false,
       EDVIRON_RAZORPAY: urlFilters.gateway
         .split(",")
         .includes("EDVIRON_RAZORPAY")
+        ? true
+        : false,
+      EDVIRON_RAZORPAY_SEAMLESS: urlFilters.gateway
+        .split(",")
+        .includes("EDVIRON_RAZORPAY_SEAMLESS")
+        ? true
+        : false,
+      EDVIRON_GATEPAY: urlFilters.gateway.split(",").includes("EDVIRON_GATEPAY")
+        ? true
+        : false,
+      EDVIRON_PAY: urlFilters.gateway.split(",").includes("EDVIRON_PAY")
         ? true
         : false,
     },

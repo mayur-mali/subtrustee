@@ -117,7 +117,17 @@ function VendorTransaction() {
         : false,
     },
     gateway: {
+      PHONEPE: urlFilters.gateway.split(",").includes("PHONEPE") ? true : false,
+      HDFC: urlFilters.gateway.split(",").includes("HDFC") ? true : false,
       EDVIRON_PG: urlFilters.gateway.split(",").includes("EDVIRON_PG")
+        ? true
+        : false,
+      EDVIRON_PAY_U: urlFilters.gateway.split(",").includes("EDVIRON_PAY_U")
+        ? true
+        : false,
+      EDVIRON_CCAVENUE: urlFilters.gateway
+        .split(",")
+        .includes("EDVIRON_CCAVENUE")
         ? true
         : false,
       EDVIRON_EASEBUZZ: urlFilters.gateway
@@ -125,9 +135,42 @@ function VendorTransaction() {
         .includes("EDVIRON_EASEBUZZ")
         ? true
         : false,
+      EDVIRON_HDFC_RAZORPAY: urlFilters.gateway
+        .split(",")
+        .includes("EDVIRON_HDFC_RAZORPAY")
+        ? true
+        : false,
+      SMART_GATEWAY: urlFilters.gateway.split(",").includes("SMART_GATEWAY")
+        ? true
+        : false,
+      PAYTM_POS: urlFilters.gateway.split(",").includes("PAYTM_POS")
+        ? true
+        : false,
+      MOSAMBEE_POS: urlFilters.gateway.split(",").includes("MOSAMBEE_POS")
+        ? true
+        : false,
+      EDVIRON_NTTDATA: urlFilters.gateway.split(",").includes("EDVIRON_NTTDATA")
+        ? true
+        : false,
+      EDVIRON_WORLDLINE: urlFilters.gateway
+        .split(",")
+        .includes("EDVIRON_WORLDLINE")
+        ? true
+        : false,
       EDVIRON_RAZORPAY: urlFilters.gateway
         .split(",")
         .includes("EDVIRON_RAZORPAY")
+        ? true
+        : false,
+      EDVIRON_RAZORPAY_SEAMLESS: urlFilters.gateway
+        .split(",")
+        .includes("EDVIRON_RAZORPAY_SEAMLESS")
+        ? true
+        : false,
+      EDVIRON_GATEPAY: urlFilters.gateway.split(",").includes("EDVIRON_GATEPAY")
+        ? true
+        : false,
+      EDVIRON_PAY: urlFilters.gateway.split(",").includes("EDVIRON_PAY")
         ? true
         : false,
     },
@@ -824,6 +867,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -844,6 +891,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -856,6 +907,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -868,6 +923,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -882,6 +941,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -892,6 +955,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -903,6 +970,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -917,6 +988,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -943,6 +1018,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -964,6 +1043,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >
@@ -985,6 +1068,10 @@ function VendorTransaction() {
                     collect_id: transaction?.collect_id,
                     amount: transaction?.amount,
                     schoolName: transaction?.name,
+                    gateway:
+                      transaction.gateway === "EDVIRON_PG"
+                        ? "Cashfree"
+                        : transaction.gateway,
                   }}
                   to={`/payments/vendor-transaction-receipt/`}
                 >

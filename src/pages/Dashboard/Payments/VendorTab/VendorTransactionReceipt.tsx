@@ -36,6 +36,7 @@ import { getStartAndEndOfMonth } from "../../../../utils/getStartAndEndOfMonth";
 // import Aword from "../../../assets/a_round.svg";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { getBankName } from "../../../../utils/getBankName";
+import { gatewayName } from "../../Transaction/Transaction";
 export function PaymentSmallCard({ title, value, icon }: any) {
   return (
     <div className=" flex text-xs font-normal space-y-2 flex-col">
@@ -419,11 +420,9 @@ function VendorTransactionReceipt() {
             <PaymentSmallCard
               title="Payment Gateway"
               value={
-                transaction?.gateway === "EDVIRON_PG"
-                  ? "CASHFREE"
-                  : transaction?.gateway === "EDVIRON_EASEBUZZ"
-                    ? "EASEBUZZ"
-                    : "NA"
+                transaction?.gateway
+                  ? gatewayName[transaction.gateway as keyof typeof gatewayName]
+                  : "NA"
               }
             />
             <PaymentSmallCard title="Processing fee" value="NA" />
