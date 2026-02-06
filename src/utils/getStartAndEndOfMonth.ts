@@ -74,12 +74,8 @@ export function getDateRange(month: number, year: number) {
   const firstDate = new Date(year, month - 1, 1);
   const lastDate = new Date(year, month, 0);
 
-  const startDate = `${String(firstDate.getDate()).padStart(2, "0")} ${
-    monthNames[firstDate.getMonth()]
-  } ${firstDate.getFullYear()}`;
-  const endDate = `${String(lastDate.getDate()).padStart(2, "0")} ${
-    monthNames[lastDate.getMonth()]
-  } ${lastDate.getFullYear()}`;
+  const startDate = `${String(firstDate.getDate()).padStart(2, "0")} ${monthNames[firstDate.getMonth()]} ${firstDate.getFullYear()}`;
+  const endDate = `${String(lastDate.getDate()).padStart(2, "0")} ${monthNames[lastDate.getMonth()]} ${lastDate.getFullYear()}`;
 
   return `${startDate} - ${endDate}`;
 }

@@ -316,6 +316,24 @@ function Mode({ setSelectedItem, selectedItems, filter, setFilters }: any) {
           POS QR Code
         </label>
       </div>
+      <div className="flex items-center gap-x-2">
+        <input
+          type="checkbox"
+          onChange={() =>
+            handleCheckboxChange("paymentMode", "cash", setFilters)
+          }
+          id={"cash"}
+          name={"cash"}
+          disabled={filter.qr}
+          checked={filter.cash}
+        />
+        <label
+          htmlFor={"cash"}
+          className={filter.cash ? "text-black " : " text-gray-400"}
+        >
+          Cash
+        </label>
+      </div>
 
       <p className="text-[10px] text-red-500 ">
         *You cannot select multiple payment modes while selecting Dynamic QR

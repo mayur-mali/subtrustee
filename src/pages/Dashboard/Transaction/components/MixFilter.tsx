@@ -9,8 +9,6 @@ import Vendor from "./AllFilter/Vendor";
 function MixFilter({
   setSelectSchool,
   setSchoolId,
-  setSelectVendor,
-  setVendorId,
   setType,
   onCancel,
   onApply,
@@ -21,6 +19,10 @@ function MixFilter({
 }: any) {
   const [openFilter, setOpenFilter] = useState(false);
   const [activTab, setActiveTab] = useState(1);
+  const [selectedVendor, setSelectedVendor] = useState<string>("");
+  const [selectedVendorId, setSelectedVendorId] = useState<string>(
+    filters?.vendor_id || "",
+  );
 
   const divRef = useRef<HTMLDivElement>(null);
 
@@ -29,6 +31,12 @@ function MixFilter({
       setOpenFilter(false);
     }
   };
+
+  useEffect(() => {
+    if (filters?.vendor_id && !selectedVendorId) {
+      setSelectedVendorId(filters.vendor_id);
+    }
+  }, [filters?.vendor_id]);
 
   useEffect(() => {
     document.addEventListener("mousedown", handleOutsideClick);
@@ -123,8 +131,9 @@ function MixFilter({
                 )}
                 {activTab === 4 && (
                   <Vendor
-                    setSelectVendor={setSelectVendor}
-                    setVendorId={setVendorId}
+                    setSelectSchool={setSelectedVendor}
+                    setSchoolId={setSelectedVendorId}
+                    setVendorId={setSelectedVendorId}
                     menuIsOpen={activTab === 4}
                     schoolId={[]}
                   />
@@ -137,6 +146,8 @@ function MixFilter({
                     setType("");
                     setActiveTab(1);
                     setOpenFilter(false);
+                    setSelectedVendor("");
+                    setSelectedVendorId("");
                   }}
                   className=" pointer border mr-4 px-4 py-1 rounded-md text-sm text-[#6687FF] border-edviron_black"
                 >

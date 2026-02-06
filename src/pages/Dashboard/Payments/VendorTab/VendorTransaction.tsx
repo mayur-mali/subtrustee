@@ -47,7 +47,8 @@ function VendorTransaction() {
   const [vendorId, setVendorId] = useState<string | null>(null);
   const [selectVendor, setSelectVendor] = useState<string | null>(null);
   const [refetching, setRefetching] = useState(false);
-  const { startDate, endDate } = getStartAndEndOfMonth();
+  const { currentDate: startDate, currentDate: endDate } =
+    getStartAndEndOfMonth();
   const [urlFilters, setUrlFilters] = useTransactionFilters();
   const [searchFilter, setSearchFilter] = useState<any>("");
   const {

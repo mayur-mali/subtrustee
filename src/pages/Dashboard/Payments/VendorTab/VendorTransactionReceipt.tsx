@@ -36,6 +36,8 @@ import { getStartAndEndOfMonth } from "../../../../utils/getStartAndEndOfMonth";
 // import Aword from "../../../assets/a_round.svg";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { getBankName } from "../../../../utils/getBankName";
+import { formatPaymentOrigin } from "../../../../utils/formatPaymentOrigin";
+import { extractRemainingPart } from "../../../../utils/helper";
 export function PaymentSmallCard({ title, value, icon }: any) {
   return (
     <div className=" flex text-xs font-normal space-y-2 flex-col">
@@ -131,7 +133,7 @@ function VendorTransactionReceipt() {
   if (transaction === null) {
     return (
       <div className="h-screen w-full flex justify-center items-center">
-        <AiOutlineLoading3Quarters className="text-2xl animate-spin" />;
+        <AiOutlineLoading3Quarters className="text-2xl animate-spin" />
       </div>
     );
   }
@@ -450,6 +452,56 @@ function VendorTransactionReceipt() {
                   : "NA"
               }
             />
+            <PaymentSmallCard
+              title="UPI ID"
+              value={(() => {
+                try {
+                  const details = transaction?.details
+                    ? JSON.parse(transaction.details)
+                    : null;
+
+                  return details?.upi?.upi_id || "NA";
+                } catch {
+                  return "NA";
+                }
+              })()}
+            />
+            <PaymentSmallCard
+              title="Reason"
+              value={
+                transaction?.reason
+                  ? extractRemainingPart(transaction.reason)
+                  : "NA"
+              }
+            />
+            <PaymentSmallCard
+              title="Payment Id"
+              value={transaction?.payment_id ? transaction?.payment_id : "N/A"}
+            />
+            <>
+              <PaymentSmallCard
+                title="Settlement UTR Number"
+                value={transaction?.utr_number || "N/A"}
+              />
+              <PaymentSmallCard
+                title="Settlement Date"
+                value={
+                  transaction?.settlement_transfer_time
+                    ? new Date(
+                        transaction.settlement_transfer_time,
+                      ).toLocaleString("en-IN", {
+                        year: "numeric",
+                        month: "2-digit",
+                        day: "2-digit",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                        hour12: true,
+                      })
+                    : "N/A"
+                }
+              />
+            </>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-x-8">
@@ -486,8 +538,20 @@ function VendorTransactionReceipt() {
             <p className=" my-4 text-base text-[#767676] font-medium">
               Additional details
             </p>
-            <div className="p-8 border border-[#E7EDFB] h-[80%] rounded-lg grid grid-cols-2 gap-6">
-              NA
+            <div className="p-8 border border-[#E7EDFB]  h-[80%] rounded-lg grid grid-cols-2 gap-6">
+              <PaymentSmallCard
+                title="Payment Origin"
+                value={formatPaymentOrigin(transaction?.payment_origin).label}
+              />
+              {transaction?.additional_data &&
+                Object.entries(JSON.parse(transaction.additional_data)).map(
+                  ([key, value]) => (
+                    <PaymentSmallCard
+                      title={key.replace(/_/g, " ")}
+                      value={String(value)}
+                    />
+                  ),
+                )}
             </div>
           </div>
           {/* {transactionRefundsRequest?.getRefundRequest?.length > 0 && (

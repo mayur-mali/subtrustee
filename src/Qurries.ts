@@ -288,6 +288,7 @@ export const GET_SINGLE_SUBTRUSTEE_TRANSACTION_INFO = gql`
       utr_number
       settlement_transfer_time
       payment_origin
+      additional_data
     }
   }
 `;
@@ -414,6 +415,24 @@ export const GET_SINGLE_VENDOR_TRANSACTION = gql`
       payment_detail
       details
       payment_origin
+      reason
+      payment_id
+      utr_number
+      settlement_transfer_time
+      isAutoRefund
+      isQRPayment
+      vendors_info {
+        vendor_id
+        percentage
+        amount
+        name
+        edv_vendor_id
+      }
+      error_details {
+        error_description
+        error_reason
+        error_source
+      }
     }
   }
 `;
@@ -500,3 +519,22 @@ export const GET_BATCH_TRANSACTION = gql`
     }
   }
 `;
+
+// export const GET_SUBTRUSTEE_TRANSACTION_REFUND = gql`
+//   query GetSubtrusteeRefundRequest($order_id: String!) {
+//     getSubtrusteeRefundRequest(order_id: $order_id) {
+//       _id
+//       trustee_id
+//       createdAt
+//       updatedAt
+//       school_id
+//       order_id
+//       status
+//       refund_amount
+//       order_amount
+//       transaction_amount
+//       custom_id
+//       reason
+//     }
+//   }
+// `;

@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import { GET_TRANSACTIONS } from "../../../Qurries";
+import { GET_INSTITUTES, GET_TRANSACTIONS } from "../../../Qurries";
 import {
   _Table,
   Pagination,
@@ -24,7 +24,9 @@ import { getPaymentMode } from "../../../utils/getPaymentMode";
 import MixFilter from "./components/MixFilter";
 import { IoIosArrowDown } from "react-icons/io";
 import Aword from "../../../assets/a_round.svg";
-
+import { LiaRupeeSignSolid } from "react-icons/lia";
+import axios from "axios";
+import { useAuth } from "../../../context/AuthContext";
 export const payment_method_map: any = {
   credit_card: "Credit Card",
   debit_card: "Debit Card",
@@ -41,6 +43,9 @@ export const payment_method_map: any = {
   pos_credit_card: "POS Credit Card",
   pos_debit_card: "POS Debit Card",
   pos_qr: "POS QR",
+  cash: "Cash",
+  cheque: "Cheque",
+  demand_draft: "Demand Draft",
 };
 
 export const gatewayName = {
@@ -49,6 +54,7 @@ export const gatewayName = {
   EDVIRON_RAZORPAY: "Razorpay",
   EDVIRON_PAY_U: "PayU",
   PENDING: "Pending",
+  EDVIRON_PAY: "Pay",
 };
 
 export const handleCheckboxChange = (
@@ -89,6 +95,7 @@ export const CustomDropdownIndicator = () => {
 // }
 
 export default function Transaction() {
+  const { user } = useAuth();
   const [urlFilters, setUrlFilters] = useTransactionFilters();
   const [currentPage, setCurrentPage] = useState<any>(
     Number(urlFilters.page) || 1,
@@ -192,7 +199,8 @@ export default function Transaction() {
 
   const [transactionData, setTransactionData] = useState<any>([]);
 
-  const { startDate, endDate } = getStartAndEndOfMonth();
+  const { currentDate: startDate, currentDate: endDate } =
+    getStartAndEndOfMonth();
   const {
     data: transactionReport,
     loading: transactionReportLoading,
@@ -252,6 +260,10 @@ export default function Transaction() {
       setTransactionData(formattedData);
     }
   }, [transactionReport]);
+  const { data, loading } = useQuery(GET_INSTITUTES, {
+    variables: { page: 1, limit: 1000, searchQuery: "" },
+    fetchPolicy: "network-only",
+  });
 
   const refetchDataFetch = async ({
     start_date,
@@ -342,6 +354,74 @@ export default function Transaction() {
     }
   };
 
+  const GET_TRANSACTION_AMOUNT = async (
+    start_date: String,
+    end_date: String,
+    trustee_id: String,
+    school_id: [String],
+    status: String,
+    mode?: string[] | null,
+    isQrCode?: boolean,
+    gateway?: string[] | null,
+  ) => {
+    const token = localStorage.getItem("token");
+    axios
+      .post(
+        `${import.meta.env.VITE_PAYMENT_BACKEND_URL}/edviron-pg/get-transaction-report-batched`,
+        {
+          trustee_id: trustee_id,
+          school_id: school_id,
+          start_date: start_date,
+          end_date: end_date,
+          status: status,
+          mode: isQrCode ? null : mode,
+          isQRPayment: isQrCode,
+          gateway,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      )
+      .then((response) => {
+        setTransactionAmountDetails(response.data.transactions[0]);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  useEffect(() => {
+    if (!data?.getSubTrusteeSchools?.schools?.length) return;
+
+    const schoolIds = data.getSubTrusteeSchools.schools.map((e) => e.school_id);
+    if (!user?.trustee_id) return;
+    GET_TRANSACTION_AMOUNT(
+      urlFilters.start_date ? urlFilters.start_date : startDate,
+      urlFilters.end_date ? urlFilters.end_date : endDate,
+
+      user?.trustee_id || "",
+      selectSchool !== "" ? schoolIds : "",
+      status ? status?.toUpperCase() : "SUCCESS",
+      getPaymentMode(filters.paymentMode, type),
+      getPaymentMode(filters.paymentMode, type)?.includes("qr"),
+      getPaymentMode(filters.gateway, type),
+    );
+  }, [
+    type,
+    status,
+    selectSchool,
+    searchFilter,
+    itemsPerRow,
+    selectedRange,
+    filters,
+    urlFilters.end_date,
+    urlFilters.start_date,
+    data?.getSubTrusteeSchools?.schools,
+  ]);
+
   const handlePageChange = (page: any) => {
     setCurrentPage(page);
     setUrlFilters({
@@ -394,6 +474,71 @@ export default function Transaction() {
 
   return (
     <div>
+      <h2 className="text-[#1B163B] text-[28px] ml-4 font-[600]">
+        Transactions
+      </h2>
+      <div className="w-full  grid xl:grid-cols-2 gap-4 mb-2">
+        <div className="xl:col-span-1 col-span-2">
+          <h2 className="text-[#1B163B] xl:text-[24px] text-lg ml-2  font-[400]">
+            Transactions Amount
+          </h2>
+
+          <div className="text-[#229635] font-[400] flex items-center ">
+            {/* {transactionReportLoading || refetchLoading ? (
+              <img
+                src={PriceLoading}
+                className=" w-10 h-10 animate-spin"
+                alt="loading"
+              />
+            ) : (
+              <>
+                
+              </>
+            )} */}
+
+            <span className="xl:text-[44px] text-3xl flex items-center">
+              <LiaRupeeSignSolid />{" "}
+              {transactionAmountDetails !== null &&
+              (status?.toLowerCase() === "success" || status === null) ? (
+                <span>
+                  {transactionAmountDetails?.totalTransactionAmount.toLocaleString(
+                    "hi-in",
+                  )}
+                </span>
+              ) : (
+                <span>0</span>
+              )}
+            </span>
+            <span className="text-[20px] text-[#717171] flex items-center ml-2">
+              {` (selected period )`}
+            </span>
+          </div>
+        </div>
+
+        <div className="xl:col-span-1 col-span-2">
+          <h2 className="text-[#1B163B] xl:text-[24px] text-lg ml-2  font-[400]">
+            Order Amount
+          </h2>
+          <div className="text-[#229635] font-[400] flex items-center ">
+            <span className="xl:text-[44px] text-3xl flex items-center">
+              <LiaRupeeSignSolid />
+              {transactionAmountDetails !== null &&
+              (status?.toLowerCase() === "success" || status === null) ? (
+                <span>
+                  {transactionAmountDetails?.totalOrderAmount.toLocaleString(
+                    "hi-in",
+                  )}
+                </span>
+              ) : (
+                <span>0</span>
+              )}
+            </span>
+            <span className="text-[20px] text-[#717171] flex items-center ml-2">
+              {` (selected period )`}
+            </span>
+          </div>
+        </div>
+      </div>
       <div className="overflow-x-auto w-full">
         {transactionReportData ? (
           <_Table
@@ -976,6 +1121,7 @@ export default function Transaction() {
                 "Vendor Amount",
                 "Gateway",
                 "Capture Status",
+                "Bank Reference Number",
               ],
               ...transactionData?.map((row: any) => [
                 <div>{row?.serialNumber}</div>,
@@ -1114,6 +1260,13 @@ export default function Transaction() {
                 >
                   <div className="truncate " key={row.orderID}>
                     {row?.capture_status || "NA"}
+                  </div>
+                </Link>,
+                <Link
+                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                >
+                  <div className="truncate " key={row.orderID}>
+                    {row?.bank_reference || "NA"}
                   </div>
                 </Link>,
               ]),

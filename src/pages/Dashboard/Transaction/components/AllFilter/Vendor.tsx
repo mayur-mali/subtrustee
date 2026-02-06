@@ -11,13 +11,19 @@ interface VendorOption {
   id: string;
 }
 
-function Vendor({ setSelectVendor, setVendorId, menuIsOpen, schoolId }: any) {
+function Vendor({
+  setSelectSchool,
+  setSchoolId,
+  setVendorId,
+  menuIsOpen,
+  schoolId,
+}: any) {
   const [limit, setLimit] = useState(10);
   const [vendors, setVendors] = useState<VendorOption[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [inputValue, setInputValue] = useState("");
 
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { data, loading, refetch } = useQuery(GET_VENDORS_FOR_REPORT, {
     variables: { school: schoolId && schoolId.length > 0 ? schoolId : null },
@@ -140,9 +146,9 @@ function Vendor({ setSelectVendor, setVendorId, menuIsOpen, schoolId }: any) {
         }}
         onChange={(selected: any) => {
           if (selected) {
-            setSelectVendor(selected.value);
-            setVendorId(selected.id);
-            setInputValue(""); // Clear input after selection
+            setSelectSchool(selected.value);
+            setSchoolId(selected.id);
+            setVendorId?.(selected.id);
           }
         }}
         placeholder="Select Vendor"
@@ -150,10 +156,7 @@ function Vendor({ setSelectVendor, setVendorId, menuIsOpen, schoolId }: any) {
         isMulti={false}
         isLoading={loading}
         inputValue={inputValue}
-        onInputChange={(val) => {
-          setInputValue(val);
-          debouncedSearch(val);
-        }}
+        onInputChange={(val) => debouncedSearch(val)}
       />
     </div>
   );

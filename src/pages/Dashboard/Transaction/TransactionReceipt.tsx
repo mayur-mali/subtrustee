@@ -96,6 +96,9 @@ function TransactionReceipt() {
                   ? "NA"
                   : payment_method_map[item.payment_method],
               mode_details: item?.details ? JSON.parse(item?.details) : null,
+              additional_data: item?.additional_data
+                ? JSON.parse(item?.additional_data)
+                : null,
               gateway: gatewayname,
               ...item,
             };
@@ -437,6 +440,10 @@ function TransactionReceipt() {
               value={`₹${transactionInfo?.transaction_amount ? Number(transactionInfo?.transaction_amount.toFixed(2)).toLocaleString("hi-IN") : 0}`}
             />
             <PaymentSmallCard
+              title="Transaction Charges"
+              value={`${transactionInfo.currency && transactionInfo.currency === "USD" ? "$" : "₹"}${transactionInfo?.transaction_amount ? Number((transactionInfo?.transaction_amount - transactionInfo?.order_amount).toFixed(2)).toLocaleString("hi-IN") : 0}`}
+            />
+            <PaymentSmallCard
               icon={
                 transactionInfo?.remarks && (
                   <FaRegEdit
@@ -630,6 +637,15 @@ function TransactionReceipt() {
                   formatPaymentOrigin(transactionInfo?.payment_origin).label
                 }
               />
+              {transactionInfo?.additional_data &&
+                Object.entries(JSON.parse(transactionInfo.additional_data)).map(
+                  ([key, value]) => (
+                    <PaymentSmallCard
+                      title={key.replace(/_/g, " ")}
+                      value={String(value)}
+                    />
+                  ),
+                )}
             </div>
           </div>
           {transactionInfo?.error_details && (
