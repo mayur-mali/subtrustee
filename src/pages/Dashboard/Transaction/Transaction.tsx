@@ -120,7 +120,7 @@ export default function Transaction() {
   const [orderAmountTotal, setOrderAmountTotal] = useState(0);
 
   const [type, setType] = useState("");
-  const [dateRange, setDateRange] = useState("");
+  const [dateRange, setDateRange] = useState("Today");
 
   const [refetchLoading, setRefetchLoading] = useState(false);
 

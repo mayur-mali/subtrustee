@@ -69,47 +69,41 @@ const Settlement = () => {
     },
   ]);
 
+  const { data, loading, refetch } = useQuery(GET_SETTLEMENT_REPORTS, {
+    variables: {
+      filters: {
+        page: currentPage,
+        limit: itemsPerPage.name,
+        search: debouncedSearch || undefined,
+        status: settlementStatusFilter || undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
+        dateFilterType: dateFilterType || undefined,
+      },
+    },
+  });
+
   // Data state
-  const [SettlementReportsData, setSettlementReportsData] = useState<any[]>([]); // will be replaced by filteredRows in render
-  const [schoolData, setSchoolData] = useState<any[]>([]);
+  const settlementData = data?.getSettlementReportsSubTrustee?.data ?? [];
+  const totalCount = data?.getSettlementReportsSubTrustee?.total ?? 0;
 
   // Apollo: fetch schools then settlements
-  const { data: schoolsData, loading: schoolsLoading } = useQuery(
-    GET_INSTITUTES,
-    {
-      onCompleted: () => {
-        getSettlementReportsSubTrustee();
-      },
-    },
-  );
+  const { data: schoolsData, loading: schoolsLoading } =
+    useQuery(GET_INSTITUTES);
 
-  const [getSettlementReportsSubTrustee] = useLazyQuery(
-    GET_SETTLEMENT_REPORTS,
-    {
-      onCompleted: (data: any) => {
-        const allSchools = schoolsData?.getSubTrusteeSchools?.schools ?? [];
-        const enriched = data.getSettlementReportsSubTrustee.map(
-          (report: any) => {
-            const match = allSchools.find(
-              (s: any) => s.school_id === report.schoolId,
-            );
-            return {
-              ...report,
-              schoolName: match ? match.school_name : "Unknown School",
-            };
-          },
-        );
+  const enrichedRows = useMemo(() => {
+    const allSchools = schoolsData?.getSubTrusteeSchools?.schools ?? [];
 
-        setSchoolData(enriched);
-
-        const totalPrice = data.getSettlementReportsSubTrustee
-          .map((adj: any) => Number(adj.adjustment || 0))
-          .reduce((acc: number, x: number) => acc + x, 0);
-
-        setUnsettledAmountExplicit(totalPrice);
-      },
-    },
-  );
+    return settlementData.map((report: any) => {
+      const match = allSchools.find(
+        (s: any) => s.school_id === report.schoolId,
+      );
+      return {
+        ...report,
+        schoolName: match ? match.school_name : "Unknown School",
+      };
+    });
+  }, [settlementData, schoolsData]);
 
   // Build schools list options once from API data
   const schoolsList = useMemo(
@@ -167,40 +161,41 @@ const Settlement = () => {
   }, []); // always returns boolean; stable reference [7][10]
 
   // Derive filtered rows (no setState here; pure derivation)
-  const filteredRows = useMemo(() => {
-    if (!schoolData?.length) return [];
-    const currentDate = endDate ? new Date(endDate) : new Date();
+  // const filteredRows = useMemo(() => {
+  //   if (!schoolData?.length) return [];
+  //   const currentDate = endDate ? new Date(endDate) : new Date();
 
-    const byDate = (r: any) => filterByDateRange(r, currentDate, selectDays);
-    const byQuery = (r: any) => dataContainsQuery(r, debouncedSearch);
-    const bySchool = (r: any) =>
-      schoolId.length === 1 || schoolId.includes(r.schoolName);
-    const byStatus = (r: any) =>
-      settlementStatusFilter !== ""
-        ? r.status === settlementStatusFilter ||
-          (r.status === "SUCCESS" && settlementStatusFilter === "Settled")
-        : true;
+  //   const byDate = (r: any) => filterByDateRange(r, currentDate, selectDays);
+  //   const byQuery = (r: any) => dataContainsQuery(r, debouncedSearch);
+  //   const bySchool = (r: any) =>
+  //     schoolId.length === 1 || schoolId.includes(r.schoolName);
+  //   const byStatus = (r: any) =>
+  //     settlementStatusFilter !== ""
+  //       ? r.status === settlementStatusFilter ||
+  //         (r.status === "SUCCESS" && settlementStatusFilter === "Settled")
+  //       : true;
 
-    return schoolData.filter(
-      (r: any) => byDate(r) && byQuery(r) && bySchool(r) && byStatus(r),
-    );
-  }, [
-    schoolData,
-    endDate,
-    selectDays,
-    debouncedSearch,
-    schoolId,
-    settlementStatusFilter,
-    filterByDateRange,
-    dataContainsQuery,
-  ]);
+  //   return schoolData.filter(
+  //     (r: any) => byDate(r) && byQuery(r) && bySchool(r) && byStatus(r),
+  //   );
+  // }, [
+  //   schoolData,
+  //   endDate,
+  //   selectDays,
+  //   debouncedSearch,
+  //   schoolId,
+  //   settlementStatusFilter,
+  //   filterByDateRange,
+  //   dataContainsQuery,
+  // ]);
 
   // Pagination based on filtered rows
-  const totalPages = Math.ceil(filteredRows.length / itemsPerPage?.name) || 1;
-  const currentPageSafe = Math.min(currentPage, totalPages);
-  const pageSliceStart = (currentPageSafe - 1) * itemsPerPage?.name;
-  const pageSliceEnd = currentPageSafe * itemsPerPage?.name;
-  const paginatedRows = filteredRows.slice(pageSliceStart, pageSliceEnd);
+  // const totalPages = Math.ceil(filteredRows.length / itemsPerPage?.name) || 1;
+  const totalPages = Math.ceil(totalCount / itemsPerPage.name) || 1;
+
+  // const pageSliceStart = (currentPageSafe - 1) * itemsPerPage?.name;
+  // const pageSliceEnd = currentPageSafe * itemsPerPage?.name;
+  // const paginatedRows = filteredRows.slice(pageSliceStart, pageSliceEnd);
 
   const handlePageChange = (page: any) => {
     setCurrentPage(page);
@@ -281,26 +276,35 @@ const Settlement = () => {
           exportBtn={true}
           heading={"History"}
           srNo={false}
-          loading={schoolsLoading}
+          loading={loading || schoolsLoading}
           pagination={false}
-          copyContent={[11]}
+          copyContent={[9]}
           filter={[debouncedSearch]}
           isCustomFilter={true}
           searchBox={
             <div className="flex flex-col w-full">
               <div className="flex xl:!flex-row flex-col gap-2  w-full xl:items-center items-start mb-2 justify-between">
-                <div className="bg-[#EEF1F6] py-3 items-center flex  px-6 xl:max-w-md max-w-[34rem] w-full rounded-lg">
-                  <IoSearchOutline className=" cursor-pointer text-edvion_black text-opacity-50 text-md " />
+                <div className="bg-[#EEF1F6] py-3 items-center flex px-6 xl:max-w-md max-w-[34rem] w-full rounded-lg relative">
+                  <IoSearchOutline className="text-edvion_black text-opacity-50 text-md" />
+
                   <input
                     type="text"
-                    className="ml-4 text-xs bg-transparent focus:outline-none w-full placeholder:font-normal"
-                    onFocus={(e) =>
-                      (e.target.style.borderColor = "transparent")
-                    }
+                    className="ml-4 text-xs bg-transparent focus:outline-none w-full placeholder:font-normal pr-6"
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
+
+                  {searchQuery && (
+                    <FaX
+                      className="absolute right-4 text-xs cursor-pointer text-gray-500 hover:text-black"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setDebouncedSearch("");
+                        setCurrentPage(1);
+                      }}
+                    />
+                  )}
                 </div>
 
                 <div className="flex items-center xl:max-w-lg w-full">
@@ -464,7 +468,7 @@ const Settlement = () => {
               "UTR No",
               "Settlement Date",
             ],
-            ...paginatedRows.map((data: any, index) => [
+            ...enrichedRows.map((data: any, index) => [
               (currentPage - 1) * itemsPerPage.name + 1 + index,
               <Link
                 to="/payments/settlements-transaction"

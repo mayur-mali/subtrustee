@@ -22,7 +22,7 @@ export const formatDate = (dateString: Date) => {
 
 function TransactionDateFilter({
   setType,
-
+  type,
   refetch,
   selectedRange,
   setSelectedRange,
@@ -108,7 +108,9 @@ function TransactionDateFilter({
         }}
         className="focus:outline-none border border-edviron_black  hover:border-gray-300 transition-all duration-150 rounded-md py-2 w-full text-xs text-left flex items-center "
       >
-        <span className="mr-auto pl-2">Date</span>
+        <span className="mr-auto pl-2">
+          Date {type === "Today" && <span>(Today)</span>}
+        </span>
         <IoIosArrowDown className=" text-xs w-8 text-[#1E1B59]" />
       </button>
       {openDateRange && (

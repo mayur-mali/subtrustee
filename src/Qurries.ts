@@ -136,19 +136,24 @@ export const GET_TRANSACTIONS = gql`
 `;
 
 export const GET_SETTLEMENT_REPORTS = gql`
-  query GetSettlementReportsSubTrustee {
-    getSettlementReportsSubTrustee {
-      settlementAmount
-      adjustment
-      netSettlementAmount
-      fromDate
-      tillDate
-      status
-      utrNumber
-      settlementDate
-      trustee
-      schoolId
-      clientId
+  query GetSettlementReportsSubTrustee($filters: SettlementFilterInput) {
+    getSettlementReportsSubTrustee(filters: $filters) {
+      data {
+        settlementAmount
+        adjustment
+        netSettlementAmount
+        fromDate
+        tillDate
+        status
+        utrNumber
+        settlementDate
+        trustee
+        schoolId
+        clientId
+      }
+      total
+      page
+      limit
     }
   }
 `;

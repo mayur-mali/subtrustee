@@ -437,6 +437,10 @@ function TransactionReceipt() {
               value={`₹${transactionInfo?.transaction_amount ? Number(transactionInfo?.transaction_amount.toFixed(2)).toLocaleString("hi-IN") : 0}`}
             />
             <PaymentSmallCard
+              title="Transaction Charges"
+              value={`${transactionInfo.currency && transactionInfo.currency === "USD" ? "$" : "₹"}${transactionInfo?.transaction_amount ? Number((transactionInfo?.transaction_amount - transactionInfo?.order_amount).toFixed(2)).toLocaleString("hi-IN") : 0}`}
+            />
+            <PaymentSmallCard
               icon={
                 transactionInfo?.remarks && (
                   <FaRegEdit

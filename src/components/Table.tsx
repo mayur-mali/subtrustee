@@ -177,8 +177,8 @@ export const _Table = ({
   const [csv_link, set_csv_link] = React.useState("");
   const refs: any = useRef<any>([]);
   const column = srNo ? ["S. No", ...data[0]] : data[0];
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerRow, setItemsPerRow] = useState({ name: 10 });
+  // const [currentPage, setCurrentPage] = useState(1);
+  // const [itemsPerRow, setItemsPerRow] = useState({ name: 10 });
 
   // ⭐ NEW STATES FOR EXPORT MODAL
   const gateways = ["razorpay", "cashfree", "easebuzz"];
@@ -200,21 +200,26 @@ export const _Table = ({
     column.filter((c) => c !== "S. No"),
   );
 
-  const items = data?.slice(1);
-  const totalPages = Math.ceil(items.length / itemsPerRow?.name);
+  // const items = data?.slice(1);
+  // // const totalPages = Math.ceil(items.length / itemsPerRow?.name);
 
-  const handlePageChange = (page: any) => {
-    setCurrentPage(page);
-  };
+  // const handlePageChange = (page: any) => {
+  //   setCurrentPage(page);
+  // };
 
-  const indexOfLastItem = currentPage * itemsPerRow?.name;
-  const indexOfFirstItem = indexOfLastItem - itemsPerRow?.name;
-  const currentItems = items.slice(indexOfFirstItem, indexOfLastItem);
-  const currentItemsArray = pagination ? currentItems : data?.slice(1);
+  // const indexOfLastItem = currentPage * itemsPerRow?.name;
+  // const indexOfFirstItem = indexOfLastItem - itemsPerRow?.name;
+  // const currentItems = items.slice(indexOfFirstItem, indexOfLastItem);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [filter, itemsPerRow]);
+  // const currentItemsArray = pagination
+  //   ? currentItems
+  //   : data?.slice(1); // backend already paginated
+
+  // useEffect(() => {
+  //   setCurrentPage(1);
+  // }, [filter, itemsPerRow]);
+
+  const currentItemsArray = data?.slice(1);
 
   // ⭐ NEW FUNCTION TO CHECK IF COLUMN SHOULD BE HIDDEN
   const shouldHideGatewayColumn = (colName: string) => {
@@ -269,7 +274,10 @@ export const _Table = ({
     ];
 
     // ⭐ Gateway filtering for Excel
-    const selectedCols = ["S. No", ...selectedColumns];
+    const selectedCols = [
+      column[0], // Always first column (Sr No)
+      ...selectedColumns,
+    ];
 
     const filteredIndices = column
       .map((col, i) => {
@@ -326,7 +334,7 @@ export const _Table = ({
     set_csv_link(url);
 
     return () => URL.revokeObjectURL(url);
-  }, [data, currentPage, itemsPerRow?.name, selectedColumns, selectedGateway]); // ⭐ Added dependencies
+  }, [data, selectedColumns, selectedGateway]); // ⭐ Added dependencies
 
   const renderTableHeader = () => {
     return (
@@ -339,7 +347,8 @@ export const _Table = ({
         {column.map((item: any, i: any) => {
           // ⭐ UPDATED - Apply column filtering
           if (shouldHideGatewayColumn(item)) return null;
-          if (item !== "S. No" && !selectedColumns.includes(item)) return null;
+          if (item !== column[0] && !selectedColumns.includes(item))
+            return null;
 
           return (
             <th
@@ -364,45 +373,44 @@ export const _Table = ({
           className=" bg-[#FFFFFF] overflow-hidden  w-full hover:-translate-y-[2px] hover:scale-[1.01] new-shadow  transform transition-transform duration-200  "
           key={key}
         >
-          {(srNo === true
-            ? [(currentPage - 1) * itemsPerRow.name + 1 + key, ...row]
-            : row
-          ).map((item: any, i: any) => {
-            if (!item) {
-              return;
-            }
+          {(srNo === true ? [key + 1, ...row] : row).map(
+            (item: any, i: any) => {
+              if (!item) {
+                return;
+              }
 
-            const colName = column[i];
+              const colName = column[i];
 
-            // ⭐ UPDATED - Apply column filtering
-            if (shouldHideGatewayColumn(colName)) return null;
-            if (colName !== "S. No" && !selectedColumns.includes(colName))
-              return null;
+              // ⭐ UPDATED - Apply column filtering
+              if (shouldHideGatewayColumn(colName)) return null;
+              if (colName !== column[0] && !selectedColumns.includes(colName))
+                return null;
 
-            return (
-              <td className="py-3 pl-4 pr-4 text-left " key={i}>
-                <div className="flex text-xs gap-x-2 items-center max-w-[15rem] justify-between">
-                  <span className="w-full" key={i}>
-                    {item}
-                  </span>
-                  {copyContent?.length &&
-                    !["NA", "N/A"].includes(item) &&
-                    copyContent.map((c: any) => {
-                      if (c === i + 1) {
-                        return (
-                          <PasteBtn
-                            onClick={() => {
-                              handleCopyContent(item);
-                            }}
-                            className="cursor-pointer text-[#717171] shrink-0 text-xl"
-                          />
-                        );
-                      }
-                    })}
-                </div>
-              </td>
-            );
-          })}
+              return (
+                <td className="py-3 pl-4 pr-4 text-left " key={i}>
+                  <div className="flex text-xs gap-x-2 items-center max-w-[15rem] justify-between">
+                    <span className="w-full" key={i}>
+                      {item}
+                    </span>
+                    {copyContent?.length &&
+                      !["NA", "N/A"].includes(item) &&
+                      copyContent.map((c: any) => {
+                        if (c === i + 1) {
+                          return (
+                            <PasteBtn
+                              onClick={() => {
+                                handleCopyContent(item);
+                              }}
+                              className="cursor-pointer text-[#717171] shrink-0 text-xl"
+                            />
+                          );
+                        }
+                      })}
+                  </div>
+                </td>
+              );
+            },
+          )}
         </tr>
       );
     });
@@ -427,7 +435,7 @@ export const _Table = ({
 
   // ⭐ NEW FUNCTIONS FOR EXPORT MODAL
   const toggleSelectAll = () => {
-    const colsWithoutSrNo = column.filter((c) => c !== "S. No");
+    const colsWithoutSrNo = column.filter((c) => c !== column[0]);
     setTempSelectedColumns(
       tempSelectedColumns.length === colsWithoutSrNo.length
         ? []
@@ -501,13 +509,13 @@ export const _Table = ({
             {searchBox}
           </div>
         )}
-        {perPage && (
+        {/* {perPage && (
           <RowsPerPageSelect
             setItemsPerRow={setItemsPerRow}
             itemsPerRow={itemsPerRow}
             className=" justify-start"
           />
-        )}
+        )} */}
         <div className="grid grid-cols-1 overflow-x-auto p-4">
           <table className="table-auto col-span-1 w-full border-separate border-spacing-y-0.5">
             <thead>{renderTableHeader()}</thead>
@@ -530,7 +538,7 @@ export const _Table = ({
           )}
         </div>
         {!loading && footer}
-        {!loading && (pagination || perPage) && (
+        {/* {!loading && pagination && (
           <div className="my-2 pagination-div flex justify-between">
             {pagination && (
               <div className="w-full flex justify-center">
@@ -550,7 +558,7 @@ export const _Table = ({
               </div>
             )}
           </div>
-        )}
+        )} */}
       </div>
       {copyRight && <CopyRight />}
 
