@@ -334,7 +334,7 @@ export const _Table = ({
     set_csv_link(url);
 
     return () => URL.revokeObjectURL(url);
-  }, [data, selectedColumns, selectedGateway]);
+  }, [data, selectedColumns, selectedGateway]); // ⭐ Added dependencies
 
   const renderTableHeader = () => {
     return (
@@ -345,6 +345,7 @@ export const _Table = ({
         }}
       >
         {column.map((item: any, i: any) => {
+          // ⭐ UPDATED - Apply column filtering
           if (shouldHideGatewayColumn(item)) return null;
           if (item !== column[0] && !selectedColumns.includes(item))
             return null;
