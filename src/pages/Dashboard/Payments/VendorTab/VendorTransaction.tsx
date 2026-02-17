@@ -37,7 +37,7 @@ function VendorTransaction() {
     key: "selection",
   });
   const [type, setType] = useState("");
-  const [dateRange, setDateRange] = useState("");
+  const [dateRange, setDateRange] = useState("Today");
   const [transactionData, setTransactionData] = useState<any>([]);
   const [isDateRangeIsSelected, setIsDateRangeIsSelected] = useState(false);
   const [status, setStatus] = useState<any>(null);
