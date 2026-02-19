@@ -15,6 +15,10 @@ function Filters(props: any) {
     backdrop: false,
   });
 
+  const [pendingFilterType, setPendingFilterType] = useState<string>("");
+  const [pendingEndDate, setPendingEndDate] = useState<any>(null);
+  const [pendingSelectDays, setPendingSelectDays] = useState<number>(0);
+
   const toogleDropDownOpt = (dropdownName: string) => {
     const updatedDropdowns = Object.keys(dropDownOpt).reduce(
       (acc: any, name) => {
@@ -258,17 +262,15 @@ function Filters(props: any) {
                 <div className="grid grid-cols-2 ">
                   <button
                     className={`py-2 px-4 mr-2 cursor-pointer rounded-md ${
-                      props.dateFilterType === "Today"
+                      pendingFilterType === "Today"
                         ? "bg-[#6687FFCC] text-white"
                         : ""
                     }`}
                     onClick={() => {
                       const currentDate = new Date();
-                      props.setEndDate(currentDate.toString());
-                      props.setSelectDays(1);
-                      props.setDateFilterType("Today");
-                      props.setDateDropDown(!props.dateDropDown);
-                      toogleDropDownOpt("date");
+                      setPendingEndDate(currentDate.toString());
+                      setPendingSelectDays(1);
+                      setPendingFilterType("Today");
                       props.setDateRange([
                         {
                           startDate: new Date(),
@@ -282,17 +284,15 @@ function Filters(props: any) {
                   </button>
                   <button
                     className={`py-2 px-4 mr-2 cursor-pointer rounded-md ${
-                      props.dateFilterType === "Last 7 days"
+                      pendingFilterType === "Last 7 days"
                         ? "bg-[#6687FFCC] text-white"
                         : ""
                     }`}
                     onClick={() => {
                       const currentDate = new Date();
-                      props.setEndDate(currentDate.toString());
-                      props.setSelectDays(7);
-                      props.setDateFilterType("Last 7 days");
-                      props.setDateDropDown(!props.dateDropDown);
-                      toogleDropDownOpt("date");
+                      setPendingEndDate(currentDate.toString());
+                      setPendingSelectDays(7);
+                      setPendingFilterType("Last 7 days");
                       props.setDateRange([
                         {
                           startDate: new Date(),
@@ -306,18 +306,16 @@ function Filters(props: any) {
                   </button>
                   <button
                     className={`py-2 px-4 mr-2 cursor-pointer rounded-md ${
-                      props.dateFilterType === "This Month"
+                      pendingFilterType === "This Month"
                         ? "bg-[#6687FFCC] text-white"
                         : ""
                     }`}
                     onClick={() => {
                       const currentDate = new Date();
                       currentDate.setDate(1);
-                      props.setEndDate(currentDate.toString());
-                      props.setSelectDays(11);
-                      props.setDateFilterType("This Month");
-                      props.setDateDropDown(!props.dateDropDown);
-                      toogleDropDownOpt("date");
+                      setPendingEndDate(currentDate.toString());
+                      setPendingSelectDays(11);
+                      setPendingFilterType("This Month");
                       props.setDateRange([
                         {
                           startDate: new Date(),
@@ -331,7 +329,7 @@ function Filters(props: any) {
                   </button>
                   <button
                     className={`py-2 px-4 mr-2 cursor-pointer rounded-md ${
-                      props.dateFilterType === "Last Month"
+                      pendingFilterType === "Last Month"
                         ? "bg-[#6687FFCC] text-white"
                         : ""
                     }`}
@@ -342,11 +340,9 @@ function Filters(props: any) {
                       lastDate.setDate(0);
                       currentDate.setMonth(currentDate.getMonth() - 1);
                       currentDate.setDate(1);
-                      props.setEndDate(lastDate.toString());
-                      props.setSelectDays(30);
-                      props.setDateFilterType("Last Month");
-                      props.setDateDropDown(!props.dateDropDown);
-                      toogleDropDownOpt("date");
+                      setPendingEndDate(lastDate.toString());
+                      setPendingSelectDays(30);
+                      setPendingFilterType("Last Month");
                       props.setDateRange([
                         {
                           startDate: new Date(),
@@ -420,26 +416,41 @@ function Filters(props: any) {
                             </button> */}
                 <div className="text-right">
                   <button
-                    onClick={() => handleClearTimeRangeSettlement()}
+                    onClick={() => {
+                      setPendingFilterType("");
+                      setPendingEndDate(null);
+                      setPendingSelectDays(0);
+                      handleClearTimeRangeSettlement();
+                    }}
                     className="border px-4 py-2 rounded-lg mr-2 text-[#6687FFCC] text-bold"
                   >
                     Clear
                   </button>
                   <button
-                    disabled={isNaN(props.dateRange[0].endDate?.getTime())}
+                    disabled={
+                      !pendingFilterType &&
+                      isNaN(props.dateRange[0].endDate?.getTime())
+                    }
                     onClick={() => {
-                      props.setStartDate(props.dateRange[0].startDate);
-                      props.setEndDate(props.dateRange[0].endDate);
-                      handleApplyClick();
-                      toogleDropDownOpt("date");
+                      if (pendingFilterType) {
+                        // preset was selected — commit it
+                        props.setEndDate(pendingEndDate);
+                        props.setSelectDays(pendingSelectDays);
+                        props.setDateFilterType(pendingFilterType);
+                        props.setDateDropDown(!props.dateDropDown);
+                        setPendingFilterType("");
+                        setPendingEndDate(null);
+                        setPendingSelectDays(0);
+                        toogleDropDownOpt("date");
+                      } else {
+                        // custom calendar range — existing logic
+                        props.setStartDate(props.dateRange[0].startDate);
+                        props.setEndDate(props.dateRange[0].endDate);
+                        handleApplyClick();
+                        toogleDropDownOpt("date");
+                      }
                     }}
                     className="bg-gray-100 text-gray-500 px-4 py-2 rounded-md"
-                    // className={`${
-                    //   !isNaN(props.dateRange[0].endDate?.getTime()) &&
-                    //   props.dateRange[0].startDate
-                    //     ? "bg-edviron_black text-white"
-                    //     : "bg-gray-100 text-gray-500"
-                    // } px-4 py-2 rounded-lg `}
                   >
                     Apply
                   </button>

@@ -35,7 +35,7 @@ export const CustomDropdownIndicator = () => {
 const Settlement = () => {
   // Search
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [committedSearch, setCommittedSearch] = useState("");
   const debounceTimerRef = useRef<number | null>(null);
 
   // Pagination
@@ -74,7 +74,7 @@ const Settlement = () => {
       filters: {
         page: currentPage,
         limit: itemsPerPage.name,
-        search: debouncedSearch || undefined,
+        search: committedSearch || undefined,
         status: settlementStatusFilter || undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
@@ -118,17 +118,17 @@ const Settlement = () => {
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
-    // setTimeout returns NodeJS.Timeout in Node, number in browser; for TS DOM lib it's number
-    debounceTimerRef.current = window.setTimeout(() => {
-      setDebouncedSearch(searchQuery.trim());
-      setCurrentPage(1);
-    }, 300);
     return () => {
       if (debounceTimerRef.current) {
         clearTimeout(debounceTimerRef.current);
       }
     };
   }, [searchQuery]);
+
+  const commitSearch = () => {
+    setCommittedSearch(searchQuery.trim());
+    setCurrentPage(1);
+  };
 
   // Utilities
   const filterByDateRange = useCallback(
@@ -279,32 +279,37 @@ const Settlement = () => {
           loading={loading || schoolsLoading}
           pagination={false}
           copyContent={[9]}
-          filter={[debouncedSearch]}
+          filter={[committedSearch]}
           isCustomFilter={true}
           searchBox={
             <div className="flex flex-col w-full">
               <div className="flex xl:!flex-row flex-col gap-2  w-full xl:items-center items-start mb-2 justify-between">
                 <div className="bg-[#EEF1F6] py-3 items-center flex px-6 xl:max-w-md max-w-[34rem] w-full rounded-lg relative">
-                  <IoSearchOutline className="text-edvion_black text-opacity-50 text-md" />
-
                   <input
                     type="text"
-                    className="ml-4 text-xs bg-transparent focus:outline-none w-full placeholder:font-normal pr-6"
+                    className="ml-1 text-xs bg-transparent focus:outline-none w-full placeholder:font-normal pr-6"
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitSearch();
+                    }}
                   />
 
                   {searchQuery && (
                     <FaX
-                      className="absolute right-4 text-xs cursor-pointer text-gray-500 hover:text-black"
+                      className="absolute right-10 text-xs cursor-pointer text-gray-500 hover:text-black"
                       onClick={() => {
                         setSearchQuery("");
-                        setDebouncedSearch("");
+                        setCommittedSearch("");
                         setCurrentPage(1);
                       }}
                     />
                   )}
+                  <IoSearchOutline
+                    className="absolute right-3 text-lg cursor-pointer text-edvion_black text-opacity-50"
+                    onClick={commitSearch}
+                  />
                 </div>
 
                 <div className="flex items-center xl:max-w-lg w-full">
