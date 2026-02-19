@@ -339,7 +339,9 @@ export default function Institute() {
           className="flex flex-col gap-y-3 px-2 py-1"
         >
           <div className="flex flex-col gap-y-1">
-            <label className="text-xs text-gray-600">Education Institute</label>
+            <label className="text-xs text-black-800">
+              Education Institute
+            </label>
             <input
               type="text"
               name="instituteName"
@@ -351,7 +353,7 @@ export default function Institute() {
             />
           </div>
           <div className="flex flex-col gap-y-1">
-            <label className="text-xs text-gray-600">Email</label>
+            <label className="text-xs text-black-800">Email</label>
             <input
               type="email"
               name="email"
@@ -363,7 +365,7 @@ export default function Institute() {
             />
           </div>
           <div className="flex flex-col gap-y-1">
-            <label className="text-xs text-gray-600">Phone Number</label>
+            <label className="text-xs text-black-800">Phone Number</label>
             <input
               type="number"
               name="phoneNumber"
@@ -379,7 +381,7 @@ export default function Institute() {
             />
           </div>
           <div className="flex flex-col gap-y-1">
-            <label className="text-xs text-gray-600">Admin Name</label>
+            <label className="text-xs text-black-800">Admin Name</label>
             <input
               type="text"
               name="adminName"

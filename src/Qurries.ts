@@ -507,13 +507,13 @@ export const GET_BATCH_TRANSACTION = gql`
 `;
 
 export const CREATE_INSTITUTE = gql`
-  mutation CreateSchool(
+  mutation subTrusteeCreateSchool(
     $email: String!
     $school_name: String!
     $phone_number: String!
     $admin_name: String!
   ) {
-    createSchool(
+    subTrusteeCreateSchool(
       email: $email
       school_name: $school_name
       phone_number: $phone_number

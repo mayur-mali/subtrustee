@@ -6,6 +6,13 @@ import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { DateRange } from "react-date-range";
 import { toast } from "react-toastify";
+import {
+  startOfDay,
+  endOfDay,
+  subDays,
+  startOfMonth,
+  endOfMonth,
+} from "date-fns";
 
 function Filters(props: any) {
   const [dropDownOpt, setDropDownOpt] = useState<any>({
@@ -33,11 +40,31 @@ function Filters(props: any) {
   //commect for push
 
   const handleTimeFilter = (type: string) => {
+    let rangeStartDate: Date;
+    let rangeEndDate: Date;
+
+    if (type === "Today") {
+      rangeStartDate = startOfDay(new Date());
+      rangeEndDate = endOfDay(new Date());
+    } else if (type === "Last 7 days") {
+      rangeStartDate = subDays(new Date(), 7);
+      rangeEndDate = endOfDay(new Date());
+    } else if (type === "This Month") {
+      rangeStartDate = startOfMonth(new Date());
+      rangeEndDate = endOfDay(new Date());
+    } else if (type === "Last Month") {
+      rangeStartDate = startOfMonth(subDays(new Date(), 30));
+      rangeEndDate = endOfMonth(subDays(new Date(), 30));
+    } else {
+      rangeStartDate = new Date();
+      rangeEndDate = null as any;
+    }
+
     if (type !== "Custom Date Range") {
       props.setDateRange([
         {
-          startDate: new Date(),
-          endDate: null,
+          startDate: rangeStartDate,
+          endDate: rangeEndDate,
           key: "selection",
         },
       ]);
@@ -153,7 +180,7 @@ function Filters(props: any) {
   };
   const handleApplyClick = () => {
     if (props.dateRange[0].startDate && props.dateRange[0].endDate) {
-      props.setDateFilterType("Custom Date Filter");
+      props.setDateFilterType("Custom Date");
       const startDateObj = new Date(props.dateRange[0].startDate);
       const endDateObj = new Date(props.dateRange[0].endDate);
 
@@ -211,70 +238,52 @@ function Filters(props: any) {
           <IoIosArrowDown className=" ml-auto w-8" />
         </button>
         {dropDownOpt.date && (
-          <div className="absolute left-0 mt-2 text-sm bg-white  lg:min-w-[26rem] min-w-[20rem]  min-h-[27rem] px-2 pr-4 pb-2 rounded-md shadow-lg z-10 ">
+          <div className="absolute left-0 mt-2 text-sm bg-white  lg:min-w-[26rem] min-w-[20rem]  min-h-[27rem] px-4 pt-4 pb-4 rounded-md shadow-lg z-10 ">
+            <p className="text-sm text-center mb-4">Custom Range</p>
             {props.transaction ? (
-              <div className="w-full lg:col-span-3 col-span-8 py-4">
-                <div className="grid grid-cols-2 ">
+              <div className="w-full">
+                <div className="grid grid-cols-2 text-[10px] mb-4 pl-4">
                   <button
                     onClick={() => handleTimeFilter("Today")}
-                    className={`py-2 px-4 mr-2 text-left rounded-md ${
-                      props.selectedTime === "Today"
-                        ? "bg-[#6687FFCC] text-white"
-                        : ""
-                    }`}
+                    className="p-1.5 cursor-pointer rounded-md text-left"
                   >
                     Today
                   </button>
                   <button
                     onClick={() => handleTimeFilter("Last 7 days")}
-                    className={`py-2 px-4 mr-2 text-left rounded-md ${
-                      props.selectedTime === "Last 7 days"
-                        ? "bg-[#6687FFCC] text-white"
-                        : ""
-                    }`}
+                    className="p-1.5 cursor-pointer rounded-md text-left"
                   >
-                    Last 7 days
+                    Last 7 Days
                   </button>
                   <button
                     onClick={() => handleTimeFilter("This Month")}
-                    className={`py-2 px-4 mr-2 text-left rounded-md ${
-                      props.selectedTime === "This Month"
-                        ? "bg-[#6687FFCC] text-white"
-                        : ""
-                    }`}
+                    className="p-1.5 cursor-pointer rounded-md text-left"
                   >
                     This Month
                   </button>
                   <button
                     onClick={() => handleTimeFilter("Last Month")}
-                    className={`py-2 px-4 mr-2 text-left rounded-md ${
-                      props.selectedTime === "Last Month"
-                        ? "bg-[#6687FFCC] text-white"
-                        : ""
-                    }`}
+                    className="p-1.5 cursor-pointer rounded-md text-left"
                   >
                     Last Month
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="w-full lg:col-span-3 col-span-8 py-4">
-                <div className="grid grid-cols-2 ">
+              <div className="w-full">
+                <div className="grid grid-cols-2 text-[10px] mb-4 pl-4">
                   <button
-                    className={`py-2 px-4 mr-2 cursor-pointer rounded-md ${
-                      pendingFilterType === "Today"
-                        ? "bg-[#6687FFCC] text-white"
-                        : ""
-                    }`}
+                    className="p-1.5 cursor-pointer rounded-md text-left"
                     onClick={() => {
-                      const currentDate = new Date();
-                      setPendingEndDate(currentDate.toString());
+                      const startDate = startOfDay(new Date());
+                      const endDate = endOfDay(new Date());
+                      setPendingEndDate(endDate.toString());
                       setPendingSelectDays(1);
-                      setPendingFilterType("Today");
+                      setPendingFilterType("Custom Date");
                       props.setDateRange([
                         {
-                          startDate: new Date(),
-                          endDate: new Date(""),
+                          startDate: startDate,
+                          endDate: endDate,
                           key: "selection",
                         },
                       ]);
@@ -283,43 +292,41 @@ function Filters(props: any) {
                     Today
                   </button>
                   <button
-                    className={`py-2 px-4 mr-2 cursor-pointer rounded-md ${
-                      pendingFilterType === "Last 7 days"
-                        ? "bg-[#6687FFCC] text-white"
-                        : ""
-                    }`}
+                    className="p-1.5 cursor-pointer rounded-md text-left"
                     onClick={() => {
-                      const currentDate = new Date();
-                      setPendingEndDate(currentDate.toString());
+                      const startDate = subDays(new Date(), 7);
+                      const endDate = endOfDay(new Date());
+                      setPendingEndDate(endDate.toString());
                       setPendingSelectDays(7);
-                      setPendingFilterType("Last 7 days");
+                      setPendingFilterType("Custom Date");
                       props.setDateRange([
                         {
-                          startDate: new Date(),
-                          endDate: new Date(""),
+                          startDate: startDate,
+                          endDate: endDate,
                           key: "selection",
                         },
                       ]);
                     }}
                   >
-                    Last 7 days
+                    Last 7 Days
                   </button>
                   <button
-                    className={`py-2 px-4 mr-2 cursor-pointer rounded-md ${
-                      pendingFilterType === "This Month"
-                        ? "bg-[#6687FFCC] text-white"
-                        : ""
-                    }`}
+                    className="p-1.5 cursor-pointer rounded-md text-left"
                     onClick={() => {
-                      const currentDate = new Date();
-                      currentDate.setDate(1);
-                      setPendingEndDate(currentDate.toString());
-                      setPendingSelectDays(11);
-                      setPendingFilterType("This Month");
+                      const startDate = startOfMonth(new Date());
+                      const endDate = endOfDay(new Date());
+                      setPendingEndDate(endDate.toString());
+                      setPendingSelectDays(
+                        Math.ceil(
+                          (endDate.getTime() - startDate.getTime()) /
+                            (24 * 60 * 60 * 1000),
+                        ),
+                      );
+                      setPendingFilterType("Custom Date");
                       props.setDateRange([
                         {
-                          startDate: new Date(),
-                          endDate: new Date(""),
+                          startDate: startDate,
+                          endDate: endDate,
                           key: "selection",
                         },
                       ]);
@@ -328,25 +335,22 @@ function Filters(props: any) {
                     This Month
                   </button>
                   <button
-                    className={`py-2 px-4 mr-2 cursor-pointer rounded-md ${
-                      pendingFilterType === "Last Month"
-                        ? "bg-[#6687FFCC] text-white"
-                        : ""
-                    }`}
+                    className="p-1.5 cursor-pointer rounded-md text-left"
                     onClick={() => {
-                      const lastDate = new Date();
-                      const currentDate = new Date();
-                      lastDate.setDate(1);
-                      lastDate.setDate(0);
-                      currentDate.setMonth(currentDate.getMonth() - 1);
-                      currentDate.setDate(1);
-                      setPendingEndDate(lastDate.toString());
-                      setPendingSelectDays(30);
-                      setPendingFilterType("Last Month");
+                      const startDate = startOfMonth(subDays(new Date(), 30));
+                      const endDate = endOfMonth(subDays(new Date(), 30));
+                      setPendingEndDate(endDate.toString());
+                      setPendingSelectDays(
+                        Math.ceil(
+                          (endDate.getTime() - startDate.getTime()) /
+                            (24 * 60 * 60 * 1000),
+                        ),
+                      );
+                      setPendingFilterType("Custom Date");
                       props.setDateRange([
                         {
-                          startDate: new Date(),
-                          endDate: new Date(""),
+                          startDate: startDate,
+                          endDate: endDate,
                           key: "selection",
                         },
                       ]);
@@ -358,63 +362,47 @@ function Filters(props: any) {
               </div>
             )}
             {props.transaction ? (
-              <div className="text-center lg:col-span-5 col-span-8 flex flex-col w-full">
-                <p className="p-2">Custom Range</p>
-
-                <DateRange
-                  rangeColors={["#6687FF"]}
-                  editableDateInputs={false}
-                  onChange={(item: any) => props.setDateRange([item.selection])}
-                  ranges={props.dateRange}
-                  maxDate={new Date()}
-                />
-                <div className="text-right">
+              <div className="flex flex-col w-full">
+                <div className="mx-auto">
+                  <DateRange
+                    editableDateInputs={false}
+                    onChange={(item: any) =>
+                      props.setDateRange([item.selection])
+                    }
+                    ranges={props.dateRange}
+                    maxDate={new Date()}
+                    showDateDisplay={false}
+                  />
+                </div>
+                <div className="flex justify-end items-center mt-2">
                   <button
                     onClick={() => handleClearTimeRange()}
-                    className="border px-4 py-2 rounded-md mr-2 text-[#6687FFCC] text-bold"
+                    className="border px-3 py-1.5 rounded-lg mr-2 text-[#6687FFCC]"
                   >
                     Clear
                   </button>
                   <button
-                    disabled={isNaN(props.dateRange[0].endDate?.getTime())}
                     onClick={() => handleTimeFilter("Custom Date Range")}
-                    className="bg-gray-100 text-gray-500 px-4 py-2 rounded-md"
-                    // className={`${
-                    //   !isNaN(props.dateRange[0].endDate?.getTime()) &&
-                    //   props.dateRange[0].startDate
-                    //     ? "bg-edviron_black text-white"
-                    //     : "bg-gray-100 text-gray-500"
-                    // } px-4 py-2 rounded-md `}
+                    className="border px-3 py-1.5 rounded-lg mr-2 text-[#6687FFCC]"
                   >
                     Apply
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="text-center lg:col-span-5 col-span-8 flex flex-col w-full">
-                <p className="p-2">Custom Range</p>
-                <DateRange
-                  editableDateInputs={false}
-                  rangeColors={["#6687FF"]}
-                  onChange={(item: any) => {
-                    props.setDateRange([item.selection]);
-                  }}
-                  ranges={props.dateRange}
-                  maxDate={new Date()}
-                />
-                {/* <button
-                              className="px-4 py-1 bg-[#6687FF] text-white font-semibold rounded-lg mt-4 mr-2"
-                              onClick={handleApplyClick}
-                            >
-                              Apply
-                            </button>
-                            <button
-                              className="px-4 py-1 bg-[#6687FF] text-white font-semibold rounded-lg mt-4 mr-2"
-                              onClick={() => handleClearTimeRange()}
-                            >
-                              clear
-                            </button> */}
-                <div className="text-right">
+              <div className="flex flex-col w-full">
+                <div className="mx-auto">
+                  <DateRange
+                    editableDateInputs={false}
+                    ranges={[props.dateRange[0]]}
+                    onChange={(item: any) => {
+                      props.setDateRange([item.selection]);
+                    }}
+                    maxDate={new Date()}
+                    showDateDisplay={false}
+                  />
+                </div>
+                <div className="flex justify-end items-center mt-2">
                   <button
                     onClick={() => {
                       setPendingFilterType("");
@@ -422,15 +410,11 @@ function Filters(props: any) {
                       setPendingSelectDays(0);
                       handleClearTimeRangeSettlement();
                     }}
-                    className="border px-4 py-2 rounded-lg mr-2 text-[#6687FFCC] text-bold"
+                    className="border px-3 py-1.5 rounded-lg mr-2 text-[#6687FFCC]"
                   >
                     Clear
                   </button>
                   <button
-                    disabled={
-                      !pendingFilterType &&
-                      isNaN(props.dateRange[0].endDate?.getTime())
-                    }
                     onClick={() => {
                       if (pendingFilterType) {
                         // preset was selected — commit it
@@ -450,7 +434,7 @@ function Filters(props: any) {
                         toogleDropDownOpt("date");
                       }
                     }}
-                    className="bg-gray-100 text-gray-500 px-4 py-2 rounded-md"
+                    className="border px-3 py-1.5 rounded-lg mr-2 text-[#6687FFCC]"
                   >
                     Apply
                   </button>
