@@ -23,6 +23,7 @@ function Filters(props: any) {
   });
 
   const [pendingFilterType, setPendingFilterType] = useState<string>("");
+  const [pendingStartDate, setPendingStartDate] = useState<any>(null);
   const [pendingEndDate, setPendingEndDate] = useState<any>(null);
   const [pendingSelectDays, setPendingSelectDays] = useState<number>(0);
 
@@ -53,8 +54,15 @@ function Filters(props: any) {
       rangeStartDate = startOfMonth(new Date());
       rangeEndDate = endOfDay(new Date());
     } else if (type === "Last Month") {
-      rangeStartDate = startOfMonth(subDays(new Date(), 30));
-      rangeEndDate = endOfMonth(subDays(new Date(), 30));
+      const currentDate = new Date();
+      const lastMonth = currentDate.getMonth() - 1;
+      const year =
+        lastMonth < 0
+          ? currentDate.getFullYear() - 1
+          : currentDate.getFullYear();
+      const month = lastMonth < 0 ? 11 : lastMonth;
+      rangeStartDate = new Date(year, month, 1);
+      rangeEndDate = new Date(year, month + 1, 0);
     } else {
       rangeStartDate = new Date();
       rangeEndDate = null as any;
@@ -166,6 +174,13 @@ function Filters(props: any) {
       }),
     });
   };
+  const formatDateForAPI = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
   const handleClearTimeRangeSettlement = () => {
     props.setDateRange([
       {
@@ -174,6 +189,7 @@ function Filters(props: any) {
         key: "selection",
       },
     ]);
+    props.setStartDate("");
     props.setDateFilterType("");
     props.setEndDate("");
     props.setSelectDays(0);
@@ -277,7 +293,8 @@ function Filters(props: any) {
                     onClick={() => {
                       const startDate = startOfDay(new Date());
                       const endDate = endOfDay(new Date());
-                      setPendingEndDate(endDate.toString());
+                      setPendingStartDate(formatDateForAPI(startDate));
+                      setPendingEndDate(formatDateForAPI(endDate));
                       setPendingSelectDays(1);
                       setPendingFilterType("Custom Date");
                       props.setDateRange([
@@ -296,7 +313,8 @@ function Filters(props: any) {
                     onClick={() => {
                       const startDate = subDays(new Date(), 7);
                       const endDate = endOfDay(new Date());
-                      setPendingEndDate(endDate.toString());
+                      setPendingStartDate(formatDateForAPI(startDate));
+                      setPendingEndDate(formatDateForAPI(endDate));
                       setPendingSelectDays(7);
                       setPendingFilterType("Custom Date");
                       props.setDateRange([
@@ -315,7 +333,8 @@ function Filters(props: any) {
                     onClick={() => {
                       const startDate = startOfMonth(new Date());
                       const endDate = endOfDay(new Date());
-                      setPendingEndDate(endDate.toString());
+                      setPendingStartDate(formatDateForAPI(startDate));
+                      setPendingEndDate(formatDateForAPI(endDate));
                       setPendingSelectDays(
                         Math.ceil(
                           (endDate.getTime() - startDate.getTime()) /
@@ -337,9 +356,17 @@ function Filters(props: any) {
                   <button
                     className="p-1.5 cursor-pointer rounded-md text-left"
                     onClick={() => {
-                      const startDate = startOfMonth(subDays(new Date(), 30));
-                      const endDate = endOfMonth(subDays(new Date(), 30));
-                      setPendingEndDate(endDate.toString());
+                      const currentDate = new Date();
+                      const lastMonth = currentDate.getMonth() - 1;
+                      const year =
+                        lastMonth < 0
+                          ? currentDate.getFullYear() - 1
+                          : currentDate.getFullYear();
+                      const month = lastMonth < 0 ? 11 : lastMonth;
+                      const startDate = new Date(year, month, 1);
+                      const endDate = new Date(year, month + 1, 0);
+                      setPendingStartDate(formatDateForAPI(startDate));
+                      setPendingEndDate(formatDateForAPI(endDate));
                       setPendingSelectDays(
                         Math.ceil(
                           (endDate.getTime() - startDate.getTime()) /
@@ -383,7 +410,7 @@ function Filters(props: any) {
                   </button>
                   <button
                     onClick={() => handleTimeFilter("Custom Date Range")}
-                    className="border px-3 py-1.5 rounded-lg mr-2 text-[#6687FFCC]"
+                    className="bg-[#1E1B59] text-white px-3 py-1.5 rounded-lg mr-2"
                   >
                     Apply
                   </button>
@@ -406,6 +433,7 @@ function Filters(props: any) {
                   <button
                     onClick={() => {
                       setPendingFilterType("");
+                      setPendingStartDate(null);
                       setPendingEndDate(null);
                       setPendingSelectDays(0);
                       handleClearTimeRangeSettlement();
@@ -418,11 +446,13 @@ function Filters(props: any) {
                     onClick={() => {
                       if (pendingFilterType) {
                         // preset was selected — commit it
+                        props.setStartDate(pendingStartDate);
                         props.setEndDate(pendingEndDate);
                         props.setSelectDays(pendingSelectDays);
                         props.setDateFilterType(pendingFilterType);
                         props.setDateDropDown(!props.dateDropDown);
                         setPendingFilterType("");
+                        setPendingStartDate(null);
                         setPendingEndDate(null);
                         setPendingSelectDays(0);
                         toogleDropDownOpt("date");
@@ -434,7 +464,7 @@ function Filters(props: any) {
                         toogleDropDownOpt("date");
                       }
                     }}
-                    className="border px-3 py-1.5 rounded-lg mr-2 text-[#6687FFCC]"
+                    className="bg-[#1E1B59] text-white px-3 py-1.5 rounded-lg mr-2"
                   >
                     Apply
                   </button>
