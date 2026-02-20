@@ -505,3 +505,21 @@ export const GET_BATCH_TRANSACTION = gql`
     }
   }
 `;
+
+export const CREATE_INSTITUTE = gql`
+  mutation subTrusteeCreateSchool(
+    $email: String!
+    $school_name: String!
+    $phone_number: String!
+    $admin_name: String!
+  ) {
+    subTrusteeCreateSchool(
+      email: $email
+      school_name: $school_name
+      phone_number: $phone_number
+      admin_name: $admin_name
+    ) {
+      school_name
+    }
+  }
+`;

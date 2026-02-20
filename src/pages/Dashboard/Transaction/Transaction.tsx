@@ -876,7 +876,7 @@ export default function Transaction() {
                       </button>
                     </div>
                   )}
-                  {(dateRange !== "" ||
+                  {((dateRange !== "" && isDateRangeIsSelected) ||
                     urlFilters.end_date !== "" ||
                     urlFilters.start_date !== "") && (
                     <div className=" text-sm m-2  max-w-fit ">

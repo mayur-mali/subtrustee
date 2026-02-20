@@ -43,7 +43,10 @@ export default function Example({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+          <div
+            className="fixed inset-0 backdrop-blur-sm transition-opacity"
+            style={{ backgroundColor: "rgba(107, 114, 128, 0.5)" }}
+          />
         </Transition.Child>
 
         <div className="fixed inset-0 z-10 overflow-y-auto ">

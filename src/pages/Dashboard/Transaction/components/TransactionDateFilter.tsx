@@ -165,7 +165,7 @@ function TransactionDateFilter({
               // disabled={
               //   selectedRange.startDate.getDate() === new Date().getDate()
               // }
-              className="border px-3 py-1.5 rounded-lg mr-2 text-[#6687FFCC]"
+              className="bg-[#1E1B59] text-white border px-3 py-1.5 rounded-lg mr-2"
               onClick={async () => {
                 refetch();
                 setType("Custom Date");

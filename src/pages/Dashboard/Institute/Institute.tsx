@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@apollo/client";
 import {
   GET_INSTITUTES,
   LOGIN_TO_MERCHANT_WITH_TRUSTEE,
+  CREATE_INSTITUTE,
 } from "../../../Qurries";
 import {
   Pagination,
@@ -13,6 +14,22 @@ import ToolTip from "../../../components/generics/ToolTip";
 import { MdContentCopy } from "react-icons/md";
 import { IoSearchOutline } from "react-icons/io5";
 import React, { useState } from "react";
+import Modal from "../../../components/Modal/Modal";
+import { toast } from "react-toastify";
+
+const preventNegativeValues = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  if (e.key === "-" || e.key === "+") {
+    e.preventDefault();
+  }
+};
+
+const preventPasteNegative = (e: React.ClipboardEvent<HTMLInputElement>) => {
+  const pastedText = e.clipboardData.getData("text");
+  if (pastedText.includes("-") || pastedText.includes("+")) {
+    e.preventDefault();
+  }
+};
+
 export default function Institute() {
   const [page, setPage] = useState(1);
   // const [urlFilters, setUrlFilters] = useTransactionFilters();
@@ -22,6 +39,48 @@ export default function Institute() {
   });
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [showModal, setShowModal] = React.useState(false);
+  const [formData, setFormData] = useState({
+    instituteName: "",
+    email: "",
+    phoneNumber: "",
+    adminName: "NA",
+  });
+  const [formLoading, setFormLoading] = useState(false);
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormLoading(true);
+    try {
+      const res = await createInstitute({
+        variables: {
+          email: formData.email,
+          school_name: formData.instituteName,
+          phone_number: formData.phoneNumber,
+          admin_name: formData.adminName || "NA",
+        },
+      });
+      if (res.data) {
+        toast.success("New School created successfully");
+        setCurrentPage(1);
+        setSearchQuery("");
+        setFormData({
+          instituteName: "",
+          email: "",
+          phoneNumber: "",
+          adminName: "NA",
+        });
+      }
+    } finally {
+      setFormLoading(false);
+      setShowModal(false);
+    }
+  };
+
   const location = useLocation();
   const { loading, error, data, refetch } = useQuery(GET_INSTITUTES, {
     variables: {
@@ -37,6 +96,18 @@ export default function Institute() {
   // if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
   const [logInToMerchant] = useMutation(LOGIN_TO_MERCHANT_WITH_TRUSTEE);
+  const [createInstitute] = useMutation(CREATE_INSTITUTE, {
+    refetchQueries: [
+      {
+        query: GET_INSTITUTES,
+        variables: {
+          page: currentPage,
+          limit: itemsPerRow.name,
+          searchQuery: searchQuery,
+        },
+      },
+    ],
+  });
 
   return (
     <div>
@@ -73,10 +144,9 @@ export default function Institute() {
                 />
               </div>
               <div className="flex ">
-                {/* <SchoolsUploadViaCsv page={page} /> */}
                 <button
-                  //onClick={() => setShowModal(!showModal)}
-                  className="py-2 bg-edviron_black text-sm rounded-[4px] text-white float-right px-6 ml-2"
+                  onClick={() => setShowModal(!showModal)}
+                  className="py-2 bg-[#1E1B59] text-sm rounded-[4px] text-white float-right px-6 ml-2"
                 >
                   + Add Institute
                 </button>
@@ -258,6 +328,80 @@ export default function Institute() {
         //   </div>
         // }
       />
+      <Modal
+        className="max-w-lg w-full"
+        open={showModal}
+        setOpen={setShowModal}
+        title="Create Education Institute"
+      >
+        <form
+          onSubmit={handleFormSubmit}
+          className="flex flex-col gap-y-3 px-2 py-1"
+        >
+          <div className="flex flex-col gap-y-1">
+            <label className="text-xs text-black-800">
+              Education Institute
+            </label>
+            <input
+              type="text"
+              name="instituteName"
+              placeholder="Enter Institute Name"
+              value={formData.instituteName}
+              onChange={handleFormChange}
+              required
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-edviron_black"
+            />
+          </div>
+          <div className="flex flex-col gap-y-1">
+            <label className="text-xs text-black-800">Email</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter Email"
+              value={formData.email}
+              onChange={handleFormChange}
+              required
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-edviron_black"
+            />
+          </div>
+          <div className="flex flex-col gap-y-1">
+            <label className="text-xs text-black-800">Phone Number</label>
+            <input
+              type="number"
+              name="phoneNumber"
+              placeholder="Enter Phone no"
+              value={formData.phoneNumber}
+              onChange={handleFormChange}
+              onKeyDown={preventNegativeValues}
+              onPaste={preventPasteNegative}
+              min={0}
+              maxLength={10}
+              required
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-edviron_black"
+            />
+          </div>
+          <div className="flex flex-col gap-y-1">
+            <label className="text-xs text-black-800">Admin Name</label>
+            <input
+              type="text"
+              name="adminName"
+              placeholder="Enter Admin Name"
+              value={formData.adminName}
+              onChange={handleFormChange}
+              className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:border-edviron_black"
+            />
+          </div>
+          <div className="mt-2 mb-2 text-center">
+            <button
+              type="submit"
+              disabled={formLoading}
+              className="py-2 px-16 max-w-[15rem] w-full rounded-lg disabled:bg-blue-300 bg-[#1E1B59] text-white"
+            >
+              {formLoading ? "Creating..." : "Create Institute"}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
