@@ -50,6 +50,7 @@ function Refund() {
   const [itemsPerRow, setItemsPerRow] = useState({ name: 10 });
   const [isDateRangeIsSelected, setIsDateRangeIsSelected] = useState(false);
   const [urlFilters, setUrlFilters] = useTransactionFilters();
+  const [searchClicked, setsearchClicked] = useState(false);
   const [checkboxFilter, setCheckboxFilter] = useState<any>({
     size: 0,
     status: 0,
@@ -67,7 +68,7 @@ function Refund() {
   } = useQuery(SUBTRUSTEE_REFUND_REQUESTS, {
     variables: {
       page: 1,
-      limit: itemsPerRow.name,
+      limit: 10,
       startDate: startDate,
       endDate: endDate,
     },
@@ -125,19 +126,6 @@ function Refund() {
 
   function handelSearchQueryChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSearchQuery(e.target.value);
-    refetchDateFetch({
-      searchQuery: e.target.value,
-      page: 1,
-      limit: itemsPerRow.name,
-      start_date: isDateRangeIsSelected
-        ? formatDate(selectedRange.startDate)
-        : startDate,
-      end_date: isDateRangeIsSelected
-        ? formatDate(selectedRange.endDate)
-        : endDate,
-      status: settlementStatusFilter,
-      schools: schoolId,
-    });
   }
   const handleSchoolFilterChange = (selectedFilter: any) => {
     if (!schoolFilterData.includes(selectedFilter.label)) {
@@ -169,6 +157,7 @@ function Refund() {
     // Create a new array without the filter at the specified index
     const updatedFilters = filters.filter((_: any, i: number) => i !== index);
     setFilters(updatedFilters);
+    setCurrentPage(1);
     refetchDateFetch({
       searchQuery: searchQuery,
       page: 1,
@@ -208,9 +197,9 @@ function Refund() {
   };
 
   const handlePageChange = (page: any) => {
-    if (page == currentPage) {
-      return;
-    }
+    // if (page == currentPage) {
+    //   return;
+    // }
     setCurrentPage(page);
     refetchDateFetch({
       searchQuery: searchQuery,
@@ -245,7 +234,6 @@ function Refund() {
                 <div className="flex flex-col w-full">
                   <div className="flex xl:!flex-row flex-col gap-2  w-full xl:items-center items-start mb-2 justify-between">
                     <div className="bg-[#EEF1F6] py-3 items-center flex  px-6 xl:max-w-md max-w-[34rem] w-full rounded-lg">
-                      <IoSearchOutline />
                       <input
                         type="text"
                         className="ml-4 text-xs bg-transparent focus:outline-none w-full placeholder:font-normal"
@@ -254,8 +242,81 @@ function Refund() {
                         }
                         placeholder="Search..."
                         value={searchQuery}
-                        onChange={(e) => handelSearchQueryChange(e)}
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          setSearchQuery(newValue);
+
+                          if (newValue === "" && searchClicked) {
+                            setsearchClicked(false);
+                            setCurrentPage(1);
+                            refetchDateFetch({
+                              searchQuery: null,
+                              page: 1,
+                              limit: itemsPerRow.name,
+                              start_date: isDateRangeIsSelected
+                                ? formatDate(selectedRange.startDate)
+                                : startDate,
+                              end_date: isDateRangeIsSelected
+                                ? formatDate(selectedRange.endDate)
+                                : endDate,
+                              status: settlementStatusFilter,
+                              schools: schoolId,
+                            });
+                          }
+                        }}
                       />
+                      {searchQuery.length > 0 && (
+                        <HiMiniXMark
+                          onClick={() => {
+                            setSearchQuery("");
+                            setCurrentPage(1);
+                            setsearchClicked(false);
+                            refetchDateFetch({
+                              searchQuery: null,
+                              page: 1,
+                              limit: itemsPerRow.name,
+                              start_date: isDateRangeIsSelected
+                                ? formatDate(selectedRange.startDate)
+                                : startDate,
+                              end_date: isDateRangeIsSelected
+                                ? formatDate(selectedRange.endDate)
+                                : endDate,
+                              status: settlementStatusFilter,
+                              schools: schoolId,
+                            });
+                          }}
+                          className="text-[#1E1B59] cursor-pointer text-md ml-2 shrink-0"
+                        />
+                      )}
+                      <div className="w-10 z-50 shrink-0 flex justify-center items-center">
+                        {searchQuery.length > 3 &&
+                        (loading || refetchLoading) ? (
+                          <AiOutlineLoading3Quarters className="text-xs animate-spin" />
+                        ) : (
+                          <IoSearchOutline
+                            onClick={() => {
+                              if (searchQuery.length > 3) {
+                                setsearchClicked(true);
+                                setCurrentPage(1);
+                                refetchDateFetch({
+                                  searchQuery: searchQuery,
+                                  page: 1,
+                                  limit: itemsPerRow.name,
+                                  start_date: isDateRangeIsSelected
+                                    ? formatDate(selectedRange.startDate)
+                                    : startDate,
+                                  end_date: isDateRangeIsSelected
+                                    ? formatDate(selectedRange.endDate)
+                                    : endDate,
+                                  status: settlementStatusFilter,
+                                  schools: schoolId,
+                                });
+                              }
+                            }}
+                            className=" cursor-pointer text-edvion_black text-opacity-50 text-md "
+                          />
+                        )}
+                      </div>
                     </div>
 
                     <div className="flex items-center xl:max-w-lg w-full">
@@ -384,8 +445,24 @@ function Refund() {
                   <div className="mt-2">
                     <RowsPerPageSelect
                       setItemsPerRow={(e: any) => {
+                        if (itemsPerRow.name === e.name) {
+                          return;
+                        }
                         setCurrentPage(1);
                         setItemsPerRow(e);
+                        refetchDateFetch({
+                          searchQuery: searchQuery,
+                          page: 1,
+                          limit: e.name,
+                          start_date: isDateRangeIsSelected
+                            ? formatDate(selectedRange.startDate)
+                            : startDate,
+                          end_date: isDateRangeIsSelected
+                            ? formatDate(selectedRange.endDate)
+                            : endDate,
+                          status: settlementStatusFilter,
+                          schools: schoolId,
+                        });
                         setUrlFilters({
                           ...urlFilters,
                           limit: e.name,
@@ -532,6 +609,7 @@ function Refund() {
                           <FaX
                             className="text-white cursor-pointer h-3"
                             onClick={() => {
+                              setCurrentPage(1);
                               refetchDateFetch({
                                 searchQuery: searchQuery,
                                 page: 1,
@@ -569,7 +647,7 @@ function Refund() {
                   "Reason",
                 ],
                 ...refundRequestData.map((data: any, index: any) => [
-                  <div>{index + 1}</div>,
+                  <div>{(currentPage - 1) * itemsPerRow.name + 1 + index}</div>,
                   <Link
                     to={`/payments/transaction-receipt/${data.order_id}?sid=${data.school_id}`}
                   >
