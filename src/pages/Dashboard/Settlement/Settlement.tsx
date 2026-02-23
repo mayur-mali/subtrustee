@@ -78,7 +78,6 @@ const Settlement = () => {
         status: settlementStatusFilter || undefined,
         startDate: startDate || undefined,
         endDate: endDate || undefined,
-        dateFilterType: dateFilterType || undefined,
       },
     },
   });
