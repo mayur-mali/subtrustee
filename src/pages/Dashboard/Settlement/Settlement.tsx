@@ -6,6 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { HiMiniXMark } from "react-icons/hi2";
 import {
   _Table,
   Pagination,
@@ -33,10 +34,8 @@ export const CustomDropdownIndicator = () => {
 };
 
 const Settlement = () => {
-  // Search
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const debounceTimerRef = useRef<number | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [activeSearch, setActiveSearch] = useState<string | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -74,7 +73,8 @@ const Settlement = () => {
       filters: {
         page: currentPage,
         limit: itemsPerPage.name,
-        search: debouncedSearch || undefined,
+        // search: debouncedSearch || undefined,
+        search: activeSearch || undefined,
         status: settlementStatusFilter || undefined,
         startDate: startDate ? new Date(startDate).toISOString() : undefined,
         endDate: endDate ? new Date(endDate).toISOString() : undefined,
@@ -114,21 +114,21 @@ const Settlement = () => {
       })),
     [schoolsData],
   );
-  useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-    // setTimeout returns NodeJS.Timeout in Node, number in browser; for TS DOM lib it's number
-    debounceTimerRef.current = window.setTimeout(() => {
-      setDebouncedSearch(searchQuery.trim());
-      setCurrentPage(1);
-    }, 300);
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [searchQuery]);
+  // useEffect(() => {
+  //   if (debounceTimerRef.current) {
+  //     clearTimeout(debounceTimerRef.current);
+  //   }
+  //   // setTimeout returns NodeJS.Timeout in Node, number in browser; for TS DOM lib it's number
+  //   debounceTimerRef.current = window.setTimeout(() => {
+  //     setDebouncedSearch(searchQuery.trim());
+  //     setCurrentPage(1);
+  //   }, 300);
+  //   return () => {
+  //     if (debounceTimerRef.current) {
+  //       clearTimeout(debounceTimerRef.current);
+  //     }
+  //   };
+  // }, [searchQuery]);
 
   // Utilities
   const filterByDateRange = useCallback(
@@ -252,6 +252,17 @@ const Settlement = () => {
     }
   };
 
+  const performSearch = () => {
+    setActiveSearch(searchInput.trim() || null);
+    setCurrentPage(1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      performSearch();
+    }
+  };
+
   return (
     <div className="overflow-hidden">
       <h2 className="text-[#1B163B] text-[28px] font-">Settlements</h2>
@@ -279,32 +290,39 @@ const Settlement = () => {
           loading={loading || schoolsLoading}
           pagination={false}
           copyContent={[9]}
-          filter={[debouncedSearch]}
+          // filter={[debouncedSearch]}
           isCustomFilter={true}
           searchBox={
             <div className="flex flex-col w-full">
               <div className="flex xl:!flex-row flex-col gap-2  w-full xl:items-center items-start mb-2 justify-between">
-                <div className="bg-[#EEF1F6] py-3 items-center flex px-6 xl:max-w-md max-w-[34rem] w-full rounded-lg relative">
-                  <IoSearchOutline className="text-edvion_black text-opacity-50 text-md" />
-
+                <div className="bg-[#EEF1F6] py-3 items-center flex px-3 xl:max-w-md max-w-[34rem] w-full rounded-lg">
                   <input
+                    className="text-xs pr-2 bg-transparent focus:outline-none w-full placeholder:font-normal"
                     type="text"
-                    className="ml-4 text-xs bg-transparent focus:outline-none w-full placeholder:font-normal pr-6"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    value={searchInput}
+                    placeholder=" Search..."
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
                   />
-
-                  {searchQuery && (
-                    <FaX
-                      className="absolute right-4 text-xs cursor-pointer text-gray-500 hover:text-black"
+                  {searchInput && (
+                    <HiMiniXMark
                       onClick={() => {
-                        setSearchQuery("");
-                        setDebouncedSearch("");
+                        setSearchInput("");
+                        setActiveSearch(null);
                         setCurrentPage(1);
                       }}
+                      className="text-[#1E1B59] cursor-pointer text-md ml-2 shrink-0"
                     />
                   )}
+                  <div className="w-10 z-50 shrink-0 flex justify-center items-center">
+                    <IoSearchOutline
+                      onClick={() => {
+                        setActiveSearch(searchInput.trim() || null);
+                        setCurrentPage(1);
+                      }}
+                      className="cursor-pointer text-edvion_black text-opacity-50 text-md"
+                    />
+                  </div>
                 </div>
 
                 <div className="relative flex items-center xl:max-w-lg w-full">
