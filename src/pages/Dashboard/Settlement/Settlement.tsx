@@ -76,9 +76,9 @@ const Settlement = () => {
         limit: itemsPerPage.name,
         search: debouncedSearch || undefined,
         status: settlementStatusFilter || undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
-        dateFilterType: dateFilterType || undefined,
+        startDate: startDate ? new Date(startDate).toISOString() : undefined,
+        endDate: endDate ? new Date(endDate).toISOString() : undefined,
+        // dateFilterType: dateFilterType || undefined,
       },
     },
   });
@@ -307,7 +307,7 @@ const Settlement = () => {
                   )}
                 </div>
 
-                <div className="flex items-center xl:max-w-lg w-full">
+                <div className="relative flex items-center xl:max-w-lg w-full">
                   <Filters
                     selectedTime={selectedTime}
                     dateRange={dateRange}
@@ -423,6 +423,7 @@ const Settlement = () => {
                               key: "selection",
                             },
                           ]);
+                          setStartDate("");
                           setEndDate("");
                           setSelectDays(0);
                         }}
