@@ -54,6 +54,10 @@ function InstituteList() {
     setActiveSearch(searchInput.trim());
     setCurrentPage(1);
   };
+  const handlePageChange = (pageNumber: any) => {
+    setPage(pageNumber);
+    setCurrentPage(pageNumber);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
@@ -106,11 +110,11 @@ function InstituteList() {
                 </div>
               </div>
 
-              <div className="flex">
+              {/* <div className="flex">
                 <button className="py-2 bg-edviron_black text-sm rounded-[4px] text-white float-right px-6 ml-2">
                   + Add Institute
                 </button>
-              </div>
+              </div> */}
             </div>
 
             {/* (Optional filter chips area – currently commented) */}
@@ -236,6 +240,15 @@ function InstituteList() {
             </button>,
           ]),
         ]}
+        footer={
+          <div className="flex justify-center items-center">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={Math.ceil(data?.getSubTrusteeSchools?.total_pages)}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        }
       />
     </div>
   );

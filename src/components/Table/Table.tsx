@@ -33,7 +33,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: any) {
       buttons.push(
         <button
           key={i}
-          className={`px-4 py-1 ${
+          className={`px-4 cursor-pointer py-1 ${
             i === currentPage
               ? "bg-[#1B163B] text-white text-sm"
               : " text-[#1B163B] text-sm font-normal"
