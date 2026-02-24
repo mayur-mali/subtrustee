@@ -45,7 +45,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="reports" element={<Reports />} />
           <Route index element={<Overview />} />
-          <Route path="institute" element={<Institute />} />
+          <Route path="institute/*" element={<Institute />} />
           <Route path="payments" element={<PaymentLayout menu={true} />}>
             <Route index element={<Transaction />} />
             <Route path="transaction" element={<Transaction />} />

@@ -8,6 +8,40 @@ export const LOG_IN_TRUSTEE = gql`
   }
 `;
 
+export const GET_SCHOOLS = gql`
+  query GetSchools($searchQuery: String, $page: Float, $limit: Float) {
+    getSchoolQuery(searchQuery: $searchQuery, page: $page, limit: $limit) {
+      total_pages
+      page
+      totalItems
+      schools {
+        updatedAt
+        school_name
+        phone_number
+        school_id
+        pg_key
+        email
+        merchantStatus
+        disabled_modes
+        bank_details {
+          account_holder_name
+          account_number
+          ifsc_code
+        }
+        platform_charges {
+          platform_type
+          payment_mode
+          range_charge {
+            upto
+            charge_type
+            charge
+          }
+        }
+      }
+    }
+  }
+`;
+
 export const GET_USER = gql`
   query GetSubTrusteeQuery {
     getSubTrusteeQuery {
