@@ -8,6 +8,7 @@ import {
   RowsPerPageSelect,
   Table,
 } from "../../../components/Table/Table";
+import { toast } from "react-toastify";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import ToolTip from "../../../components/generics/ToolTip";
 import { MdContentCopy } from "react-icons/md";
@@ -155,13 +156,22 @@ function InstituteList() {
                   <div className="w-full truncate">{school.school_name}</div>
                 </ToolTip>
               </Link>
-              <button>
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(school.school_id);
+                    toast.success("Copied to clipboard");
+                  } catch (err) {
+                    toast.error("Failed to copy Institute ID ❌");
+                    console.error("Copy failed:", err);
+                  }
+                }}
+              >
                 <ToolTip text="Copy Institute ID">
                   <MdContentCopy
                     className="cursor-pointer text-[#717171] shrink-0 text-xl"
                     style={{
                       fontSize: "22px",
-                      color: "",
                       backgroundColor: "transparent",
                     }}
                   />
