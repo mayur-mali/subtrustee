@@ -38,6 +38,7 @@ function VendorTransaction() {
   });
   const [type, setType] = useState("");
   const [dateRange, setDateRange] = useState("Today");
+
   const [transactionData, setTransactionData] = useState<any>([]);
   const [isDateRangeIsSelected, setIsDateRangeIsSelected] = useState(false);
   const [status, setStatus] = useState<any>(null);
@@ -67,6 +68,8 @@ function VendorTransaction() {
       endDate: endDate,
     },
   });
+  const showCustomDate =
+    isDateRangeIsSelected && urlFilters.start_date && urlFilters.end_date;
 
   const [filters, setFilters] = useState<any>({
     paymentMode: {
@@ -681,7 +684,7 @@ function VendorTransaction() {
                     </button>
                   </div>
                 )}
-                {dateRange !== "" && (
+                {showCustomDate && (
                   <div className=" text-sm m-2  max-w-fit ">
                     <button
                       onClick={async () => {
@@ -703,12 +706,17 @@ function VendorTransaction() {
                           ),
                           gateway: getPaymentMode(filters.gateway, type),
                         });
-                        setDateRange("");
+                        setDateRange("Today");
                         setIsDateRangeIsSelected(false);
+                        setUrlFilters({
+                          ...urlFilters,
+                          start_date: "",
+                          end_date: "",
+                        });
                       }}
                       className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
                     >
-                      {dateRange} <HiMiniXMark className=" text-lg ml-1" />
+                      Custom Date <HiMiniXMark className=" text-lg ml-1" />
                     </button>
                   </div>
                 )}

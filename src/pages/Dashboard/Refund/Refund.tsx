@@ -244,17 +244,76 @@ function Refund() {
               searchBox={
                 <div className="flex flex-col w-full">
                   <div className="flex xl:!flex-row flex-col gap-2  w-full xl:items-center items-start mb-2 justify-between">
-                    <div className="bg-[#EEF1F6] py-3 items-center flex  px-6 xl:max-w-md max-w-[34rem] w-full rounded-lg">
-                      <IoSearchOutline />
+                    <div className="bg-[#EEF1F6] py-3 items-center flex px-6 xl:max-w-md max-w-[34rem] w-full rounded-lg">
                       <input
                         type="text"
-                        className="ml-4 text-xs bg-transparent focus:outline-none w-full placeholder:font-normal"
-                        onFocus={(e) =>
-                          (e.target.style.borderColor = "transparent")
-                        }
                         placeholder="Search..."
                         value={searchQuery}
-                        onChange={(e) => handelSearchQueryChange(e)}
+                        onChange={(e) => {
+                          setSearchQuery(e.target.value);
+                          setCurrentPage(1);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            refetchDateFetch({
+                              searchQuery: searchQuery,
+                              page: 1,
+                              limit: itemsPerRow.name,
+                              start_date: isDateRangeIsSelected
+                                ? formatDate(selectedRange.startDate)
+                                : startDate,
+                              end_date: isDateRangeIsSelected
+                                ? formatDate(selectedRange.endDate)
+                                : endDate,
+                              status: settlementStatusFilter,
+                              schools: schoolId,
+                            });
+                          }
+                        }}
+                        className="text-xs bg-transparent focus:outline-none w-full placeholder:font-normal"
+                      />
+
+                      {searchQuery && (
+                        <HiMiniXMark
+                          onClick={() => {
+                            setSearchQuery("");
+                            setCurrentPage(1);
+                            refetchDateFetch({
+                              searchQuery: "",
+                              page: 1,
+                              limit: itemsPerRow.name,
+                              start_date: isDateRangeIsSelected
+                                ? formatDate(selectedRange.startDate)
+                                : startDate,
+                              end_date: isDateRangeIsSelected
+                                ? formatDate(selectedRange.endDate)
+                                : endDate,
+                              status: settlementStatusFilter,
+                              schools: schoolId,
+                            });
+                          }}
+                          className="text-[#1E1B59] cursor-pointer text-md mr-2 shrink-0"
+                        />
+                      )}
+
+                      <IoSearchOutline
+                        onClick={() => {
+                          if (!searchQuery) return;
+                          refetchDateFetch({
+                            searchQuery: searchQuery,
+                            page: 1,
+                            limit: itemsPerRow.name,
+                            start_date: isDateRangeIsSelected
+                              ? formatDate(selectedRange.startDate)
+                              : startDate,
+                            end_date: isDateRangeIsSelected
+                              ? formatDate(selectedRange.endDate)
+                              : endDate,
+                            status: settlementStatusFilter,
+                            schools: schoolId,
+                          });
+                        }}
+                        className="cursor-pointer text-[#1E1B59] shrink-0 text-md"
                       />
                     </div>
 
@@ -358,6 +417,7 @@ function Refund() {
                       </div>
                       <div className="w-full min-w-[180px] max-w-[180px]">
                         <Institute
+                          value={selectSchool}
                           setSelectSchool={setSelectSchool}
                           setSchoolId={(id: any) => {
                             const updatedSchoolIds = [...schoolId, id];
@@ -369,10 +429,10 @@ function Refund() {
                               limit: itemsPerRow.name,
                               start_date: isDateRangeIsSelected
                                 ? formatDate(selectedRange.startDate)
-                                : "",
+                                : startDate,
                               end_date: isDateRangeIsSelected
                                 ? formatDate(selectedRange.endDate)
-                                : "",
+                                : endDate,
                               status: settlementStatusFilter,
                               schools: updatedSchoolIds,
                             });

@@ -196,6 +196,25 @@ export const GET_SUBTRUSTEE_TRANSACTIONS_OF_SETTLEMENT = gql`
   }
 `;
 
+export const GET_TRANSACTION_REFUND = gql`
+  query GetRefundRequest($order_id: String!) {
+    getRefundRequest(order_id: $order_id) {
+      _id
+      trustee_id
+      createdAt
+      updatedAt
+      school_id
+      order_id
+      status
+      refund_amount
+      order_amount
+      transaction_amount
+      custom_id
+      reason
+    }
+  }
+`;
+
 export const SUBTRUSTEE_REFUND_REQUESTS = gql`
   query GetSubTrusteeRefundRequest(
     $page: Float
