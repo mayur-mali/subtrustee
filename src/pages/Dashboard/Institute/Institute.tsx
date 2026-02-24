@@ -39,13 +39,13 @@ function InstituteList() {
 
   const location = useLocation();
   const { loading, error, data, refetch } = useQuery(GET_INSTITUTES, {
+    fetchPolicy: "network-only",
     variables: {
       page: currentPage,
       limit: itemsPerRow.name,
       searchQuery: activeSearch, // use activeSearch, not searchInput
     },
   });
-  const schools = data?.getSubTrusteeSchools?.schools || [];
 
   const [logInToMerchant] = useMutation(LOGIN_TO_MERCHANT_WITH_TRUSTEE);
 
@@ -142,103 +142,105 @@ function InstituteList() {
             "KYC Dashboard",
             "Merchant Dashboard",
           ],
-          ...schools?.map((school: any, index: number) => [
-            <div className="ml-4">
-              {(data.getSubTrusteeSchools.page - 1) * itemsPerRow.name +
-                index +
-                1}
-            </div>,
-            <div
-              className="flex justify-between items-center"
-              key={school.school_id}
-            >
-              <Link
-                to="vendor"
-                state={{ schoolId: school.school_id, school: school }}
+          ...(data?.getSubTrusteeSchools?.schools?.map(
+            (school: any, index: number) => [
+              <div className="ml-4">
+                {(data.getSubTrusteeSchools.page - 1) * itemsPerRow.name +
+                  index +
+                  1}
+              </div>,
+              <div
+                className="flex justify-between items-center"
+                key={school.school_id}
               >
-                <ToolTip text={school.school_name}>
-                  <div className="w-full truncate">{school.school_name}</div>
-                </ToolTip>
-              </Link>
+                <Link
+                  to="vendor"
+                  state={{ schoolId: school.school_id, school: school }}
+                >
+                  <ToolTip text={school.school_name}>
+                    <div className="w-full truncate">{school.school_name}</div>
+                  </ToolTip>
+                </Link>
+                <button
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(school.school_id);
+                      toast.success("Copied to clipboard");
+                    } catch (err) {
+                      toast.error("Failed to copy Institute ID ❌");
+                      console.error("Copy failed:", err);
+                    }
+                  }}
+                >
+                  <ToolTip text="Copy Institute ID">
+                    <MdContentCopy
+                      className="cursor-pointer text-[#717171] shrink-0 text-xl"
+                      style={{
+                        fontSize: "22px",
+                        backgroundColor: "transparent",
+                      }}
+                    />
+                  </ToolTip>
+                </button>
+              </div>,
+              <div className="truncate" title={school.email}>
+                {school.email ? school.email : "NA"}
+              </div>,
+              <div className="truncate">
+                {" "}
+                {school.merchantStatus ? school.merchantStatus : "NA"}
+              </div>,
               <button
+                disabled={school.pg_key}
+                className="px-4 py-2 border disabled:border-gray-400 disabled:text-gray-400 border-edviron_black text-[#6687FF] font-normal rounded-[4px]"
+              >
+                Resend Email
+              </button>,
+              <>
+                {school.pg_key ? (
+                  <div className="flex justify-between gap-x-2 items-center">
+                    <p className="bg-[#EEF1F6] truncate w-full py-1.5 px-4 rounded-[4px]">
+                      {school.pg_key}
+                    </p>
+                    <button>{/* Copy button placeholder */}</button>
+                  </div>
+                ) : (
+                  <p className="bg-gray-100 py-1.5 px-4 rounded-[4px]">
+                    PG key is not enabled
+                  </p>
+                )}
+              </>,
+              <button
+                disabled={school.pg_key}
+                className="px-4 py-2 border disabled:border-gray-400 disabled:text-gray-400 border-edviron_black text-[#6687FF] font-normal rounded-[4px]"
+              >
+                Login to Dashboard
+              </button>,
+              <button
+                disabled={!school.pg_key || !school.email}
+                className="px-4 py-2 border cursor-pointer disabled:border-gray-400 disabled:text-gray-400 border-edviron_black text-[#6687FF] font-normal rounded-[4px]"
                 onClick={async () => {
                   try {
-                    await navigator.clipboard.writeText(school.school_id);
-                    toast.success("Copied to clipboard");
+                    const res = await logInToMerchant({
+                      variables: {
+                        email: school.email,
+                      },
+                    });
+                    if (res?.data?.generateMerchantLoginTokenForSubtrustee) {
+                      window.open(
+                        `${import.meta.env.VITE_MERCHANT_DASHBOARD_URL}/admin?token=${res?.data?.generateMerchantLoginTokenForSubtrustee}`,
+                        "_blank",
+                      );
+                    }
                   } catch (err) {
-                    toast.error("Failed to copy Institute ID ❌");
-                    console.error("Copy failed:", err);
+                    console.log("error", err);
                   }
                 }}
               >
-                <ToolTip text="Copy Institute ID">
-                  <MdContentCopy
-                    className="cursor-pointer text-[#717171] shrink-0 text-xl"
-                    style={{
-                      fontSize: "22px",
-                      backgroundColor: "transparent",
-                    }}
-                  />
-                </ToolTip>
-              </button>
-            </div>,
-            <div className="truncate" title={school.email}>
-              {school.email ? school.email : "NA"}
-            </div>,
-            <div className="truncate">
-              {" "}
-              {school.merchantStatus ? school.merchantStatus : "NA"}
-            </div>,
-            <button
-              disabled={school.pg_key}
-              className="px-4 py-2 border disabled:border-gray-400 disabled:text-gray-400 border-edviron_black text-[#6687FF] font-normal rounded-[4px]"
-            >
-              Resend Email
-            </button>,
-            <>
-              {school.pg_key ? (
-                <div className="flex justify-between gap-x-2 items-center">
-                  <p className="bg-[#EEF1F6] truncate w-full py-1.5 px-4 rounded-[4px]">
-                    {school.pg_key}
-                  </p>
-                  <button>{/* Copy button placeholder */}</button>
-                </div>
-              ) : (
-                <p className="bg-gray-100 py-1.5 px-4 rounded-[4px]">
-                  PG key is not enabled
-                </p>
-              )}
-            </>,
-            <button
-              disabled={school.pg_key}
-              className="px-4 py-2 border disabled:border-gray-400 disabled:text-gray-400 border-edviron_black text-[#6687FF] font-normal rounded-[4px]"
-            >
-              Login to Dashboard
-            </button>,
-            <button
-              disabled={!school.pg_key || !school.email}
-              className="px-4 py-2 border cursor-pointer disabled:border-gray-400 disabled:text-gray-400 border-edviron_black text-[#6687FF] font-normal rounded-[4px]"
-              onClick={async () => {
-                try {
-                  const res = await logInToMerchant({
-                    variables: {
-                      email: school.email,
-                    },
-                  });
-                  if (res?.data?.generateMerchantLoginTokenForSubtrustee) {
-                    window.open(
-                      `${import.meta.env.VITE_MERCHANT_DASHBOARD_URL}/admin?token=${res?.data?.generateMerchantLoginTokenForSubtrustee}`,
-                      "_blank",
-                    );
-                  }
-                } catch (err) {
-                  console.log("error", err);
-                }
-              }}
-            >
-              Login to Dashboard
-            </button>,
-          ]),
+                Login to Dashboard
+              </button>,
+            ],
+          ) || []),
         ]}
         footer={
           <div className="flex justify-center items-center">
