@@ -13,7 +13,11 @@ import {
   RowsPerPageSelect,
 } from "../../../components/Table";
 import Select from "react-select";
-import { GET_SETTLEMENT_REPORTS, GET_INSTITUTES } from "../../../Qurries";
+import {
+  GET_SETTLEMENT_REPORTS,
+  GET_INSTITUTES,
+  GET_ALL_SCHOOLS_QUERY_FOR_REPORT,
+} from "../../../Qurries";
 import { useQuery, useLazyQuery } from "@apollo/client";
 import { FaX } from "react-icons/fa6";
 import { IoSearchOutline } from "react-icons/io5";
@@ -42,12 +46,13 @@ const Settlement = () => {
   const [itemsPerPage, setItemsPerRow] = useState({
     name: 10,
   });
+  const [schoolName, setSchoolName] = useState("");
 
   // UI filters
   const [filters, setFilters] = useState<(string | null)[]>([null]);
   const [settlementStatusFilter, setSettlementStatusFilter] = useState("");
   const [selectDays, setSelectDays] = useState(0);
-  const [schoolId, setSchoolId] = useState<(string | null)[]>([null]);
+  const [schoolId, setSchoolId] = useState<string | null>("");
   const [unsettledAmountExplicit, setUnsettledAmountExplicit] = useState<
     number | null
   >(null);
@@ -68,49 +73,49 @@ const Settlement = () => {
     },
   ]);
 
-  const { data, loading, refetch } = useQuery(GET_SETTLEMENT_REPORTS, {
+  const { data, loading } = useQuery(GET_SETTLEMENT_REPORTS, {
     variables: {
       filters: {
         page: currentPage,
         limit: itemsPerPage.name,
-        // search: debouncedSearch || undefined,
         search: activeSearch || undefined,
         status: settlementStatusFilter || undefined,
         startDate: startDate ? new Date(startDate).toISOString() : undefined,
         endDate: endDate ? new Date(endDate).toISOString() : undefined,
-        // dateFilterType: dateFilterType || undefined,
+        schoolID: schoolId || undefined,
       },
     },
+    fetchPolicy: "network-only",
   });
 
-  // Data state
-  const settlementData = data?.getSettlementReportsSubTrustee?.data ?? [];
   const totalCount = data?.getSettlementReportsSubTrustee?.total ?? 0;
 
   // Apollo: fetch schools then settlements
-  const { data: schoolsData, loading: schoolsLoading } =
-    useQuery(GET_INSTITUTES);
+  const { data: schoolsData, loading: schoolsLoading } = useQuery(
+    GET_ALL_SCHOOLS_QUERY_FOR_REPORT,
+  );
 
-  const enrichedRows = useMemo(() => {
-    const allSchools = schoolsData?.getSubTrusteeSchools?.schools ?? [];
+  // const enrichedRows = useMemo(() => {
+  //   const allSchools = schoolsData?.getSubTrusteeSchools?.schools ?? [];
 
-    return settlementData.map((report: any) => {
-      const match = allSchools.find(
-        (s: any) => s.school_id === report.schoolId,
-      );
-      return {
-        ...report,
-        schoolName: match ? match.school_name : "Unknown School",
-      };
-    });
-  }, [settlementData, schoolsData]);
+  //   return settlementData.map((report: any) => {
+  //     const match = allSchools.find(
+  //       (s: any) => s.school_id === report.schoolId,
+  //     );
+  //     return {
+  //       ...report,
+  //       schoolName: match ? match.school_name : "Unknown School",
+  //     };
+  //   });
+  // }, [settlementData, schoolsData]);
 
   // Build schools list options once from API data
   const schoolsList = useMemo(
     () =>
-      (schoolsData?.getSubTrusteeSchools?.schools ?? []).map((school: any) => ({
+      (schoolsData?.getAllSubTrusteeSchools ?? []).map((school: any) => ({
         label: school.school_name,
         value: school.school_name,
+        id: school.school_id,
       })),
     [schoolsData],
   );
@@ -221,8 +226,8 @@ const Settlement = () => {
   };
 
   const handleSchoolFilterChange = useCallback((selectedFilter: any) => {
-    const val = selectedFilter?.value;
-    setSchoolId((prev) => (prev.includes(val) ? prev : [...prev, val]));
+    setSchoolId(selectedFilter.id);
+    setSchoolName(selectedFilter.value);
     setCurrentPage(1);
   }, []);
 
@@ -232,7 +237,8 @@ const Settlement = () => {
   };
 
   const removeSchoolFilter = (index: number) => {
-    setSchoolId((prev) => prev.filter((_, i) => i !== index));
+    setSchoolId("");
+    setSchoolName("");
     setCurrentPage(1);
   };
 
@@ -404,26 +410,24 @@ const Settlement = () => {
                       </div>
                     ),
                 )}
-
-                {schoolId.map(
-                  (school, index) =>
-                    school !== null && (
-                      <div
-                        className="bg-[#6687FFCC] text-sm m-2 rounded-lg min-w-max h-10 px-2 flex items-center gap-x-2"
-                        style={{ maxWidth: "8em" }}
-                        key={index}
-                      >
-                        <span className="text-white truncate pl-2">
-                          {school}
-                        </span>
-                        <span>
-                          <FaX
-                            className="text-white cursor-pointer h-3"
-                            onClick={() => removeSchoolFilter(index)}
-                          />
-                        </span>
-                      </div>
-                    ),
+                {schoolId && schoolName && (
+                  <div
+                    className="bg-[#6687FFCC] text-sm m-2 rounded-lg min-w-max h-10 px-2 flex items-center gap-x-2"
+                    style={{ maxWidth: "8em" }}
+                  >
+                    <span className="text-white truncate pl-2">
+                      {schoolName}
+                    </span>
+                    <span>
+                      <FaX
+                        className="text-white cursor-pointer h-3"
+                        onClick={() => {
+                          setSchoolId("");
+                          setSchoolName("");
+                        }}
+                      />
+                    </span>
+                  </div>
                 )}
 
                 {selectDays !== 0 && (
@@ -487,78 +491,80 @@ const Settlement = () => {
               "UTR No",
               "Settlement Date",
             ],
-            ...enrichedRows.map((data: any, index) => [
-              (currentPage - 1) * itemsPerPage.name + 1 + index,
-              <Link
-                to="/payments/settlements-transaction"
-                state={{
-                  utrno: data.utrNumber,
-                  settlementDate: data.settlementDate,
-                }}
-              >
-                <div className="truncate">{data.schoolName}</div>
-              </Link>,
+            ...(data?.getSettlementReportsSubTrustee?.data.map(
+              (data: any, index) => [
+                (currentPage - 1) * itemsPerPage.name + 1 + index,
+                <Link
+                  to="/payments/settlements-transaction"
+                  state={{
+                    utrno: data.utrNumber,
+                    settlementDate: data.settlementDate,
+                  }}
+                >
+                  <div className="truncate">{data.schoolName}</div>
+                </Link>,
 
-              <div className="truncate">
-                {amountFormat(data.settlementAmount)}
-              </div>,
+                <div className="truncate">
+                  {amountFormat(data.settlementAmount)}
+                </div>,
 
-              <div className="truncate">{data.adjustment}</div>,
+                <div className="truncate">{data.adjustment}</div>,
 
-              <div className="truncate">
-                {amountFormat(data.netSettlementAmount)}
-              </div>,
+                <div className="truncate">
+                  {amountFormat(data.netSettlementAmount)}
+                </div>,
 
-              <div className="truncate">
-                {new Date(data.fromDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </div>,
+                <div className="truncate">
+                  {new Date(data.fromDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </div>,
 
-              <div className="truncate">
-                {new Date(data.tillDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </div>,
+                <div className="truncate">
+                  {new Date(data.tillDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </div>,
 
-              <div
-                className={
-                  "truncate " +
-                  (data.status.toLowerCase() === "settled" ||
+                <div
+                  className={
+                    "truncate " +
+                    (data.status.toLowerCase() === "settled" ||
+                    data.status.toLowerCase() === "success"
+                      ? "text-[#04B521]"
+                      : "")
+                  }
+                >
+                  {data.status.toLowerCase() === "settled" ||
                   data.status.toLowerCase() === "success"
-                    ? "text-[#04B521]"
-                    : "")
-                }
-              >
-                {data.status.toLowerCase() === "settled" ||
-                data.status.toLowerCase() === "success"
-                  ? "Settled"
-                  : data.status}
-              </div>,
+                    ? "Settled"
+                    : data.status}
+                </div>,
 
-              <div
-                className="truncate overflow-hidden"
-                style={{ maxWidth: "5em" }}
-                title={data.utrNumber}
-              >
-                {data.utrNumber}
-              </div>,
+                <div
+                  className="truncate overflow-hidden"
+                  style={{ maxWidth: "5em" }}
+                  title={data.utrNumber}
+                >
+                  {data.utrNumber}
+                </div>,
 
-              <div className={"truncate"}>
-                {new Date(data.settlementDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                  hour: "numeric",
-                  minute: "numeric",
-                  second: "numeric",
-                })}
-              </div>,
-            ]),
+                <div className={"truncate"}>
+                  {new Date(data.settlementDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "numeric",
+                    second: "numeric",
+                  })}
+                </div>,
+              ],
+            ) || []),
           ]}
           footer={
             <div className="flex justify-center items-center">

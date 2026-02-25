@@ -170,24 +170,36 @@ export const GET_TRANSACTIONS = gql`
 `;
 
 export const GET_SETTLEMENT_REPORTS = gql`
-  query GetSettlementReportsSubTrustee($filters: SettlementFilterInput) {
+  query GetSettlementReportsSubTrustee(
+    $filters: SettlementFilterInputSubtrustee
+  ) {
     getSettlementReportsSubTrustee(filters: $filters) {
+      total
+      page
+      limit
       data {
         settlementAmount
         adjustment
         netSettlementAmount
         fromDate
+        createdAt
+        updatedAt
+        settlementInitiatedOn
         tillDate
+        settlement_initiated_on
         status
         utrNumber
         settlementDate
+        clientId
+        gateway
+        razorpay_id
+        remarks
+        is_cf_label
         trustee
         schoolId
-        clientId
+        worldline_merchant_code
+        schoolName
       }
-      total
-      page
-      limit
     }
   }
 `;
