@@ -22,6 +22,24 @@ function MixFilter({
   const [openFilter, setOpenFilter] = useState(false);
   const [activTab, setActiveTab] = useState(1);
 
+  const [pendingFilters, setPendingFilters] = useState<any>({
+    paymentMode: { ...filters.paymentMode },
+    gateway: { ...filters.gateway },
+  });
+
+  const setPendingFiltersWrapper = (updater: any) => {
+    setPendingFilters((prev: any) => {
+      const fullState = {
+        ...filters,
+        paymentMode: prev.paymentMode,
+        gateway: prev.gateway,
+      };
+      const updated =
+        typeof updater === "function" ? updater(fullState) : updater;
+      return { paymentMode: updated.paymentMode, gateway: updated.gateway };
+    });
+  };
+
   const divRef = useRef<HTMLDivElement>(null);
 
   const handleOutsideClick = (event: any) => {
@@ -41,9 +59,16 @@ function MixFilter({
     <div className="relative w-full " ref={divRef}>
       <button
         onClick={() => {
+          if (!openFilter) {
+            // sync pending state with current committed filters when opening
+            setPendingFilters({
+              paymentMode: { ...filters.paymentMode },
+              gateway: { ...filters.gateway },
+            });
+          }
           setOpenFilter(!openFilter);
         }}
-        className="focus:outline-none border border-edviron_black  hover:border-gray-300 transition-all duration-150 rounded-md py-2 w-full text-xs text-left flex items-center "
+        className="focus:outline-none border border-[#1E1B59]  hover:border-gray-300 transition-all duration-150 rounded-md py-2 w-full text-xs text-left flex items-center "
       >
         <span className="mr-auto pl-2">All Filter</span>
         <HiOutlineAdjustmentsHorizontal className=" ml-auto w-8" />
@@ -107,7 +132,10 @@ function MixFilter({
                   <Status filter={filters.status} setFilters={setFilters} />
                 )} */}
                 {activTab === 1 && (
-                  <Mode filter={filters.paymentMode} setFilters={setFilters} />
+                  <Mode
+                    filter={pendingFilters.paymentMode}
+                    setFilters={setPendingFiltersWrapper}
+                  />
                 )}
                 {activTab === 2 && (
                   <Institute
@@ -117,8 +145,8 @@ function MixFilter({
                 )}
                 {activTab === 3 && (
                   <GatewayMode
-                    filter={filters?.gateway}
-                    setFilters={setFilters}
+                    filter={pendingFilters.gateway}
+                    setFilters={setPendingFiltersWrapper}
                   />
                 )}
                 {activTab === 4 && (
@@ -133,29 +161,40 @@ function MixFilter({
               <div className="flex justify-end items-center my-2">
                 <button
                   onClick={() => {
+                    setPendingFilters({
+                      paymentMode: { ...filters.paymentMode },
+                      gateway: { ...filters.gateway },
+                    });
                     onCancel();
                     setType("");
                     setActiveTab(1);
                     setOpenFilter(false);
                   }}
-                  className=" pointer border mr-4 px-4 py-1 rounded-md text-sm text-[#6687FF] border-edviron_black"
+                  className=" pointer border mr-4 px-4 py-1 rounded-md text-sm text-[#6687FF] border-[#1E1B59]"
                 >
                   Cancel
                 </button>
 
                 <button
                   onClick={() => {
-                    if (!paymentModes.length && !gateway.length) {
-                      onApply();
-                    } else {
+                    setFilters((prev: any) => ({
+                      ...prev,
+                      paymentMode: pendingFilters.paymentMode,
+                      gateway: pendingFilters.gateway,
+                    }));
+                    const hasFilters =
+                      Object.values(pendingFilters.paymentMode).some(Boolean) ||
+                      Object.values(pendingFilters.gateway).some(Boolean);
+                    if (hasFilters) {
                       setType("Custom Filter");
-                      onApply();
                     }
+                    onApply(pendingFilters.paymentMode, pendingFilters.gateway);
+                    setOpenFilter(false);
                   }}
                   //disabled={!selectedItems.length}
-                  className="pointer border  px-4 py-1 rounded-md text-sm text-[#6687FF] bg-edviron_black border-edviron_black"
+                  className="pointer border  px-4 py-1 rounded-md text-sm text-white bg-[#1E1B59] border-[#1E1B59]"
                   // {
-                  //   "border px-4 py-1 rounded-md text-sm text-white bg-edviron_black disabled:bg-[#EEF1F6] disabled:text-slate-700"
+                  //   "border px-4 py-1 rounded-md text-sm text-white bg-[#1E1B59] disabled:bg-[#EEF1F6] disabled:text-slate-700"
                   // }
                 >
                   Apply

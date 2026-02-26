@@ -240,7 +240,7 @@ function Filters(props: any) {
               };
             });
           }}
-          className="border border-edviron_black rounded-md py-2 w-full  
+          className="border border-[#1E1B59] rounded-md py-2 w-full  
           
           text-xs text-left flex items-center"
         >
@@ -483,7 +483,7 @@ function Filters(props: any) {
               };
             })
           }
-          className="border border-edviron_black text-xs rounded-md py-2 w-full lg:min-w-[11rem] min-w-fit text-left flex items-center"
+          className="border border-[#1E1B59] text-xs rounded-md py-2 w-full lg:min-w-[11rem] min-w-fit text-left flex items-center"
         >
           <span className="mr-auto pl-2">Status</span>
           <IoIosArrowDown className=" ml-auto w-8" />
@@ -562,7 +562,7 @@ function Filters(props: any) {
                 };
               })
             }
-            className=" border text-xs border-edviron_black rounded-md py-2 w-full lg:min-w-[11rem] min-w-[6rem] text-left flex items-center"
+            className=" border text-xs border-[#1E1B59] rounded-md py-2 w-full lg:min-w-[11rem] min-w-[6rem] text-left flex items-center"
           >
             <span className="mr-auto pl-2">All Filters</span>
             <HiOutlineAdjustmentsHorizontal className=" ml-auto w-8" />

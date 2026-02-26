@@ -106,7 +106,7 @@ function TransactionDateFilter({
         onClick={() => {
           setOpenDateRange(!openDateRange);
         }}
-        className="focus:outline-none border border-edviron_black  hover:border-gray-300 transition-all duration-150 rounded-md py-2 w-full text-xs text-left flex items-center "
+        className="focus:outline-none border border-[#1E1B59]  hover:border-gray-300 transition-all duration-150 rounded-md py-2 w-full text-xs text-left flex items-center "
       >
         <span className="mr-auto pl-2">
           Date {type === "Today" && <span>(Today)</span>}

@@ -764,18 +764,25 @@ export default function Transaction() {
                             gateway: getPaymentMode(filters.gateway, type),
                           });
                         }}
-                        onApply={() => {
+                        onApply={(
+                          pendingPaymentMode: any,
+                          pendingGateway: any,
+                        ) => {
+                          const paymentModesResult = getPaymentMode(
+                            pendingPaymentMode,
+                            type,
+                          );
+                          const gatewayResult = getPaymentMode(
+                            pendingGateway,
+                            type,
+                          );
                           setCurrentPage(1);
                           setUrlFilters({
                             ...urlFilters,
                             school_id: selectSchool === "" ? null : schoolId,
                             school_name: selectSchool,
-                            payment_modes: getPaymentMode(
-                              filters.paymentMode,
-                              type,
-                            ),
-
-                            gateway: getPaymentMode(filters.gateway, type),
+                            payment_modes: paymentModesResult,
+                            gateway: gatewayResult,
                           });
                           refetchDataFetch({
                             start_date: isDateRangeIsSelected
@@ -785,19 +792,12 @@ export default function Transaction() {
                               ? formatDate(selectedRange.endDate)
                               : endDate,
                             status: status?.toUpperCase(),
-
                             school_id: selectSchool === "" ? null : schoolId,
-                            payment_modes: getPaymentMode(
-                              filters.paymentMode,
-                              type,
-                            )?.includes("qr")
+                            payment_modes: paymentModesResult?.includes("qr")
                               ? null
-                              : getPaymentMode(filters.paymentMode, type),
-                            isQrCode: getPaymentMode(
-                              filters.paymentMode,
-                              type,
-                            )?.includes("qr"),
-                            gateway: getPaymentMode(filters.gateway, type),
+                              : paymentModesResult,
+                            isQrCode: paymentModesResult?.includes("qr"),
+                            gateway: gatewayResult,
                           });
                         }}
                         filters={filters}
