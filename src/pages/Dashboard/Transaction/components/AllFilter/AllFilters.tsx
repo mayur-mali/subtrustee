@@ -194,7 +194,7 @@ function AllFilters(props: any) {
         <div className="flex mt-auto ml-auto">
           <button
             onClick={() => clearFilter()}
-            className="border mr-4 px-4 py-1 rounded-md text-sm text-[#6687FF] border-edviron_black"
+            className="border mr-4 px-4 py-1 rounded-md text-sm text-[#6687FF] border-[#1E1B59]"
           >
             Clear
           </button>
@@ -204,7 +204,7 @@ function AllFilters(props: any) {
             className={`border px-4 py-1 rounded-md text-sm ${
               filter.size === 0
                 ? "bg-[#EEF1F6] text-slate-700"
-                : "text-white bg-edviron_black"
+                : "text-white bg-[#1E1B59]"
             } `}
           >
             Apply
@@ -231,7 +231,7 @@ function AllFilters(props: any) {
         <div className="flex mt-auto ml-auto ">
           <button
             onClick={() => clearFilter()}
-            className="border mr-4 px-4 py-1 rounded-md text-sm text-[#6687FF] border-edviron_black"
+            className="border mr-4 px-4 py-1 rounded-md text-sm text-[#6687FF] border-[#1E1B59]"
           >
             Clear
           </button>
@@ -240,8 +240,8 @@ function AllFilters(props: any) {
             disabled={filter.size === 0}
             className={`border px-4 py-1 rounded-md text-sm ${
               filter.size === 0
-                ? "bg-[#EEF1F6] text-slate-700"
-                : "text-white bg-edviron_black"
+                ? "bg-[#1E1B59] text-slate-700"
+                : "text-white bg-[#1E1B59]"
             } `}
           >
             Apply
@@ -341,7 +341,7 @@ function AllFilters(props: any) {
                 name: null,
               }))
             }
-            className="border px-4 py-1 rounded-md text-sm text-[#6687FF] border-edviron_black"
+            className="border px-4 py-1 rounded-md text-sm text-[#6687FF] border-[#1E1B59]"
           >
             Clear
           </button>
@@ -349,7 +349,7 @@ function AllFilters(props: any) {
             onClick={() => {
               // Apply button action
             }}
-            className="border px-4 py-1 rounded-md text-sm text-white bg-edviron_black"
+            className="border px-4 py-1 rounded-md text-sm text-white bg-[#1E1B59]"
           >
             Apply
           </button>
