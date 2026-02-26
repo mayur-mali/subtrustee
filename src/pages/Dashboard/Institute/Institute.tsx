@@ -17,7 +17,7 @@ import { IoSearchOutline } from "react-icons/io5";
 import { HiMiniXMark } from "react-icons/hi2"; // <-- import for clear button
 import React, { useState } from "react";
 import Modal from "../../../components/Modal/Modal";
-import { toast } from "react-toastify";
+import Vendor from "../components/school/Vendor";
 
 const preventNegativeValues = (e: React.KeyboardEvent<HTMLInputElement>) => {
   if (e.key === "-" || e.key === "+") {
@@ -31,7 +31,6 @@ const preventPasteNegative = (e: React.ClipboardEvent<HTMLInputElement>) => {
     e.preventDefault();
   }
 };
-import Vendor from "../components/school/Vendor";
 
 export default function Institute() {
   return (
@@ -50,6 +49,8 @@ function InstituteList() {
   });
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
   const [showModal, setShowModal] = React.useState(false);
   const [formData, setFormData] = useState({
     instituteName: "",
@@ -176,14 +177,14 @@ function InstituteList() {
                   </div>
                 </div>
               </div>
-<!--               <div className="flex ">
+              {/* <div className="flex ">
                 <button
                   onClick={() => setShowModal(!showModal)}
                   className="py-2 bg-[#1E1B59] text-sm rounded-[4px] text-white float-right px-6 ml-2"
                 >
                   + Add Institute
                 </button>
-              </div> */} -->
+              </div>  */}
             </div>
 
             {/* (Optional filter chips area – currently commented) */}

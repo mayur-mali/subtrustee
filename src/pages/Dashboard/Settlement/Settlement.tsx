@@ -73,6 +73,10 @@ const Settlement = () => {
     },
   ]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [settlementStatusFilter]);
+
   const { data, loading } = useQuery(GET_SETTLEMENT_REPORTS, {
     variables: {
       filters: {
