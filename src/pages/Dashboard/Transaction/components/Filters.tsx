@@ -183,38 +183,32 @@ function Filters(props: any) {
 
   const handleClearTimeRangeSettlement = () => {
     props.setDateRange([
-      {
-        startDate: new Date(),
-        endDate: new Date(""),
-        key: "selection",
-      },
+      { startDate: new Date(), endDate: new Date(""), key: "selection" },
     ]);
     props.setStartDate("");
     props.setDateFilterType("");
+    props.setStartDate("");
     props.setEndDate("");
     props.setSelectDays(0);
+    setPendingFilter(null);
   };
   const handleApplyClick = () => {
     if (props.dateRange[0].startDate && props.dateRange[0].endDate) {
       props.setDateFilterType("Custom Date");
       const startDateObj = new Date(props.dateRange[0].startDate);
+      startDateObj.setHours(0, 0, 0, 0);
       const endDateObj = new Date(props.dateRange[0].endDate);
-
-      // Calculate the difference in milliseconds
-      const timeDifference = endDateObj.getTime() - startDateObj.getTime();
-
-      // Convert milliseconds to days (1 day = 24 * 60 * 60 * 1000 milliseconds)
-      const daysDifference = Math.ceil(timeDifference / (24 * 60 * 60 * 1000));
-
-      props.setStartDate(props.dateRange[0].startDate);
-      props.setEndDate(props.dateRange[0].endDate);
-      // setShowCustomDateModelset(!showCustomDateModel);
+      endDateObj.setHours(23, 59, 59, 999);
+      props.setStartDate(startDateObj.toISOString());
+      props.setEndDate(endDateObj.toISOString());
+      const daysDifference = Math.ceil(
+        (endDateObj.getTime() - startDateObj.getTime()) / (24 * 60 * 60 * 1000),
+      );
       props.setSelectDays(daysDifference);
       props.setDateDropDown(!props.dateDropDown);
+      toogleDropDownOpt("date");
     } else {
-      // Handle case where either startDate or endDate is null
       toast.error("Both start and end dates are required");
-      console.error("Both start and end dates are required.");
     }
   };
 
@@ -308,6 +302,7 @@ function Filters(props: any) {
                   >
                     Today
                   </button>
+
                   <button
                     className="p-1.5 cursor-pointer rounded-md text-left"
                     onClick={() => {
@@ -328,6 +323,7 @@ function Filters(props: any) {
                   >
                     Last 7 Days
                   </button>
+
                   <button
                     className="p-1.5 cursor-pointer rounded-md text-left"
                     onClick={() => {
@@ -353,6 +349,7 @@ function Filters(props: any) {
                   >
                     This Month
                   </button>
+
                   <button
                     className="p-1.5 cursor-pointer rounded-md text-left"
                     onClick={() => {

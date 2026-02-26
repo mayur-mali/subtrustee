@@ -179,11 +179,13 @@ function LineGraph({ dataArray, commission, year, setYear, refetch }: any) {
               <Select
                 selected={year}
                 setSelected={setYear}
-                options={[{ name: "2024" }, { name: "2025" }].map(
-                  (type: any) => {
-                    return { name: type.name };
-                  },
-                )}
+                options={[
+                  { name: "2024" },
+                  { name: "2025" },
+                  { name: "2026" },
+                ].map((type: any) => {
+                  return { name: type.name };
+                })}
               />
             </div>
           )}

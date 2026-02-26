@@ -6,13 +6,18 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { HiMiniXMark } from "react-icons/hi2";
 import {
   _Table,
   Pagination,
   RowsPerPageSelect,
 } from "../../../components/Table";
 import Select from "react-select";
-import { GET_SETTLEMENT_REPORTS, GET_INSTITUTES } from "../../../Qurries";
+import {
+  GET_SETTLEMENT_REPORTS,
+  GET_INSTITUTES,
+  GET_ALL_SCHOOLS_QUERY_FOR_REPORT,
+} from "../../../Qurries";
 import { useQuery, useLazyQuery } from "@apollo/client";
 import { FaX } from "react-icons/fa6";
 import { IoSearchOutline } from "react-icons/io5";
@@ -33,22 +38,21 @@ export const CustomDropdownIndicator = () => {
 };
 
 const Settlement = () => {
-  // Search
-  const [searchQuery, setSearchQuery] = useState("");
-  const [committedSearch, setCommittedSearch] = useState("");
-  const debounceTimerRef = useRef<number | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [activeSearch, setActiveSearch] = useState<string | null>(null);
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerRow] = useState({
     name: 10,
   });
+  const [schoolName, setSchoolName] = useState("");
 
   // UI filters
   const [filters, setFilters] = useState<(string | null)[]>([null]);
   const [settlementStatusFilter, setSettlementStatusFilter] = useState("");
   const [selectDays, setSelectDays] = useState(0);
-  const [schoolId, setSchoolId] = useState<(string | null)[]>([null]);
+  const [schoolId, setSchoolId] = useState<string | null>("");
   const [unsettledAmountExplicit, setUnsettledAmountExplicit] = useState<
     number | null
   >(null);
@@ -69,60 +73,67 @@ const Settlement = () => {
     },
   ]);
 
-  const { data, loading, refetch } = useQuery(GET_SETTLEMENT_REPORTS, {
+  const { data, loading } = useQuery(GET_SETTLEMENT_REPORTS, {
     variables: {
       filters: {
         page: currentPage,
         limit: itemsPerPage.name,
-        search: committedSearch || undefined,
+        search: activeSearch || undefined,
         status: settlementStatusFilter || undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        startDate: startDate ? new Date(startDate).toISOString() : undefined,
+        endDate: endDate ? new Date(endDate).toISOString() : undefined,
+        schoolID: schoolId || undefined,
       },
     },
+    fetchPolicy: "network-only",
   });
 
-  // Data state
-  const settlementData = data?.getSettlementReportsSubTrustee?.data ?? [];
   const totalCount = data?.getSettlementReportsSubTrustee?.total ?? 0;
 
   // Apollo: fetch schools then settlements
-  const { data: schoolsData, loading: schoolsLoading } =
-    useQuery(GET_INSTITUTES);
+  const { data: schoolsData, loading: schoolsLoading } = useQuery(
+    GET_ALL_SCHOOLS_QUERY_FOR_REPORT,
+  );
 
-  const enrichedRows = useMemo(() => {
-    const allSchools = schoolsData?.getSubTrusteeSchools?.schools ?? [];
+  // const enrichedRows = useMemo(() => {
+  //   const allSchools = schoolsData?.getSubTrusteeSchools?.schools ?? [];
 
-    return settlementData.map((report: any) => {
-      const match = allSchools.find(
-        (s: any) => s.school_id === report.schoolId,
-      );
-      return {
-        ...report,
-        schoolName: match ? match.school_name : "Unknown School",
-      };
-    });
-  }, [settlementData, schoolsData]);
+  //   return settlementData.map((report: any) => {
+  //     const match = allSchools.find(
+  //       (s: any) => s.school_id === report.schoolId,
+  //     );
+  //     return {
+  //       ...report,
+  //       schoolName: match ? match.school_name : "Unknown School",
+  //     };
+  //   });
+  // }, [settlementData, schoolsData]);
 
   // Build schools list options once from API data
   const schoolsList = useMemo(
     () =>
-      (schoolsData?.getSubTrusteeSchools?.schools ?? []).map((school: any) => ({
+      (schoolsData?.getAllSubTrusteeSchools ?? []).map((school: any) => ({
         label: school.school_name,
         value: school.school_name,
+        id: school.school_id,
       })),
     [schoolsData],
   );
-  useEffect(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-    return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-    };
-  }, [searchQuery]);
+  // useEffect(() => {
+  //   if (debounceTimerRef.current) {
+  //     clearTimeout(debounceTimerRef.current);
+  //   }
+  //   // setTimeout returns NodeJS.Timeout in Node, number in browser; for TS DOM lib it's number
+  //   debounceTimerRef.current = window.setTimeout(() => {
+  //     setDebouncedSearch(searchQuery.trim());
+  //     setCurrentPage(1);
+  //   }, 300);
+  //   return () => {
+  //     if (debounceTimerRef.current) {
+  //       clearTimeout(debounceTimerRef.current);
+  //     }
+  //   };
+  // }, [searchQuery]);
 
   const commitSearch = () => {
     setCommittedSearch(searchQuery.trim());
@@ -220,8 +231,8 @@ const Settlement = () => {
   };
 
   const handleSchoolFilterChange = useCallback((selectedFilter: any) => {
-    const val = selectedFilter?.value;
-    setSchoolId((prev) => (prev.includes(val) ? prev : [...prev, val]));
+    setSchoolId(selectedFilter.id);
+    setSchoolName(selectedFilter.value);
     setCurrentPage(1);
   }, []);
 
@@ -231,7 +242,8 @@ const Settlement = () => {
   };
 
   const removeSchoolFilter = (index: number) => {
-    setSchoolId((prev) => prev.filter((_, i) => i !== index));
+    setSchoolId("");
+    setSchoolName("");
     setCurrentPage(1);
   };
 
@@ -248,6 +260,17 @@ const Settlement = () => {
     } else {
       toast.error("Both start and end dates are required");
       console.error("Both start and end dates are required.");
+    }
+  };
+
+  const performSearch = () => {
+    setActiveSearch(searchInput.trim() || null);
+    setCurrentPage(1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      performSearch();
     }
   };
 
@@ -278,40 +301,42 @@ const Settlement = () => {
           loading={loading || schoolsLoading}
           pagination={false}
           copyContent={[9]}
-          filter={[committedSearch]}
+          // filter={[debouncedSearch]}
           isCustomFilter={true}
           searchBox={
             <div className="flex flex-col w-full">
               <div className="flex xl:!flex-row flex-col gap-2  w-full xl:items-center items-start mb-2 justify-between">
-                <div className="bg-[#EEF1F6] py-3 items-center flex px-6 xl:max-w-md max-w-[34rem] w-full rounded-lg relative">
+                <div className="bg-[#EEF1F6] py-3 items-center flex px-3 xl:max-w-md max-w-[34rem] w-full rounded-lg">
                   <input
+                    className="text-xs pr-2 bg-transparent focus:outline-none w-full placeholder:font-normal"
                     type="text"
-                    className="ml-1 text-xs bg-transparent focus:outline-none w-full placeholder:font-normal pr-6"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") commitSearch();
-                    }}
+                    value={searchInput}
+                    placeholder=" Search..."
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
                   />
-
-                  {searchQuery && (
-                    <FaX
-                      className="absolute right-10 text-xs cursor-pointer text-gray-500 hover:text-black"
+                  {searchInput && (
+                    <HiMiniXMark
                       onClick={() => {
-                        setSearchQuery("");
-                        setCommittedSearch("");
+                        setSearchInput("");
+                        setActiveSearch(null);
                         setCurrentPage(1);
                       }}
+                      className="text-[#1E1B59] cursor-pointer text-md ml-2 shrink-0"
                     />
                   )}
-                  <IoSearchOutline
-                    className="absolute right-3 text-lg cursor-pointer text-edvion_black text-opacity-50"
-                    onClick={commitSearch}
-                  />
+                  <div className="w-10 z-50 shrink-0 flex justify-center items-center">
+                    <IoSearchOutline
+                      onClick={() => {
+                        setActiveSearch(searchInput.trim() || null);
+                        setCurrentPage(1);
+                      }}
+                      className="cursor-pointer text-edvion_black text-opacity-50 text-md"
+                    />
+                  </div>
                 </div>
 
-                <div className="flex items-center xl:max-w-lg w-full">
+                <div className="relative flex items-center xl:max-w-lg w-full">
                   <Filters
                     selectedTime={selectedTime}
                     dateRange={dateRange}
@@ -390,26 +415,24 @@ const Settlement = () => {
                       </div>
                     ),
                 )}
-
-                {schoolId.map(
-                  (school, index) =>
-                    school !== null && (
-                      <div
-                        className="bg-[#6687FFCC] text-sm m-2 rounded-lg min-w-max h-10 px-2 flex items-center gap-x-2"
-                        style={{ maxWidth: "8em" }}
-                        key={index}
-                      >
-                        <span className="text-white truncate pl-2">
-                          {school}
-                        </span>
-                        <span>
-                          <FaX
-                            className="text-white cursor-pointer h-3"
-                            onClick={() => removeSchoolFilter(index)}
-                          />
-                        </span>
-                      </div>
-                    ),
+                {schoolId && schoolName && (
+                  <div
+                    className="bg-[#6687FFCC] text-sm m-2 rounded-lg min-w-max h-10 px-2 flex items-center gap-x-2"
+                    style={{ maxWidth: "8em" }}
+                  >
+                    <span className="text-white truncate pl-2">
+                      {schoolName}
+                    </span>
+                    <span>
+                      <FaX
+                        className="text-white cursor-pointer h-3"
+                        onClick={() => {
+                          setSchoolId("");
+                          setSchoolName("");
+                        }}
+                      />
+                    </span>
+                  </div>
                 )}
 
                 {selectDays !== 0 && (
@@ -427,6 +450,7 @@ const Settlement = () => {
                               key: "selection",
                             },
                           ]);
+                          setStartDate("");
                           setEndDate("");
                           setSelectDays(0);
                         }}
@@ -472,78 +496,80 @@ const Settlement = () => {
               "UTR No",
               "Settlement Date",
             ],
-            ...enrichedRows.map((data: any, index) => [
-              (currentPage - 1) * itemsPerPage.name + 1 + index,
-              <Link
-                to="/payments/settlements-transaction"
-                state={{
-                  utrno: data.utrNumber,
-                  settlementDate: data.settlementDate,
-                }}
-              >
-                <div className="truncate">{data.schoolName}</div>
-              </Link>,
+            ...(data?.getSettlementReportsSubTrustee?.data.map(
+              (data: any, index) => [
+                (currentPage - 1) * itemsPerPage.name + 1 + index,
+                <Link
+                  to="/payments/settlements-transaction"
+                  state={{
+                    utrno: data.utrNumber,
+                    settlementDate: data.settlementDate,
+                  }}
+                >
+                  <div className="truncate">{data.schoolName}</div>
+                </Link>,
 
-              <div className="truncate">
-                {amountFormat(data.settlementAmount)}
-              </div>,
+                <div className="truncate">
+                  {amountFormat(data.settlementAmount)}
+                </div>,
 
-              <div className="truncate">{data.adjustment}</div>,
+                <div className="truncate">{data.adjustment}</div>,
 
-              <div className="truncate">
-                {amountFormat(data.netSettlementAmount)}
-              </div>,
+                <div className="truncate">
+                  {amountFormat(data.netSettlementAmount)}
+                </div>,
 
-              <div className="truncate">
-                {new Date(data.fromDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </div>,
+                <div className="truncate">
+                  {new Date(data.fromDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </div>,
 
-              <div className="truncate">
-                {new Date(data.tillDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </div>,
+                <div className="truncate">
+                  {new Date(data.tillDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </div>,
 
-              <div
-                className={
-                  "truncate " +
-                  (data.status.toLowerCase() === "settled" ||
+                <div
+                  className={
+                    "truncate " +
+                    (data.status.toLowerCase() === "settled" ||
+                    data.status.toLowerCase() === "success"
+                      ? "text-[#04B521]"
+                      : "")
+                  }
+                >
+                  {data.status.toLowerCase() === "settled" ||
                   data.status.toLowerCase() === "success"
-                    ? "text-[#04B521]"
-                    : "")
-                }
-              >
-                {data.status.toLowerCase() === "settled" ||
-                data.status.toLowerCase() === "success"
-                  ? "Settled"
-                  : data.status}
-              </div>,
+                    ? "Settled"
+                    : data.status}
+                </div>,
 
-              <div
-                className="truncate overflow-hidden"
-                style={{ maxWidth: "5em" }}
-                title={data.utrNumber}
-              >
-                {data.utrNumber}
-              </div>,
+                <div
+                  className="truncate overflow-hidden"
+                  style={{ maxWidth: "5em" }}
+                  title={data.utrNumber}
+                >
+                  {data.utrNumber}
+                </div>,
 
-              <div className={"truncate"}>
-                {new Date(data.settlementDate).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                  hour: "numeric",
-                  minute: "numeric",
-                  second: "numeric",
-                })}
-              </div>,
-            ]),
+                <div className={"truncate"}>
+                  {new Date(data.settlementDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "numeric",
+                    second: "numeric",
+                  })}
+                </div>,
+              ],
+            ) || []),
           ]}
           footer={
             <div className="flex justify-center items-center">

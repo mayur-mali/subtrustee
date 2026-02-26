@@ -8,6 +8,40 @@ export const LOG_IN_TRUSTEE = gql`
   }
 `;
 
+export const GET_SCHOOLS = gql`
+  query GetSchools($searchQuery: String, $page: Float, $limit: Float) {
+    getSchoolQuery(searchQuery: $searchQuery, page: $page, limit: $limit) {
+      total_pages
+      page
+      totalItems
+      schools {
+        updatedAt
+        school_name
+        phone_number
+        school_id
+        pg_key
+        email
+        merchantStatus
+        disabled_modes
+        bank_details {
+          account_holder_name
+          account_number
+          ifsc_code
+        }
+        platform_charges {
+          platform_type
+          payment_mode
+          range_charge {
+            upto
+            charge_type
+            charge
+          }
+        }
+      }
+    }
+  }
+`;
+
 export const GET_USER = gql`
   query GetSubTrusteeQuery {
     getSubTrusteeQuery {
@@ -136,24 +170,36 @@ export const GET_TRANSACTIONS = gql`
 `;
 
 export const GET_SETTLEMENT_REPORTS = gql`
-  query GetSettlementReportsSubTrustee($filters: SettlementFilterInput) {
+  query GetSettlementReportsSubTrustee(
+    $filters: SettlementFilterInputSubtrustee
+  ) {
     getSettlementReportsSubTrustee(filters: $filters) {
+      total
+      page
+      limit
       data {
         settlementAmount
         adjustment
         netSettlementAmount
         fromDate
+        createdAt
+        updatedAt
+        settlementInitiatedOn
         tillDate
+        settlement_initiated_on
         status
         utrNumber
         settlementDate
+        clientId
+        gateway
+        razorpay_id
+        remarks
+        is_cf_label
         trustee
         schoolId
-        clientId
+        worldline_merchant_code
+        schoolName
       }
-      total
-      page
-      limit
     }
   }
 `;
@@ -192,6 +238,25 @@ export const GET_SUBTRUSTEE_TRANSACTIONS_OF_SETTLEMENT = gql`
         additional_data
         payment_id
       }
+    }
+  }
+`;
+
+export const GET_TRANSACTION_REFUND = gql`
+  query GetRefundRequest($order_id: String!) {
+    getRefundRequest(order_id: $order_id) {
+      _id
+      trustee_id
+      createdAt
+      updatedAt
+      school_id
+      order_id
+      status
+      refund_amount
+      order_amount
+      transaction_amount
+      custom_id
+      reason
     }
   }
 `;

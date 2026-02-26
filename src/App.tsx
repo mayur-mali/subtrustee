@@ -20,6 +20,7 @@ import VendorTransaction from "./pages/Dashboard/Payments/VendorTab/VendorTransa
 import VendorSettlement from "./pages/Dashboard/Payments/VendorTab/VendorSettlement";
 import VendorTransactionReceipt from "./pages/Dashboard/Payments/VendorTab/VendorTransactionReceipt";
 import Reports from "./components/Reports/Reports";
+import Profile from "./pages/Dashboard/Profile/Profile";
 
 function App() {
   return (
@@ -41,9 +42,10 @@ function App() {
             </ProtectedRoute>
           }
         >
+          <Route path="/profile" element={<Profile />} />
           <Route path="reports" element={<Reports />} />
           <Route index element={<Overview />} />
-          <Route path="institute" element={<Institute />} />
+          <Route path="institute/*" element={<Institute />} />
           <Route path="payments" element={<PaymentLayout menu={true} />}>
             <Route index element={<Transaction />} />
             <Route path="transaction" element={<Transaction />} />

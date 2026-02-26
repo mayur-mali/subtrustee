@@ -11,11 +11,21 @@ interface SchoolOption {
   id: string;
 }
 
-function Institute({ setSelectSchool, setSchoolId, menuIsOpen }: any) {
+function Institute({ setSelectSchool, setSchoolId, menuIsOpen, value }: any) {
   const [limit, setLimit] = useState(10);
   const [schools, setSchools] = useState<SchoolOption[]>([]);
   const [totalCount, setTotalCount] = useState<number | null>(null);
   const [inputValue, setInputValue] = useState("");
+
+  const [selectedOption, setSelectedOption] = useState<SchoolOption | null>(
+    null,
+  );
+
+  useEffect(() => {
+    if (!value) {
+      setSelectedOption(null);
+    }
+  }, [value]);
 
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -127,6 +137,7 @@ function Institute({ setSelectSchool, setSchoolId, menuIsOpen }: any) {
   return (
     <div className="w-full flex flex-col">
       <Select
+        value={selectedOption}
         className="font-normal capitalize"
         closeMenuOnSelect={true}
         onMenuScrollToBottom={handleScroll}
@@ -140,6 +151,7 @@ function Institute({ setSelectSchool, setSchoolId, menuIsOpen }: any) {
         }}
         onChange={(selected: any) => {
           if (selected) {
+            setSelectedOption(selected);
             setSelectSchool(selected.value);
             setSchoolId(selected.id);
           }

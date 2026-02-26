@@ -121,6 +121,8 @@ export default function Transaction() {
 
   const [type, setType] = useState("");
   const [dateRange, setDateRange] = useState("Today");
+  const showCustomDate =
+    isDateRangeIsSelected && urlFilters.start_date && urlFilters.end_date;
 
   const [refetchLoading, setRefetchLoading] = useState(false);
 
@@ -876,9 +878,7 @@ export default function Transaction() {
                       </button>
                     </div>
                   )}
-                  {((dateRange !== "" && isDateRangeIsSelected) ||
-                    urlFilters.end_date !== "" ||
-                    urlFilters.start_date !== "") && (
+                  {showCustomDate && (
                     <div className=" text-sm m-2  max-w-fit ">
                       <button
                         onClick={async () => {
