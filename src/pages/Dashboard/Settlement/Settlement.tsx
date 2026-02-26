@@ -140,7 +140,7 @@ const Settlement = () => {
   // }, [searchQuery]);
 
   const commitSearch = () => {
-    setCommittedSearch(searchQuery.trim());
+    setActiveSearch(searchInput.trim());
     setCurrentPage(1);
   };
 

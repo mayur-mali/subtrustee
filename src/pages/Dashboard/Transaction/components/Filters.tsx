@@ -190,7 +190,10 @@ function Filters(props: any) {
     props.setStartDate("");
     props.setEndDate("");
     props.setSelectDays(0);
-    setPendingFilter(null);
+    setPendingFilterType("");
+    setPendingStartDate(null);
+    setPendingEndDate(null);
+    setPendingSelectDays(0);
   };
   const handleApplyClick = () => {
     if (props.dateRange[0].startDate && props.dateRange[0].endDate) {
