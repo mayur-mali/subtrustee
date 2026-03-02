@@ -21,6 +21,7 @@ import VendorSettlement from "./pages/Dashboard/Payments/VendorTab/VendorSettlem
 import VendorTransactionReceipt from "./pages/Dashboard/Payments/VendorTab/VendorTransactionReceipt";
 import Reports from "./components/Reports/Reports";
 import Profile from "./pages/Dashboard/Profile/Profile";
+import TransactionsOfVendorSettlemetn from "./pages/Dashboard/Payments/VendorTab/TransactionsOfVendorSettlemetn";
 
 function App() {
   return (
@@ -66,6 +67,11 @@ function App() {
           <Route
             path="/payments/settlements-transaction"
             element={<TransactionsOfSettlement />}
+          />
+
+          <Route
+            path="/payments/vendor-settlements-transaction"
+            element={<TransactionsOfVendorSettlemetn />}
           />
         </Route>
       </Routes>

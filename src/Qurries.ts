@@ -242,6 +242,44 @@ export const GET_SUBTRUSTEE_TRANSACTIONS_OF_SETTLEMENT = gql`
   }
 `;
 
+export const GET_SUBTRUSTEE_TRANSACTIONS_OF_VENDOR_SETTLEMENT = gql`
+  query GetSubtrusteeVendorSettlementsTransactions(
+    $utr: String!
+    $cursor: String!
+    $limit: Int!
+    $skip: Int!
+  ) {
+    getSubtrusteeVendorSettlementsTransactions(
+      utr: $utr
+      cursor: $cursor
+      limit: $limit
+      skip: $skip
+    ) {
+      limit
+      cursor
+      settlements_transactions {
+        custom_order_id
+        order_id
+        event_status
+        event_settlement_amount
+        order_amount
+        event_amount
+        event_time
+        payment_group
+        settlement_utr
+        student_id
+        school_name
+        student_name
+        student_email
+        student_phone_no
+        school_id
+        additional_data
+        payment_id
+      }
+    }
+  }
+`;
+
 export const GET_TRANSACTION_REFUND = gql`
   query GetRefundRequest($order_id: String!) {
     getRefundRequest(order_id: $order_id) {
