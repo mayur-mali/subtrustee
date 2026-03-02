@@ -226,6 +226,10 @@ export default function Reports() {
                   label: "Merchant Settlement Report",
                 },
                 {
+                  value: "VENDOR_SETTLEMENT_RECON",
+                  label: "Vendor Settlement Reconciliation Report",
+                },
+                {
                   value: "SETTLEMENT_VENDOR",
                   label: "Vendor Settlement Report",
                 },
@@ -247,6 +251,7 @@ export default function Reports() {
             </p>
           </div>
           {(reportData.type === "TRANSACTION_REPORT" ||
+            reportData.type === "VENDOR_SETTLEMENT_RECON" ||
             reportData.type === "VENDOR_TRANSACTION_REPORT") && (
             <div className="flex flex-col px-4 bg-gray-100">
               <label className="my-2">Select Schools</label>
@@ -276,7 +281,8 @@ export default function Reports() {
                   if (
                     ids.length &&
                     ids.length > 0 &&
-                    reportData.type === "VENDOR_TRANSACTION_REPORT"
+                    (reportData.type === "VENDOR_TRANSACTION_REPORT" ||
+                      reportData.type === "VENDOR_SETTLEMENT_RECON")
                   )
                     refetchVendors({ school: ids });
                 }}
@@ -290,7 +296,8 @@ export default function Reports() {
             </div>
           )}
 
-          {reportData.type === "VENDOR_TRANSACTION_REPORT" && (
+          {(reportData.type === "VENDOR_TRANSACTION_REPORT" ||
+            reportData.type === "VENDOR_SETTLEMENT_RECON") && (
             <div className="flex flex-col px-4 bg-gray-100">
               <label className="my-2">Select Vendors (optional)</label>
 
