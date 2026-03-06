@@ -257,6 +257,7 @@ export const GET_SUBTRUSTEE_TRANSACTIONS_OF_VENDOR_SETTLEMENT = gql`
     ) {
       limit
       cursor
+      hasMore
       settlements_transactions {
         custom_order_id
         order_id
@@ -275,6 +276,11 @@ export const GET_SUBTRUSTEE_TRANSACTIONS_OF_VENDOR_SETTLEMENT = gql`
         school_id
         additional_data
         payment_id
+        vendors_info {
+          vendor_id
+          amount
+          name
+        }
       }
     }
   }

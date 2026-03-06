@@ -510,7 +510,7 @@ function VendorSettlement() {
                   settlementDate: settlement.settled_on,
                 }}
               >
-                <div className="truncate">{settlement?.school_name}</div>,
+                <div className="truncate">{settlement?.school_name}</div>
               </Link>,
               <div className="truncate">{settlement?.vendor_name}</div>,
               <div className=" truncate">

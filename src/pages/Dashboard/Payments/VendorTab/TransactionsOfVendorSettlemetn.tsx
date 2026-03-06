@@ -112,6 +112,7 @@ function TransactionsOfVendorSettlemetn() {
                 "Payment ID",
                 "Order Amt",
                 "Transaction Amt",
+                "Vendor Order Amt",
                 "Payment Method",
                 "Status",
                 "Student Name",
@@ -138,6 +139,14 @@ function TransactionsOfVendorSettlemetn() {
                   </div>,
                   <div>{amountFormat(transaction?.order_amount)}</div>,
                   <div>{amountFormat(transaction?.event_amount)}</div>,
+                  <div>
+                    {amountFormat(
+                      transaction?.vendors_info?.reduce(
+                        (acc: number, curr: any) => acc + (curr.amount || 0),
+                        0,
+                      ),
+                    ) || 0}
+                  </div>,
                   <div>{transaction?.payment_group || "N/A"}</div>,
                   <div
                     className={
@@ -258,7 +267,8 @@ function TransactionsOfVendorSettlemetn() {
                       data?.getSubtrusteeVendorSettlementsTransactions
                         ?.settlements_transactions?.length <
                         itemsPerRow.name - itemsPerRow.name * skip) ||
-                    ButtonDisable
+                    ButtonDisable ||
+                    !data?.getSubtrusteeVendorSettlementsTransactions?.hasMore
                   }
                   className="px-4 py-1.5 text-sm rounded-lg disabled:bg-gray-400 bg-blue-600 text-white"
                 >
