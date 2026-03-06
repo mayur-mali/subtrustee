@@ -141,11 +141,14 @@ function TransactionsOfVendorSettlemetn() {
                   <div>{amountFormat(transaction?.event_amount)}</div>,
                   <div>
                     {amountFormat(
-                      transaction?.vendors_info?.reduce(
-                        (acc: number, curr: any) => acc + (curr.amount || 0),
-                        0,
-                      ),
-                    ) || 0}
+                      transaction?.vendors_info?.length > 0
+                        ? transaction?.vendors_info?.reduce(
+                            (acc: number, curr: any) =>
+                              acc + (curr.amount || 0),
+                            0,
+                          )
+                        : transaction?.order_amount,
+                    )}
                   </div>,
                   <div>{transaction?.payment_group || "N/A"}</div>,
                   <div
