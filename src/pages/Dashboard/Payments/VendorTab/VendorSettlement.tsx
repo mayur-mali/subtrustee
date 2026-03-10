@@ -19,6 +19,7 @@ import Vendor from "../../Transaction/components/AllFilter/Vendor";
 import { CustomDropdownIndicator } from "../../Settlement/Settlement";
 import Select from "react-select";
 import { IoSearchOutline } from "react-icons/io5";
+import { Link } from "react-router-dom";
 function VendorSettlement() {
   const [searchText, setSearchText] = useState<any>("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -502,7 +503,15 @@ function VendorSettlement() {
               }),
             ].map((settlement: any, index: number) => [
               <div className="truncate">{settlement.serialNumber}</div>,
-              <div className="truncate">{settlement?.school_name}</div>,
+              <Link
+                to="/payments/vendor-settlements-transaction"
+                state={{
+                  utrno: settlement.utr,
+                  settlementDate: settlement.settled_on,
+                }}
+              >
+                <div className="truncate">{settlement?.school_name}</div>
+              </Link>,
               <div className="truncate">{settlement?.vendor_name}</div>,
               <div className=" truncate">
                 {amountFormat(settlement?.settlement_amount)}
