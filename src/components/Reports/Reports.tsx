@@ -31,6 +31,7 @@ import { FcRefresh } from "react-icons/fc";
 const MAX_RANGE_DAYS = 30;
 
 type OptionType = { label: string; value: string };
+const SELECT_ALL_FIELDS_OPTION_VALUE = "__SELECT_ALL_FIELDS__";
 
 let TRANSACTION_FIELDS = [
   "collect_id",
@@ -343,14 +344,34 @@ export default function Reports() {
               <Select
                 placeholder="Select Fields"
                 isMulti
-                value={SelectedFields.map((field) => ({
-                  value: field,
-                  label: field,
-                }))}
+                value={[
+                  ...(SelectedFields.length === fields.length && fields.length
+                    ? [
+                        {
+                          value: SELECT_ALL_FIELDS_OPTION_VALUE,
+                          label: "Select All",
+                        },
+                      ]
+                    : []),
+                  ...SelectedFields.map((field) => ({
+                    value: field,
+                    label: field,
+                  })),
+                ]}
                 onChange={(options) => {
-                  const selected = options
-                    ? options.map((opt) => opt.value)
+                  const selectedValues = options
+                    ? options.map((opt) => opt.value as string)
                     : [];
+
+                  const shouldToggleAll =
+                    selectedValues.indexOf(SELECT_ALL_FIELDS_OPTION_VALUE) !==
+                    -1;
+
+                  const selected = shouldToggleAll
+                    ? SelectedFields.length === fields.length
+                      ? []
+                      : [...fields]
+                    : selectedValues;
 
                   setSelectedFields(selected);
                   setReportData((prev) => ({
@@ -358,10 +379,16 @@ export default function Reports() {
                     SelectedFields: selected,
                   }));
                 }}
-                options={fields.map((f) => ({
-                  value: f,
-                  label: f,
-                }))}
+                options={[
+                  {
+                    value: SELECT_ALL_FIELDS_OPTION_VALUE,
+                    label: "Select All Fields",
+                  },
+                  ...fields.map((field) => ({
+                    value: field,
+                    label: field,
+                  })),
+                ]}
               />
             </div>
           )}
