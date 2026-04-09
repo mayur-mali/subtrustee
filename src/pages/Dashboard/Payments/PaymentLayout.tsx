@@ -46,6 +46,16 @@ export default function PaymentLayout({ menu = true }: { menu: boolean }) {
           >
             Refund
           </NavLink>
+          <NavLink
+            to="/payments/disputes"
+            className={({ isActive }) =>
+              isActive
+                ? "bg-[#6687FF33]   py-1.5 font-semibold rounded-lg text-[14px] text-left pl-10 text-[#1B163B]"
+                : "py-1.5 font-semibold rounded-lg text-[14px] text-left pl-10 text-[#717171]"
+            }
+          >
+            Disputes
+          </NavLink>
           <div>
             <div
               className="flex items-center cursor-pointer py-1.5 rounded-lg pl-10 font-semibold text-[14px] text-[#1B163B]"

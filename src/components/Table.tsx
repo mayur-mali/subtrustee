@@ -398,6 +398,7 @@ export const _Table = ({
                         if (c === i + 1) {
                           return (
                             <PasteBtn
+                              key={c}
                               onClick={() => {
                                 handleCopyContent(item);
                               }}

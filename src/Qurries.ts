@@ -615,6 +615,68 @@ export const GET_BATCH_TRANSACTION = gql`
   }
 `;
 
+export const GET_SUBTRUSTEE_DISPUTES = gql`
+  query GetSubTrusteeDisputes(
+    $page: Int!
+    $limit: Int!
+    $school_id: [String!]
+    $collect_id: String
+    $custom_id: String
+    $dispute_id: String
+    $startDate: String
+    $endDate: String
+    $dispute_status: String
+  ) {
+    getSubTrusteeDisputes(
+      page: $page
+      limit: $limit
+      school_id: $school_id
+      collect_id: $collect_id
+      custom_id: $custom_id
+      dispute_id: $dispute_id
+      startDate: $startDate
+      endDate: $endDate
+      dispute_status: $dispute_status
+    ) {
+      totalCount
+      disputes {
+        _id
+        school_id
+        trustee_id
+        collect_id
+        custom_order_id
+        school_name
+        student_name
+        dispute_id
+        dispute_type
+        reason_description
+        dispute_amount
+        order_amount
+        payment_amount
+        dispute_created_date
+        dispute_updated_date
+        dispute_settled_date
+        dispute_respond_by_date
+        dispute_resolved_at_date
+        dispute_status
+        dispute_remark
+        platform_type
+        remarks
+        gateway
+        case_id
+        settlement_id
+        utr_number
+        bank_reference
+        documents {
+          file_url
+          name
+          document_type
+        }
+      }
+    }
+  }
+`;
+
 export const CREATE_INSTITUTE = gql`
   mutation subTrusteeCreateSchool(
     $email: String!
