@@ -243,6 +243,10 @@ export default function Reports() {
                   value: "VENDOR_TRANSACTION_REPORT",
                   label: "Vendor Transaction Report",
                 },
+                {
+                  value: "COMMISSION_REPORT",
+                  label: "Commission Report",
+                }
                 // { value: "dispute", label: "Dispute Report" },
               ]}
               isSearchable={false}

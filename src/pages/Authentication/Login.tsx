@@ -2,7 +2,9 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
 import { useLazyQuery, useMutation } from "@apollo/client";
-import { GET_USER, LOG_IN_TRUSTEE } from "../../Qurries";
+import { GET_USER, LOG_IN_TRUSTEE, RESET_MAILS } from "../../Qurries";
+import { toast } from "react-toastify";
+import Modal from "../../components/Modal/Modal";
 import { FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
 import EdvironLogo from "../../assets/logo.svg";
 import LogoSvg from "../../assets/voice_control_ofo1.svg";
@@ -15,6 +17,10 @@ function Login() {
   const [loginMutation, { loading }] = useMutation(LOG_IN_TRUSTEE);
   const [fetchUser] = useLazyQuery(GET_USER);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [showLoadingModal, setShowLoadingModal] = useState(false);
+  const [resetMailsMutation] = useMutation(RESET_MAILS);
   const handleLogin = async () => {
     try {
       const data = await loginMutation({ variables: { email, password } });
@@ -30,6 +36,25 @@ function Login() {
     } catch (err) {
       console.error(err);
       navigate("/login");
+    }
+  };
+
+  const resetPass = async (email: string) => {
+    try {
+      setShowLoadingModal(true);
+      const { data } = await resetMailsMutation({ variables: { email } });
+      if (data && data.resetMails && data.resetMails.active) {
+        setShowLoadingModal(false);
+        toast.success("Password reset email sent successfully.");
+        setShowModal(false);
+      } else {
+        setShowLoadingModal(false);
+        toast.error("Error sending reset email. Please check your email.");
+      }
+    } catch (error: any) {
+      setShowLoadingModal(false);
+      console.error("Error sending reset email:", error.message);
+      toast.error("Error sending reset email. Try again later.");
     }
   };
   return (
@@ -109,16 +134,16 @@ function Login() {
             </button>
           </div>
         </form>
-        {/* <div className="md:max-w-[25rem] w-full mt-2">
+        <div className="md:max-w-[25rem] w-full mt-2">
           <button
-            //onClick={() => setShowModal(!showModal)}
+            onClick={() => setShowModal(!showModal)}
             className="bg-[#d6daf3] w-full px-4 py-3 mt-4 rounded-lg"
           >
             Reset Password
           </button>
-        </div> */}
+        </div>
       </div>
-      {/* <Modal
+      <Modal
         className="max-w-lg w-full"
         open={showModal}
         setOpen={setShowModal}
@@ -128,7 +153,6 @@ function Login() {
           onSubmit={async (e) => {
             e.preventDefault();
             try {
-              // Call resetPass function with the current email state
               await resetPass(resetEmail);
             } catch (error: any) {
               console.error("Error sending reset email:", error.message);
@@ -150,7 +174,16 @@ function Login() {
             </button>
           </div>
         </form>
-      </Modal> */}
+      </Modal>
+      <Modal
+        className="max-w-lg w-full"
+        open={showLoadingModal}
+        setOpen={setShowLoadingModal}
+      >
+        <div className="w-full h-full flex">
+          <FaSpinner className="m-auto animate-spin size-8" />
+        </div>
+      </Modal>
       {/* <Modal
         className="max-w-lg w-full"
         open={showLoadingModal}

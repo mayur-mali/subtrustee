@@ -694,3 +694,27 @@ export const CREATE_INSTITUTE = gql`
     }
   }
 `;
+
+export const RESET_MAILS = gql`
+  mutation ResetMails($email: String!) {
+    resetMails(email: $email) {
+      active
+    }
+  }
+`;
+
+export const RESET_PASSWORD = gql`
+  mutation ResetPassword($email: String!, $password: String!) {
+    resetPassword(email: $email, password: $password) {
+      msg
+    }
+  }
+`;
+
+export const VERIFY_TOKEN = gql`
+  query VerifyToken($token: String!) {
+    verifyToken(token: $token) {
+      active
+    }
+  }
+`;

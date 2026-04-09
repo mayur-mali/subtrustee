@@ -3,6 +3,7 @@ import "./App.css";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Authentication/Login";
+import ResetPassword from "./pages/Authentication/ResetPassword";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import PublicRoute from "./components/PublicRoute";
 import Overview from "./pages/Dashboard/Overview/Overview";
@@ -28,6 +29,14 @@ function App() {
   return (
     <>
       <Routes>
+        <Route
+          path="/reset-password"
+          element={
+            <PublicRoute>
+              <ResetPassword />
+            </PublicRoute>
+          }
+        />
         <Route
           path="/login"
           element={
