@@ -55,30 +55,32 @@ function Disputes() {
     refetch,
   } = useQuery(GET_SUBTRUSTEE_DISPUTES, {
     variables: { page, limit },
-    onCompleted(data) {
-      const today = new Date();
-      const tomorrow = new Date(today);
-      tomorrow.setDate(today.getDate() + 1);
-      const todayStr = today.toISOString().split("T")[0];
-      const tomorrowStr = tomorrow.toISOString().split("T")[0];
-
-      let todayDue = 0;
-      let tomorrowDue = 0;
-
-      data.getSubTrusteeDisputes?.disputes?.forEach((d: any) => {
-        const dueDate = new Date(d.dispute_respond_by_date)
-          .toISOString()
-          .split("T")[0];
-        if (dueDate === todayStr) todayDue += d.dispute_amount;
-        else if (dueDate === tomorrowStr) tomorrowDue += d.dispute_amount;
-      });
-
-      setDueAmounts({
-        todayDueAmount: todayDue,
-        tomorrowDueAmount: tomorrowDue,
-      });
-    },
   });
+
+  useEffect(() => {
+    const disputes = disputeData?.getSubTrusteeDisputes?.disputes;
+    if (!disputes) return;
+
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const todayStr = today.toISOString().split("T")[0];
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+    let todayDue = 0;
+    let tomorrowDue = 0;
+
+    disputes.forEach((d: any) => {
+      if (!d.dispute_respond_by_date) return;
+      const dueDate = new Date(d.dispute_respond_by_date)
+        .toISOString()
+        .split("T")[0];
+      if (dueDate === todayStr) todayDue += d.dispute_amount ?? 0;
+      else if (dueDate === tomorrowStr) tomorrowDue += d.dispute_amount ?? 0;
+    });
+
+    setDueAmounts({ todayDueAmount: todayDue, tomorrowDueAmount: tomorrowDue });
+  }, [disputeData]);
 
   const refetchData = async ({
     start_date,
