@@ -16,6 +16,7 @@ import Settlement from "./pages/Dashboard/Settlement/Settlement";
 import Refund from "./pages/Dashboard/Refund/Refund";
 import TransactionReceipt from "./pages/Dashboard/Transaction/TransactionReceipt";
 import TransactionsOfSettlement from "./pages/Dashboard/Settlement/TransactionsOfSettlement";
+import Disputes from "./pages/Dashboard/Payments/Disputes";
 import VendorTransaction from "./pages/Dashboard/Payments/VendorTab/VendorTransaction";
 import VendorSettlement from "./pages/Dashboard/Payments/VendorTab/VendorSettlement";
 import VendorTransactionReceipt from "./pages/Dashboard/Payments/VendorTab/VendorTransactionReceipt";
@@ -52,6 +53,7 @@ function App() {
             <Route path="transaction" element={<Transaction />} />
             <Route path="settlements" element={<Settlement />} />
             <Route path="refunds" element={<Refund />} />
+            <Route path="disputes" element={<Disputes />} />
             <Route path="vendor-transaction" element={<VendorTransaction />} />
             <Route path="vendor-settlement" element={<VendorSettlement />} />
           </Route>
