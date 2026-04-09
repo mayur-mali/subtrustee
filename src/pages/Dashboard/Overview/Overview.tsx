@@ -27,7 +27,7 @@ export default function Overview() {
   });
   const [schoolLength, setSchoolLength] = useState(0);
   const settledAmount = getSettlementAmount(
-    settlementData?.getSettlementReportsSubTrustee,
+    settlementData?.getSettlementReportsSubTrustee?.data,
   );
   const {
     data: transactionReport,
