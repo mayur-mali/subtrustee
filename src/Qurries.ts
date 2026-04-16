@@ -80,6 +80,11 @@ export const GET_INSTITUTES = gql`
         phone_number
         merchantStatus
         disabled_modes
+        bank_details {
+          account_holder_name
+          account_number
+          ifsc_code
+        }
         updatedAt
         gstIn
         residence_state
