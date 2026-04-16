@@ -83,11 +83,15 @@ export const GET_INSTITUTES = gql`
         updatedAt
         gstIn
         residence_state
+        bank_details {
+          account_holder_name
+          account_number
+          ifsc_code
+        }
       }
     }
   }
 `;
-
 export const GET_TRANSACTIONS = gql`
   query GetSubtrusteeTransactionReport(
     $startDate: String
