@@ -7,8 +7,8 @@ import {
 import {
   Pagination,
   RowsPerPageSelect,
-  Table,
-} from "../../../components/Table/Table";
+  _Table,
+} from "../../../components/Table";
 import { toast } from "react-toastify";
 import { Link, Route, Routes, useLocation } from "react-router-dom";
 import ToolTip from "../../../components/generics/ToolTip";
@@ -137,7 +137,7 @@ function InstituteList() {
 
   return (
     <div>
-      <Table
+      <_Table
         exportBtn={true}
         perPage={false}
         heading={"Institute List"}
