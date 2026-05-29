@@ -161,6 +161,7 @@ export const GET_TRANSACTIONS = gql`
         isVBAPaymentComplete
         utr_number
         settlement_transfer_time
+        settlement_date
         error_details {
           error_description
           error_reason
