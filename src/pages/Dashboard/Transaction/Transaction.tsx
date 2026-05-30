@@ -482,7 +482,7 @@ export default function Transaction() {
     const token = localStorage.getItem("token");
     axios
       .post(
-        `http://localhost:4001/edviron-pg/get-transaction-report-batched`,
+        `${import.meta.env.VITE_PAYMENT_BACKEND_URL}/edviron-pg/get-transaction-report-batched`,
         {
           trustee_id: trustee_id,
           school_id: school_id,
