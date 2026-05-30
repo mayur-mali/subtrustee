@@ -21,11 +21,13 @@ import ProfileNav from "../Profile/ProfileNav";
 import CopyRight from "../../../components/CopyRight";
 import { IoEllipsisVerticalSharp } from "react-icons/io5";
 
-export enum Access {
-  ADMIN = "admin",
-  MANAGEMENT = "management",
-  OWNER = "owner",
-}
+export const Access = {
+  ADMIN: "admin",
+  MANAGEMENT: "management",
+  OWNER: "owner",
+} as const;
+
+type Access = (typeof Access)[keyof typeof Access];
 
 // Helper function to check if user has admin or owner permissions
 const isAdminOrOwner = (role: string) => {
