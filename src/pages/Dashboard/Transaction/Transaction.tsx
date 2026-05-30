@@ -1,5 +1,9 @@
 import { useQuery } from "@apollo/client";
-import { GET_TRANSACTIONS } from "../../../Qurries";
+import {
+  GET_ALL_SCHOOLS_QUERY_FOR_REPORT,
+  GET_TRANSACTIONS,
+  GET_USER,
+} from "../../../Qurries";
 import {
   _Table,
   Pagination,
@@ -24,6 +28,8 @@ import { getPaymentMode } from "../../../utils/getPaymentMode";
 import MixFilter from "./components/MixFilter";
 import { IoIosArrowDown } from "react-icons/io";
 import Aword from "../../../assets/a_round.svg";
+import { LiaRupeeSignSolid } from "react-icons/lia";
+import axios from "axios";
 
 export const payment_method_map: any = {
   credit_card: "Credit Card",
@@ -139,6 +145,12 @@ export default function Transaction() {
     endDate: new Date(),
     key: "selection",
   });
+
+  const {
+    data: user_data,
+    loading: user_login,
+    error: user_error,
+  } = useQuery(GET_USER);
 
   const [filters, setFilters] = useState<any>({
     paymentMode: {
@@ -449,9 +461,157 @@ export default function Transaction() {
       setIsCustomSearch(false);
     }
   }, [searchText, searchFilter]);
+  const { data: schoolsData, loading: schoolsLoading } = useQuery(
+    GET_ALL_SCHOOLS_QUERY_FOR_REPORT,
+    {
+      fetchPolicy: "network-only",
+    },
+  );
+
+  const GET_TRANSACTION_AMOUNT = async (
+    start_date: string,
+    end_date: string,
+    trustee_id: string,
+    school_id: string,
+    school_ids: string[],
+    status: string,
+    mode?: string[] | null,
+    isQrCode?: boolean,
+    gateway?: string[] | null,
+  ) => {
+    const token = localStorage.getItem("token");
+    axios
+      .post(
+        `http://localhost:4001/edviron-pg/get-transaction-report-batched`,
+        {
+          trustee_id: trustee_id,
+          school_id: school_id,
+          school_ids: school_ids,
+          start_date: start_date,
+          end_date: end_date,
+          status: status,
+          mode: isQrCode ? null : mode,
+          isQRPayment: isQrCode,
+          gateway,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      )
+      .then((response) => {
+        setTransactionAmountDetails(response.data.transactions[0]);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
+
+  useEffect(() => {
+    if (schoolsLoading) return;
+
+    if (!user_data?.getSubTrusteeQuery?.trustee_id) return;
+
+    GET_TRANSACTION_AMOUNT(
+      urlFilters.start_date || startDate,
+      urlFilters.end_date || endDate,
+      user_data.getSubTrusteeQuery.trustee_id,
+      selectSchool !== "" ? schoolId : "",
+      selectSchool === "" || selectSchool === null
+        ? schoolsData?.getAllSubTrusteeSchools?.map(
+            (school: any) => school.school_id,
+          ) || []
+        : [],
+      status ? status.toUpperCase() : "SUCCESS",
+      getPaymentMode(filters.paymentMode, type),
+      getPaymentMode(filters.paymentMode, type)?.includes("qr"),
+      getPaymentMode(filters.gateway, type),
+    );
+  }, [
+    schoolsLoading,
+    schoolsData,
+    user_data,
+    type,
+    status,
+    selectSchool,
+    schoolId,
+    searchFilter,
+    itemsPerRow,
+    selectedRange,
+    filters,
+    urlFilters.end_date,
+    urlFilters.start_date,
+  ]);
 
   return (
-    <div>
+    <div className="overflow-hidden">
+      <h2 className="text-[#1B163B] text-[28px] ml-4 font-[600]">
+        Transactions
+      </h2>
+      <div className="w-full  grid xl:grid-cols-2 gap-4 mb-2">
+        <div className="xl:col-span-1 col-span-2">
+          <h2 className="text-[#1B163B] xl:text-[24px] text-lg ml-2  font-[400]">
+            Transactions Amount
+          </h2>
+
+          <div className="text-[#229635] font-[400] flex items-center ">
+            {/* {transactionReportLoading || refetchLoading ? (
+              <img
+                src={PriceLoading}
+                className=" w-10 h-10 animate-spin"
+                alt="loading"
+              />
+            ) : (
+              <>
+                
+              </>
+            )} */}
+
+            <span className="xl:text-[44px] text-3xl flex items-center">
+              <LiaRupeeSignSolid />{" "}
+              {transactionAmountDetails !== null &&
+              (status?.toLowerCase() === "success" || status === null) ? (
+                <span>
+                  {transactionAmountDetails?.totalTransactionAmount.toLocaleString(
+                    "hi-in",
+                  )}
+                </span>
+              ) : (
+                <span>0</span>
+              )}
+            </span>
+            <span className="text-[20px] text-[#717171] flex items-center ml-2">
+              {` (selected period )`}
+            </span>
+          </div>
+        </div>
+
+        <div className="xl:col-span-1 col-span-2">
+          <h2 className="text-[#1B163B] xl:text-[24px] text-lg ml-2  font-[400]">
+            Order Amount
+          </h2>
+          <div className="text-[#229635] font-[400] flex items-center ">
+            <span className="xl:text-[44px] text-3xl flex items-center">
+              <LiaRupeeSignSolid />
+              {transactionAmountDetails !== null &&
+              (status?.toLowerCase() === "success" || status === null) ? (
+                <span>
+                  {transactionAmountDetails?.totalOrderAmount.toLocaleString(
+                    "hi-in",
+                  )}
+                </span>
+              ) : (
+                <span>0</span>
+              )}
+            </span>
+            <span className="text-[20px] text-[#717171] flex items-center ml-2">
+              {` (selected period )`}
+            </span>
+          </div>
+        </div>
+      </div>
       <div className="overflow-x-auto w-full">
         {transactionReportData ? (
           <_Table
