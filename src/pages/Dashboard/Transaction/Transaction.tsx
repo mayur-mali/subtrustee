@@ -1032,6 +1032,9 @@ export default function Transaction() {
                 "Vendor Amount",
                 "Gateway",
                 "Capture Status",
+                "Bank Reference Number",
+                "Utr Number",
+                "Settlement Date",
               ],
               ...transactionData?.map((row: any) => [
                 <div>{row?.serialNumber}</div>,
@@ -1170,6 +1173,31 @@ export default function Transaction() {
                 >
                   <div className="truncate " key={row.orderID}>
                     {row?.capture_status || "NA"}
+                  </div>
+                </Link>,
+                <Link
+                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                >
+                  <div className="truncate " key={row.orderID}>
+                    {row?.bank_reference || "NA"}
+                  </div>
+                </Link>,
+                <Link
+                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                >
+                  <div className="truncate " key={row.orderID}>
+                    {row?.utr_number || "NA"}
+                  </div>
+                </Link>,
+                <Link
+                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                >
+                  <div className="truncate" key={row.orderID}>
+                    {row?.settlement_date
+                      ? new Date(row.settlement_date).toLocaleString("en-IN", {
+                          timeZone: "Asia/Kolkata",
+                        })
+                      : "NA"}
                   </div>
                 </Link>,
               ]),

@@ -24,6 +24,7 @@ import VendorTransactionReceipt from "./pages/Dashboard/Payments/VendorTab/Vendo
 import Reports from "./components/Reports/Reports";
 import Profile from "./pages/Dashboard/Profile/Profile";
 import TransactionsOfVendorSettlemetn from "./pages/Dashboard/Payments/VendorTab/TransactionsOfVendorSettlemetn";
+import TeamMember from "./pages/Dashboard/TeamMember/TeamMembers";
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
           }
         >
           <Route path="/profile" element={<Profile />} />
+          <Route path="/team-members" element={<TeamMember />} />
           <Route path="reports" element={<Reports />} />
           <Route index element={<Overview />} />
           <Route path="institute/*" element={<Institute />} />

@@ -161,6 +161,7 @@ export const GET_TRANSACTIONS = gql`
         isVBAPaymentComplete
         utr_number
         settlement_transfer_time
+        settlement_date
         error_details {
           error_description
           error_reason
@@ -723,6 +724,73 @@ export const RESET_PASSWORD = gql`
 export const VERIFY_TOKEN = gql`
   query VerifyToken($token: String!) {
     verifyToken(token: $token) {
+      active
+    }
+  }
+`;
+
+export const CREATE_MEMBER = gql`
+  mutation AddSubTrusteeMember(
+    $name: String!
+    $email: String!
+    $phone_number: String!
+    $access: String!
+    $password: String!
+  ) {
+    addSubTrusteeMember(
+      name: $name
+      email: $email
+      phone_number: $phone_number
+      access: $access
+      password: $password
+    )
+  }
+`;
+
+export const DELETE_MEMBER = gql`
+  mutation DeleteSubTrusteeMember($user_id: String!) {
+    deleteSubTrusteeMember(user_id: $user_id)
+  }
+`;
+
+export const GET_ALL_MEMBERS = gql`
+  query GetSubTrusteeMembers {
+    getSubTrusteeMembers {
+      _id
+      trustee_id
+      name
+      email
+      phone_number
+      access
+    }
+  }
+`;
+
+export const UPDATE_ACCESS_LEVEL = gql`
+  mutation UpdateSubTrusteeMemberAccess($user_id: String!, $access: String!) {
+    updateSubTrusteeMemberAccess(user_id: $user_id, access: $access)
+  }
+`;
+
+export const UPDATE_MEMBER_DETAIL = gql`
+  mutation UpdateSubTrusteeMember(
+    $name: String!
+    $user_id: String!
+    $email: String!
+    $phone_number: String!
+  ) {
+    updateSubTrusteeMember(
+      name: $name
+      user_id: $user_id
+      email: $email
+      phone_number: $phone_number
+    )
+  }
+`;
+
+export const RESET_MAIL = gql`
+  mutation ResetSubTrusteeMails($email: String!) {
+    resetSubTrusteeMails(email: $email) {
       active
     }
   }
