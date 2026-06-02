@@ -318,7 +318,7 @@ const TeamMember = () => {
           >
             <DeleteMember
               user_id={memberUserId}
-              owner_mail={user?.email_id}
+              owner_mail={user?.email}
               refetch={refetch}
               setDeleteMemberOpen={setDeleteMemberOpen}
               memberUserName={memberUserName}
