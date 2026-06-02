@@ -18,11 +18,17 @@ import { HiMiniXMark } from "react-icons/hi2"; // <-- import for clear button
 import React, { useState } from "react";
 import Modal from "../../../components/Modal/Modal";
 import Vendor from "../components/school/Vendor";
+import { useAuth } from "../../../context/AuthContext";
+import { Access } from "../TeamMember/TeamMembers";
 
 const preventNegativeValues = (e: React.KeyboardEvent<HTMLInputElement>) => {
   if (e.key === "-" || e.key === "+") {
     e.preventDefault();
   }
+};
+
+const isOwnerOrAdmin = (user: any) => {
+  return user?.role === Access.OWNER || user?.role === Access.ADMIN;
 };
 
 const preventPasteNegative = (e: React.ClipboardEvent<HTMLInputElement>) => {
@@ -47,6 +53,8 @@ function InstituteList() {
   const [itemsPerRow, setItemsPerRow] = useState<any>({
     name: 10,
   });
+  const { user } = useAuth();
+  console.log("User from context:", user);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -202,16 +210,18 @@ function InstituteList() {
           </div>
         }
         data={[
-          [
-            "S.No.",
-            "Institute Name",
-            "Email",
-            "KYC Status",
-            "Action",
-            "PG Key",
-            "KYC Dashboard",
-            "Merchant Dashboard",
-          ],
+          isOwnerOrAdmin(user)
+            ? [
+                "S.No.",
+                "Institute Name",
+                "Email",
+                "KYC Status",
+                "Action",
+                "PG Key",
+                "KYC Dashboard",
+                "Merchant Dashboard",
+              ]
+            : ["S.No.", "Institute Name", "Email", "KYC Status"],
           ...(data?.getSubTrusteeSchools?.schools?.map(
             (school: any, index: number) => [
               <div className="ml-4">
@@ -260,55 +270,63 @@ function InstituteList() {
                 {" "}
                 {school.merchantStatus ? school.merchantStatus : "NA"}
               </div>,
-              <button
-                disabled={school.pg_key}
-                className="px-4 py-2 border disabled:border-gray-400 disabled:text-gray-400 border-edviron_black text-[#6687FF] font-normal rounded-[4px]"
-              >
-                Resend Email
-              </button>,
-              <>
-                {school.pg_key ? (
-                  <div className="flex justify-between gap-x-2 items-center">
-                    <p className="bg-[#EEF1F6] truncate w-full py-1.5 px-4 rounded-[4px]">
-                      {school.pg_key}
+              isOwnerOrAdmin(user) && (
+                <button
+                  disabled={school.pg_key}
+                  className="px-4 py-2 border disabled:border-gray-400 disabled:text-gray-400 border-edviron_black text-[#6687FF] font-normal rounded-[4px]"
+                >
+                  Resend Email
+                </button>
+              ),
+              isOwnerOrAdmin(user) && (
+                <>
+                  {school.pg_key ? (
+                    <div className="flex justify-between gap-x-2 items-center">
+                      <p className="bg-[#EEF1F6] truncate w-full py-1.5 px-4 rounded-[4px]">
+                        {school.pg_key}
+                      </p>
+                      <button>{/* Copy button placeholder */}</button>
+                    </div>
+                  ) : (
+                    <p className="bg-gray-100 py-1.5 px-4 rounded-[4px]">
+                      PG key is not enabled
                     </p>
-                    <button>{/* Copy button placeholder */}</button>
-                  </div>
-                ) : (
-                  <p className="bg-gray-100 py-1.5 px-4 rounded-[4px]">
-                    PG key is not enabled
-                  </p>
-                )}
-              </>,
-              <button
-                disabled={school.pg_key}
-                className="px-4 py-2 border disabled:border-gray-400 disabled:text-gray-400 border-edviron_black text-[#6687FF] font-normal rounded-[4px]"
-              >
-                Login to Dashboard
-              </button>,
-              <button
-                disabled={!school.pg_key || !school.email}
-                className="px-4 py-2 border cursor-pointer disabled:border-gray-400 disabled:text-gray-400 border-edviron_black text-[#6687FF] font-normal rounded-[4px]"
-                onClick={async () => {
-                  try {
-                    const res = await logInToMerchant({
-                      variables: {
-                        email: school.email,
-                      },
-                    });
-                    if (res?.data?.generateMerchantLoginTokenForSubtrustee) {
-                      window.open(
-                        `${import.meta.env.VITE_MERCHANT_DASHBOARD_URL}/admin?token=${res?.data?.generateMerchantLoginTokenForSubtrustee}`,
-                        "_blank",
-                      );
+                  )}
+                </>
+              ),
+              isOwnerOrAdmin(user) && (
+                <button
+                  disabled={school.pg_key}
+                  className="px-4 py-2 border disabled:border-gray-400 disabled:text-gray-400 border-edviron_black text-[#6687FF] font-normal rounded-[4px]"
+                >
+                  Login to Dashboard
+                </button>
+              ),
+              isOwnerOrAdmin(user) && (
+                <button
+                  disabled={!school.pg_key || !school.email}
+                  className="px-4 py-2 border cursor-pointer disabled:border-gray-400 disabled:text-gray-400 border-edviron_black text-[#6687FF] font-normal rounded-[4px]"
+                  onClick={async () => {
+                    try {
+                      const res = await logInToMerchant({
+                        variables: {
+                          email: school.email,
+                        },
+                      });
+                      if (res?.data?.generateMerchantLoginTokenForSubtrustee) {
+                        window.open(
+                          `${import.meta.env.VITE_MERCHANT_DASHBOARD_URL}/admin?token=${res?.data?.generateMerchantLoginTokenForSubtrustee}`,
+                          "_blank",
+                        );
+                      }
+                    } catch (err) {
+                      console.log("error", err);
                     }
-                  } catch (err) {
-                    console.log("error", err);
-                  }
-                }}
-              >
-                Login to Dashboard
-              </button>,
+                  }}
+                >
+                  Login to Dashboard
+                </button>
+              ),
             ],
           ) || []),
         ]}
