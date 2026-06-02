@@ -515,8 +515,8 @@ export default function Transaction() {
     if (!user_data?.getSubTrusteeQuery?.trustee_id) return;
 
     GET_TRANSACTION_AMOUNT(
-      urlFilters.start_date || startDate,
-      urlFilters.end_date || endDate,
+      isDateRangeIsSelected ? formatDate(selectedRange.startDate) : startDate,
+      isDateRangeIsSelected ? formatDate(selectedRange.endDate) : endDate,
       user_data.getSubTrusteeQuery.trustee_id,
       selectSchool !== "" ? schoolId : "",
       selectSchool === "" || selectSchool === null
@@ -541,8 +541,9 @@ export default function Transaction() {
     itemsPerRow,
     selectedRange,
     filters,
-    urlFilters.end_date,
-    urlFilters.start_date,
+    isDateRangeIsSelected,
+    startDate,
+    endDate,
   ]);
 
   return (
