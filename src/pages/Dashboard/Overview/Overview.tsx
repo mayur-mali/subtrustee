@@ -20,6 +20,19 @@ import { useAuth } from "../../../context/AuthContext";
 import ToolTip from "../../../components/generics/ToolTip";
 import { _Table } from "../../../components/Table";
 import { NavLink } from "react-router-dom";
+import { toast } from "react-toastify";
+import { MdContentCopy } from "react-icons/md";
+
+const handleCopyContent = (content: any) => {
+  navigator.clipboard
+    .writeText(content)
+    .then(() => {
+      toast.success("Copied to clipboard");
+    })
+    .catch((err) => {
+      toast.error("Error while copying");
+    });
+};
 
 export default function Overview() {
   const { startDate, endDate, currentDate } = getStartAndEndOfMonth();
@@ -87,9 +100,9 @@ export default function Overview() {
     },
   );
   const recentTransactions = getRecentTransactions(
-    recentTransaction?.getTransactionReport?.transactionReport,
+    recentTransaction?.getSubtrusteeTransactionReport?.transactionReport,
   );
-
+  console.log("recentTransaction", recentTransaction);
   const { data: activeMerchantCount, loading: activeMerchantLoading } =
     useQuery(GET_ACTIVE_MERCHANT_COUNT);
 
