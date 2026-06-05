@@ -796,6 +796,14 @@ export const RESET_MAIL = gql`
   }
 `;
 
+export const GET_ACTIVE_MERCHANT_COUNT = gql`
+  query GetActiveMerchantCountForSubTrustee {
+    getActiveMerchantCountForSubTrustee {
+      success
+      activeMerchantCount
+    }
+  }
+`;
 export const SEND_OTP = gql`
   mutation SendOtpForSubtrustee($type: String!) {
     sendOtpForSubtrustee(type: $type)
