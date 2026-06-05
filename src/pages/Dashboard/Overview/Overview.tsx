@@ -12,9 +12,14 @@ import {
   GET_BATCH_TRANSACTION,
   GET_INSTITUTES,
   GET_SETTLEMENT_REPORTS,
+  GET_TRANSACTIONS,
+  GET_ACTIVE_MERCHANT_COUNT,
 } from "../../../Qurries";
 import axios from "axios";
 import { useAuth } from "../../../context/AuthContext";
+import ToolTip from "../../../components/generics/ToolTip";
+import { _Table } from "../../../components/Table";
+import { NavLink } from "react-router-dom";
 
 export default function Overview() {
   const { startDate, endDate, currentDate } = getStartAndEndOfMonth();
@@ -70,6 +75,24 @@ export default function Overview() {
       "SUCCESS",
     );
   }, [data, user, currentDate]);
+
+  const { data: recentTransaction, loading: recentLoading } = useQuery(
+    GET_TRANSACTIONS,
+    {
+      variables: {
+        startDate: startDate,
+        endDate: endDate,
+        limit: "100",
+      },
+    },
+  );
+  const recentTransactions = getRecentTransactions(
+    recentTransaction?.getTransactionReport?.transactionReport,
+  );
+
+  const { data: activeMerchantCount, loading: activeMerchantLoading } =
+    useQuery(GET_ACTIVE_MERCHANT_COUNT);
+
   return (
     <div className="mt-8">
       <div className="grid lg:grid-cols-5 md:grid-cols-3 sm:grid-cols-2 gap-4 mb-4">
@@ -89,16 +112,24 @@ export default function Overview() {
         />
 
         <Card
-          amount={data?.getSubTrusteeSchools?.totalItems || 0}
-          date={"Till date"}
-          description={"Total Registered Institutes"}
-        />
-        <Card
           amount={(Math.floor(settledAmount * 100) / 100).toLocaleString(
             "hi-in",
           )}
           date={"Most Recent"}
           description={"Settlement amount"}
+        />
+        <Card
+          amount={data?.getSubTrusteeSchools?.totalItems || 0}
+          date={"Till date"}
+          description={"Total Registered Institutes"}
+        />
+        <Card
+          amount={
+            activeMerchantCount?.getActiveMerchantCountForSubTrustee
+              ?.activeMerchantCount || 0
+          }
+          date={"Till date"}
+          description={"Live institutes"}
         />
       </div>
       <div
@@ -112,6 +143,65 @@ export default function Overview() {
             year={year}
             refetch={refetch}
           />
+        </div>
+        <div className=" xl:col-span-1 xl:order-2 order-3 col-span-3 lg:row-span-2">
+          {recentTransactions ? (
+            <_Table
+              perPage={false}
+              exportBtn={false}
+              bgColor={" bg-transparent"}
+              boxPadding={" p-0"}
+              copyRight={false}
+              loading={recentLoading}
+              description={
+                <div className="flex w-full justify-between text-xs pl-4 pr-1">
+                  <p className="">Recent transactions</p>
+                  <NavLink
+                    to="/payments"
+                    className="text-[#6687FF] cursor-pointer"
+                  >
+                    View all
+                  </NavLink>
+                </div>
+              }
+              data={[
+                ["Date", "Order ID", "Amount"],
+                ...recentTransactions?.map((row: any, index: number) => [
+                  <div className=" max-w-[5rem]" key={row?.orderID}>
+                    {new Date(row?.createdAt).toLocaleString("hi")}
+                  </div>,
+
+                  <div className="flex justify-between items-center">
+                    <div
+                      className="truncate max-w-[7.5rem]"
+                      title={row?.collect_id}
+                    >
+                      {row?.collect_id}
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleCopyContent(row?.collect_id);
+                      }}
+                    >
+                      <ToolTip text="Copy Order ID">
+                        <MdContentCopy
+                          className="cursor-pointer text-[#717171] shrink-0 text-xl"
+                          style={{
+                            fontSize: "22px",
+                            color: "",
+                            backgroundColor: "transparent",
+                          }}
+                        />
+                      </ToolTip>
+                    </button>
+                  </div>,
+                  <div
+                    key={row?.collect_id}
+                  >{`₹${row?.transaction_amount !== null ? (Math.floor(row?.transaction_amount * 100) / 100).toLocaleString("hi-in") : 0}`}</div>,
+                ]),
+              ]}
+            />
+          ) : null}
         </div>
       </div>
     </div>
