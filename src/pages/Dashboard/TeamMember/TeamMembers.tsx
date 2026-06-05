@@ -5,7 +5,6 @@ import {
   CREATE_MEMBER,
   DELETE_MEMBER,
   GET_ALL_MEMBERS,
-  GET_USER,
   UPDATE_ACCESS_LEVEL,
   UPDATE_MEMBER_DETAIL,
   RESET_MAIL,
@@ -20,6 +19,7 @@ import ConfirmationBox from "../../../components/ConfermationBox";
 import ProfileNav from "../Profile/ProfileNav";
 import CopyRight from "../../../components/CopyRight";
 import { IoEllipsisVerticalSharp } from "react-icons/io5";
+import { useAuth } from "../../../context/AuthContext";
 
 export const Access = {
   ADMIN: "admin",
@@ -246,6 +246,7 @@ const DeleteMember = ({
 };
 
 const TeamMember = () => {
+  const { user } = useAuth();
   const { data, loading, error, refetch } = useQuery(GET_ALL_MEMBERS);
   console.log(data);
   const [
@@ -260,12 +261,6 @@ const TeamMember = () => {
     },
   ] = useMutation(UPDATE_MEMBER_DETAIL);
 
-  const {
-    data: user_data,
-    loading: user_login,
-    error: user_error,
-  } = useQuery(GET_USER);
-  console.log(user_data?.getSubTrusteeQuery);
   useEffect(() => {
     if (error) toast.error(error.message);
   }, [error]);
@@ -323,7 +318,7 @@ const TeamMember = () => {
           >
             <DeleteMember
               user_id={memberUserId}
-              owner_mail={user_data?.getSubTrusteeQuery?.email_id}
+              owner_mail={user?.email}
               refetch={refetch}
               setDeleteMemberOpen={setDeleteMemberOpen}
               memberUserName={memberUserName}
@@ -506,7 +501,7 @@ const TeamMember = () => {
             </Form>
           </Modal>
 
-          <ProfileNav user={user_data?.getSubTrusteeQuery?.role} />
+          <ProfileNav user={user?.role} />
           <div className="flex-1 lg:pl-56 flex flex-col items-center">
             {data?.getSubTrusteeMembers ? (
               <_Table
@@ -518,17 +513,15 @@ const TeamMember = () => {
                 searchBox={
                   <div className="flex justify-end items-center gap-x-2 w-full">
                     <div className="flex ml-auto">
-                      {isAdminOrOwner(user_data?.getSubTrusteeQuery?.role) && (
+                      {isAdminOrOwner(user?.role) && (
                         <button
                           onClick={() => setNewMemberOpen(true)}
                           className={`py-2 ${
-                            isAdminOrOwner(user_data?.getSubTrusteeQuery?.role)
+                            isAdminOrOwner(user?.role)
                               ? "bg-[#1E1B59]"
                               : "bg-gray-400"
                           } text-[14px] rounded-[4px] text-white float-right px-6 ml-2`}
-                          disabled={
-                            !isAdminOrOwner(user_data?.getSubTrusteeQuery?.role)
-                          }
+                          disabled={!isAdminOrOwner(user?.role)}
                         >
                           + Add New Member
                         </button>
@@ -558,9 +551,7 @@ const TeamMember = () => {
                           setMemberUserId(d?._id);
                         }}
                       >
-                        {isAdminOrOwner(
-                          user_data?.getSubTrusteeQuery?.role,
-                        ) && (
+                        {isAdminOrOwner(user?.role) && (
                           <FaRegEdit
                             style={{ color: "#717171", cursor: "pointer" }}
                           />
@@ -571,7 +562,7 @@ const TeamMember = () => {
                       data={d}
                       setUpdateMemberOpen={setUpdateMemberOpen}
                       setMemberData={setMemberData}
-                      role={user_data?.getSubTrusteeQuery?.role}
+                      role={user?.role}
                       setDeleteMemberOpen={setDeleteMemberOpen}
                       setMemberUserId={setMemberUserId}
                       setResetMemberMail={setResetMemberMail}

@@ -350,8 +350,8 @@ export default function Transaction() {
 
     try {
       const res = await refetch({
-        startDate: urlFilters.start_date ? urlFilters.start_date : start_date,
-        endDate: urlFilters.end_date ? urlFilters.end_date : end_date,
+        startDate: start_date,
+        endDate: end_date,
         page: currentPage.toString(),
         limit: itemsPerRow.name.toString(),
         status,
@@ -515,8 +515,8 @@ export default function Transaction() {
     if (!user_data?.getSubTrusteeQuery?.trustee_id) return;
 
     GET_TRANSACTION_AMOUNT(
-      urlFilters.start_date || startDate,
-      urlFilters.end_date || endDate,
+      isDateRangeIsSelected ? formatDate(selectedRange.startDate) : startDate,
+      isDateRangeIsSelected ? formatDate(selectedRange.endDate) : endDate,
       user_data.getSubTrusteeQuery.trustee_id,
       selectSchool !== "" ? schoolId : "",
       selectSchool === "" || selectSchool === null
@@ -541,8 +541,9 @@ export default function Transaction() {
     itemsPerRow,
     selectedRange,
     filters,
-    urlFilters.end_date,
-    urlFilters.start_date,
+    isDateRangeIsSelected,
+    startDate,
+    endDate,
   ]);
 
   return (
@@ -1042,18 +1043,24 @@ export default function Transaction() {
                     <div className=" text-sm m-2  max-w-fit ">
                       <button
                         onClick={async () => {
+                          setDateRange("");
+                          setIsDateRangeIsSelected(false);
+                          setUrlFilters({
+                            ...urlFilters,
+                            start_date: "",
+                            end_date: "",
+                            page: 1,
+                            limit: itemsPerRow.name,
+                          });
+                          setCurrentPage(1);
                           setSelectedRange({
                             startDate: startOfDay(new Date()),
                             endDate: endOfDay(new Date()),
                             key: "selection",
                           });
                           refetchDataFetch({
-                            start_date: isDateRangeIsSelected
-                              ? formatDate(selectedRange.startDate)
-                              : startDate,
-                            end_date: isDateRangeIsSelected
-                              ? formatDate(selectedRange.endDate)
-                              : endDate,
+                            start_date: startDate,
+                            end_date: endDate,
                             status: status?.toUpperCase(),
                             isCustomSearch: isCustomSearch,
                             searchFilter: searchFilter,
@@ -1069,16 +1076,6 @@ export default function Transaction() {
                             )?.includes("qr"),
                             gateway: getPaymentMode(filters.gateway, type),
                           });
-                          setDateRange("");
-                          setIsDateRangeIsSelected(false);
-                          setUrlFilters({
-                            ...urlFilters,
-                            start_date: "",
-                            end_date: "",
-                            page: 1,
-                            limit: itemsPerRow.name,
-                          });
-                          setCurrentPage(1);
                         }}
                         className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
                       >
