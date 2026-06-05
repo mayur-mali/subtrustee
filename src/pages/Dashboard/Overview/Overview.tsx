@@ -102,7 +102,6 @@ export default function Overview() {
   const recentTransactions = getRecentTransactions(
     recentTransaction?.getSubtrusteeTransactionReport?.transactionReport,
   );
-  console.log("recentTransaction", recentTransaction);
   const { data: activeMerchantCount, loading: activeMerchantLoading } =
     useQuery(GET_ACTIVE_MERCHANT_COUNT);
 
