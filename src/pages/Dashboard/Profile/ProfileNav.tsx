@@ -30,6 +30,16 @@ function ProfileNav({ user }: any) {
       >
         Team Members
       </NavLink>
+      <NavLink
+        className={({ isActive }) =>
+          isActive
+            ? "bg-[#6687FF33] py-2 rounded-lg md:text-[14px] text-[12px] text-left px-5 text-[#1B163B] mt-[10px]"
+            : "rounded-lg py-2 md:text-[14px] text-[12px] text-left px-5 text-[#717171] mt-[10px]"
+        }
+        to="/change-password"
+      >
+        Change Password
+      </NavLink>
     </div>
   );
 }

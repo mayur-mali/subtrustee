@@ -27,6 +27,11 @@ import MixFilter from "../../Transaction/components/MixFilter";
 import { useTransactionFilters } from "../../../../hooks/useTransactionFilters";
 import { getPaymentMode } from "../../../../utils/getPaymentMode";
 import { FaX } from "react-icons/fa6";
+import axios from "axios";
+import { LiaRupeeSignSolid } from "react-icons/lia";
+import { GET_USER } from "../../../../Qurries";
+import { GET_ALL_SCHOOLS_QUERY_FOR_REPORT } from "../../../../Qurries";
+
 function VendorTransaction() {
   const [searchText, setSearchText] = useState<any>("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -42,6 +47,7 @@ function VendorTransaction() {
   const [transactionData, setTransactionData] = useState<any>([]);
   const [isDateRangeIsSelected, setIsDateRangeIsSelected] = useState(false);
   const [status, setStatus] = useState<any>(null);
+  const [vendorAmountDetails, setVendorAmountDetails] = useState<any>(null);
   // const [schoolId, setSchoolId] = useState<string>("");
   const [schoolId, setSchoolId] = useState<any>([]);
   const [selectSchool, setSelectSchool] = useState<any[]>([]);
@@ -301,6 +307,88 @@ function VendorTransaction() {
       gateway: getPaymentMode(filters.gateway, type),
     });
   };
+
+  const { data: user_data } = useQuery(GET_USER);
+  const { data: schoolsData, loading: schoolsLoading } = useQuery(
+    GET_ALL_SCHOOLS_QUERY_FOR_REPORT,
+    {
+      fetchPolicy: "network-only",
+    },
+  );
+
+  const GET_VENDOR_TRANSACTION_AMOUNT = async (
+    start_date: string,
+    end_date: string,
+    trustee_id: string,
+    school_ids: string[],
+    status: string,
+    vendor_id?: string | null,
+    mode?: string[] | null,
+    gateway?: string[] | null,
+  ) => {
+    const token = localStorage.getItem("token");
+    axios
+      .post(
+        `${import.meta.env.VITE_PAYMENT_BACKEND_URL}/edviron-pg/get-vendor-transaction-report-batched`,
+        {
+          trustee_id: trustee_id,
+          school_ids: school_ids,
+          start_date: start_date,
+          end_date: end_date,
+          status: status,
+          vendor_id: vendor_id,
+          mode,
+          gateway,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      )
+      .then((response) => {
+        setVendorAmountDetails(response.data.transactions[0]);
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+    console.log(vendorAmountDetails);
+  };
+
+  useEffect(() => {
+    if (schoolsLoading) return;
+    if (!user_data?.getSubTrusteeQuery?.trustee_id) return;
+
+    GET_VENDOR_TRANSACTION_AMOUNT(
+      isDateRangeIsSelected ? formatDate(selectedRange.startDate) : startDate,
+      isDateRangeIsSelected ? formatDate(selectedRange.endDate) : endDate,
+      user_data.getSubTrusteeQuery.trustee_id,
+      schoolId && schoolId.length > 0
+        ? schoolId
+        : schoolsData?.getAllSubTrusteeSchools?.map(
+            (school: any) => school.school_id,
+          ) || [],
+      status ? status.toUpperCase() : "SUCCESS",
+      vendorId,
+      getPaymentMode(filters.paymentMode, type),
+      getPaymentMode(filters.gateway, type),
+    );
+  }, [
+    schoolsLoading,
+    schoolsData,
+    user_data,
+    type,
+    status,
+    vendorId,
+    selectedRange,
+    filters,
+    isDateRangeIsSelected,
+    startDate,
+    endDate,
+    schoolId,
+  ]);
+
   return (
     <div>
       {loading ? (
@@ -308,461 +396,519 @@ function VendorTransaction() {
           <AiOutlineLoading3Quarters className=" animate-spin text-2xl" />
         </div>
       ) : (
-        <_Table
-          perPage={false}
-          exportBtn={true}
-          heading={"Vendor Transactions"}
-          copyContent={[5]}
-          srNo={false}
-          filter={[searchText]}
-          loading={refetching || loading}
-          searchBox={
-            <div className="w-full ">
-              <div className="flex xl:!flex-row flex-col justify-between gap-2  w-full xl:items-center items-start mb-2">
-                <div className="bg-[#EEF1F6] py-3 items-center flex  px-3 xl:max-w-md max-w-[34rem] w-full rounded-lg">
-                  <input
-                    className="text-xs pr-2 bg-transparent focus:outline-none w-full placeholder:font-normal"
-                    type="text"
-                    value={searchText}
-                    placeholder="Search(Order ID...)"
-                    onChange={(e) => {
-                      setSearchText(e.target.value);
-                    }}
-                  />
-                  {searchFilter !== "" && searchText.length > 3 && (
-                    <HiMiniXMark
-                      onClick={async () => {
-                        setSearchFilter("");
-                        setSearchText("");
-                        refetchDataFetch({
-                          start_date: startDate,
-                          end_date: endDate,
-                        });
-                      }}
-                      className="text-[#1E1B59] cursor-pointer text-md mr-2 shrink-0"
-                    />
-                  )}
-                  <Select
-                    className="border-l-2 border-gray-400"
-                    options={[
-                      {
-                        label: "By Order ID",
-                        value: "custom_order_id",
-                      },
-                      { label: "By Edviron Order ID", value: "order_id" },
-                    ]}
-                    isSearchable={false}
-                    components={{
-                      DropdownIndicator: CustomDropdownIndicator,
-                      IndicatorSeparator: () => null,
-                    }}
-                    onChange={(e: any) => {
-                      setSearchFilter(e.value.toLowerCase());
-                      setCurrentPage(1);
-                    }}
-                    placeholder={
-                      <div className="text-[#1E1B59] -mt-1 capitalize text-[10px]">
-                        {searchFilter === ""
-                          ? "filter by"
-                          : searchFilter
-                                .toString()
-                                .toLowerCase()
-                                .replaceAll("_", " ") === "order id"
-                            ? "Edviron Order ID"
-                            : searchFilter
-                                .toString()
-                                .toLowerCase()
-                                .replaceAll("_", " ")}
-                      </div>
-                    }
-                    value={searchFilter}
-                    styles={{
-                      control: (provided) => ({
-                        ...provided,
-                        backgroundColor: "transparent",
-                        height: "20px",
-                        border: "none",
-                        boxShadow: "none",
-                        cursor: "pointer",
-                        minHeight: "10px",
-                        padding: "0px",
-                      }),
-                      valueContainer: (provided) => ({
-                        ...provided,
-                        height: "20px",
-                        width: "8rem",
-                        padding: "0 8px",
-                      }),
-                      input: (provided) => ({
-                        ...provided,
-                        margin: "0",
-                        padding: "0",
-                      }),
-                      placeholder: (provided) => ({
-                        ...provided,
-                        margin: "0",
-                        padding: "0",
-                        lineHeight: "20px",
-                      }),
-                      singleValue: (provided) => ({
-                        ...provided,
-                        lineHeight: "20px",
-                      }),
-                      indicatorsContainer: (provided) => ({
-                        ...provided,
-                        height: "20px",
-                      }),
-                      option: (provided, state) => ({
-                        ...provided,
-                        fontSize: "10px",
-                        cursor: "pointer",
-                      }),
-                    }}
-                  />
+        <>
+          <h2 className="text-[#1B163B] text-[28px] ml-4 font-semibold">
+            Vendor Transactions
+          </h2>
+          <div className="w-full grid xl:grid-cols-2 gap-4 mb-2">
+            <div className="xl:col-span-1 col-span-2">
+              <h2 className="text-[#1B163B] xl:text-[24px] text-lg ml-2 font-normal">
+                Transaction Amount
+              </h2>
 
-                  <div className="w-10 z-50 shrink-0 flex justify-center items-center">
-                    {searchText.length > 3 && refetching ? (
-                      <AiOutlineLoading3Quarters className="text-xs animate-spin" />
-                    ) : (
-                      <IoSearchOutline
-                        onClick={() => {
-                          if (searchText.length > 3 && searchFilter !== "") {
-                            setCurrentPage(1);
-                            refetchDataFetch({
-                              order_id:
-                                searchFilter === "order_id" ? searchText : null,
-                              custom_id:
-                                searchFilter === "custom_order_id"
-                                  ? searchText
-                                  : null,
-                            });
-                          }
+              <div className="text-[#229635] font-normal flex items-center">
+                <span className="xl:text-[44px] text-3xl flex items-center">
+                  <LiaRupeeSignSolid />{" "}
+                  {vendorAmountDetails !== null &&
+                  (status?.toLowerCase() === "success" || status === null) ? (
+                    <span>
+                      {vendorAmountDetails?.totalTransactionAmount?.toLocaleString(
+                        "hi-in",
+                      )}
+                    </span>
+                  ) : (
+                    <span>0</span>
+                  )}
+                </span>
+                <span className="text-[20px] text-[#717171] flex items-center ml-2">
+                  {` (selected period )`}
+                </span>
+              </div>
+            </div>
+
+            <div className="xl:col-span-1 col-span-2">
+              <h2 className="text-[#1B163B] xl:text-[24px] text-lg ml-2 font-normal">
+                Vendor Amount
+              </h2>
+              <div className="text-[#229635] font-normal flex items-center">
+                <span className="xl:text-[44px] text-3xl flex items-center">
+                  <LiaRupeeSignSolid />
+                  {vendorAmountDetails !== null &&
+                  (status?.toLowerCase() === "success" || status === null) ? (
+                    <span>
+                      {vendorAmountDetails?.totalOrderAmount?.toLocaleString(
+                        "hi-in",
+                      )}
+                    </span>
+                  ) : (
+                    <span>0</span>
+                  )}
+                </span>
+                <span className="text-[20px] text-[#717171] flex items-center ml-2">
+                  {` (selected period )`}
+                </span>
+              </div>
+            </div>
+          </div>
+          <_Table
+            perPage={false}
+            exportBtn={true}
+            heading={"Vendor Transactions"}
+            copyContent={[5]}
+            srNo={false}
+            filter={[searchText]}
+            loading={refetching || loading}
+            searchBox={
+              <div className="w-full ">
+                <div className="flex xl:!flex-row flex-col justify-between gap-2  w-full xl:items-center items-start mb-2">
+                  <div className="bg-[#EEF1F6] py-3 items-center flex  px-3 xl:max-w-md max-w-[34rem] w-full rounded-lg">
+                    <input
+                      className="text-xs pr-2 bg-transparent focus:outline-none w-full placeholder:font-normal"
+                      type="text"
+                      value={searchText}
+                      placeholder="Search(Order ID...)"
+                      onChange={(e) => {
+                        setSearchText(e.target.value);
+                      }}
+                    />
+                    {searchFilter !== "" && searchText.length > 3 && (
+                      <HiMiniXMark
+                        onClick={async () => {
+                          setSearchFilter("");
+                          setSearchText("");
+                          refetchDataFetch({
+                            start_date: startDate,
+                            end_date: endDate,
+                          });
                         }}
-                        className=" cursor-pointer text-edvion_black text-opacity-50 text-md "
+                        className="text-[#1E1B59] cursor-pointer text-md mr-2 shrink-0"
                       />
                     )}
-                  </div>
-                </div>
-
-                <div className="flex justify-end items-center flex-1 w-full max-w-[34rem]">
-                  <TransactionDateFilter
-                    setType={setDateRange}
-                    type={dateRange}
-                    refetch={() => {
-                      setCurrentPage(1);
-                      setUrlFilters({
-                        ...urlFilters,
-                        start_date: formatDate(selectedRange.startDate),
-                        end_date: formatDate(selectedRange.endDate),
-                      });
-                      refetchDataFetch({
-                        start_date: formatDate(selectedRange.startDate),
-                        end_date: formatDate(selectedRange.endDate),
-                        status: status?.toUpperCase(),
-                        school_id:
-                          schoolId && schoolId.length > 0 ? schoolId : null,
-                        payment_modes: getPaymentMode(
-                          filters.paymentMode,
-                          type,
-                        ),
-                        gateway: getPaymentMode(filters.gateway, type),
-                      });
-                    }}
-                    selectedRange={selectedRange}
-                    setSelectedRange={setSelectedRange}
-                    setIsDateRangeIsSelected={setIsDateRangeIsSelected}
-                  />
-                  <div className="w-full">
                     <Select
-                      className="font-normal m-0 p-2 capitalize"
+                      className="border-l-2 border-gray-400"
                       options={[
-                        { label: "SUCCESS", value: "SUCCESS" },
-                        { label: "PENDING", value: "PENDING" },
-                        { label: "FAILED", value: "FAILED" },
-                        { label: "USER DROPPED", value: "USER_DROPPED" },
-                      ].map((status: any) => {
-                        return {
-                          label: status.label?.toLowerCase(),
-                          value: status.value?.toLowerCase(),
-                        };
-                      })}
+                        {
+                          label: "By Order ID",
+                          value: "custom_order_id",
+                        },
+                        { label: "By Edviron Order ID", value: "order_id" },
+                      ]}
+                      isSearchable={false}
                       components={{
                         DropdownIndicator: CustomDropdownIndicator,
                         IndicatorSeparator: () => null,
                       }}
-                      isSearchable={false}
                       onChange={(e: any) => {
-                        setStatus(e.value);
+                        setSearchFilter(e.value.toLowerCase());
                         setCurrentPage(1);
-                        // refetchDataFetch({
-                        //   start_date: isDateRangeIsSelected
-                        //     ? formatDate(selectedRange.startDate)
-                        //     : startDate,
-                        //   end_date: isDateRangeIsSelected
-                        //     ? formatDate(selectedRange.endDate)
-                        //     : endDate,
-                        //   status: e.value?.toUpperCase(),
-                        //   isCustomSearch: isCustomSearch,
-                        //   searchFilter: searchFilter,
-                        //   searchParams: searchText,
-                        //   school_id: selectSchool === "" ? null : schoolId,
-                        //   payment_modes: getPaymentMode(
-                        //     filters.paymentMode,
-                        //     type
-                        //   ),
-                        //   isQrCode: getPaymentMode(
-                        //     filters.paymentMode,
-                        //     type
-                        //   )?.includes("qr"),
-                        // });
                       }}
                       placeholder={
-                        <div className="text-[#1E1B59] text-xs">Status</div>
+                        <div className="text-[#1E1B59] -mt-1 capitalize text-[10px]">
+                          {searchFilter === ""
+                            ? "filter by"
+                            : searchFilter
+                                  .toString()
+                                  .toLowerCase()
+                                  .replaceAll("_", " ") === "order id"
+                              ? "Edviron Order ID"
+                              : searchFilter
+                                  .toString()
+                                  .toLowerCase()
+                                  .replaceAll("_", " ")}
+                        </div>
                       }
-                      value={null}
+                      value={searchFilter}
                       styles={{
-                        control: (provided: any) => ({
-                          ...provided,
-                          backgroundColor: "#F6F8FA",
-                          border: "1px solid #1B163B",
-                          borderRadius: "6px",
-
-                          minHeight: "15px",
-                          margin: "0px",
-                          color: "#6687FF",
-                        }),
-                        valueContainer: (provided: any) => ({
-                          ...provided,
-                          padding: "4px",
-                          paddingLeft: "0.5rem",
-                        }),
-                        input: (provided: any) => ({
+                        control: (provided) => ({
                           ...provided,
                           backgroundColor: "transparent",
-                          color: "#000",
-                          "::placeholder": {
-                            backgroundColor: "#YourDesiredColor",
-                            opacity: 1,
-                          },
-                          placeholder: (provided: any) => ({
-                            ...provided,
-                            color: "red", // Set the color of the placeholder text
-                          }),
+                          height: "20px",
+                          border: "none",
+                          boxShadow: "none",
+                          cursor: "pointer",
+                          minHeight: "10px",
+                          padding: "0px",
+                        }),
+                        valueContainer: (provided) => ({
+                          ...provided,
+                          height: "20px",
+                          width: "8rem",
+                          padding: "0 8px",
+                        }),
+                        input: (provided) => ({
+                          ...provided,
+                          margin: "0",
+                          padding: "0",
+                        }),
+                        placeholder: (provided) => ({
+                          ...provided,
+                          margin: "0",
+                          padding: "0",
+                          lineHeight: "20px",
+                        }),
+                        singleValue: (provided) => ({
+                          ...provided,
+                          lineHeight: "20px",
+                        }),
+                        indicatorsContainer: (provided) => ({
+                          ...provided,
+                          height: "20px",
+                        }),
+                        option: (provided, state) => ({
+                          ...provided,
+                          fontSize: "10px",
+                          cursor: "pointer",
                         }),
                       }}
                     />
+
+                    <div className="w-10 z-50 shrink-0 flex justify-center items-center">
+                      {searchText.length > 3 && refetching ? (
+                        <AiOutlineLoading3Quarters className="text-xs animate-spin" />
+                      ) : (
+                        <IoSearchOutline
+                          onClick={() => {
+                            if (searchText.length > 3 && searchFilter !== "") {
+                              setCurrentPage(1);
+                              refetchDataFetch({
+                                order_id:
+                                  searchFilter === "order_id"
+                                    ? searchText
+                                    : null,
+                                custom_id:
+                                  searchFilter === "custom_order_id"
+                                    ? searchText
+                                    : null,
+                              });
+                            }
+                          }}
+                          className=" cursor-pointer text-edvion_black text-opacity-50 text-md "
+                        />
+                      )}
+                    </div>
                   </div>
-                  <div className="w-full">
-                    <MixFilter
-                      setSelectSchool={(id: any) => {
-                        const updatedSchoolIds = [...selectSchool, id];
-                        setSelectSchool(updatedSchoolIds);
-                      }}
-                      setSchoolId={(id: any) => {
-                        const updatedSchoolIds = [...schoolId, id];
-                        setSchoolId(updatedSchoolIds);
-                      }}
-                      setSelectVendor={(vendorName: any) => {
-                        setSelectVendor(vendorName);
-                      }}
-                      setVendorId={(newVendorId: any) => {
-                        setVendorId(newVendorId);
-                      }}
-                      // setSchoolId={setSchoolId}
-                      paymentModes={Object.keys(filters.paymentMode).filter(
-                        (key) => filters.paymentMode[key],
-                      )}
-                      gateway={Object.keys(filters.gateway).filter(
-                        (key) => filters.gateway[key],
-                      )}
-                      setType={setType}
-                      onCancel={() => {
-                        setUrlFilters({
-                          ...urlFilters,
-                          payment_modes: null,
-                          gateway: null,
-                        });
-                        refetchDataFetch({
-                          start_date: isDateRangeIsSelected
-                            ? formatDate(selectedRange.startDate)
-                            : startDate,
-                          end_date: isDateRangeIsSelected
-                            ? formatDate(selectedRange.endDate)
-                            : endDate,
-                          status: status?.toUpperCase(),
-                          school_id:
-                            schoolId && schoolId.length > 0 ? schoolId : null,
-                          vendor_id: vendorId || null,
-                          gateway: null,
-                        });
-                      }}
-                      onApply={() => {
+
+                  <div className="flex justify-end items-center flex-1 w-full max-w-[34rem]">
+                    <TransactionDateFilter
+                      setType={setDateRange}
+                      type={dateRange}
+                      refetch={() => {
                         setCurrentPage(1);
                         setUrlFilters({
                           ...urlFilters,
+                          start_date: formatDate(selectedRange.startDate),
+                          end_date: formatDate(selectedRange.endDate),
+                        });
+                        refetchDataFetch({
+                          start_date: formatDate(selectedRange.startDate),
+                          end_date: formatDate(selectedRange.endDate),
+                          status: status?.toUpperCase(),
                           school_id:
                             schoolId && schoolId.length > 0 ? schoolId : null,
-                          school_name: selectSchool || null,
-                          vendor_id: vendorId || null,
-                          vendor_name: selectVendor || null,
                           payment_modes: getPaymentMode(
                             filters.paymentMode,
                             type,
                           ),
                           gateway: getPaymentMode(filters.gateway, type),
                         });
-                        refetchDataFetch({
-                          start_date: isDateRangeIsSelected
-                            ? formatDate(selectedRange.startDate)
-                            : startDate,
-                          end_date: isDateRangeIsSelected
-                            ? formatDate(selectedRange.endDate)
-                            : endDate,
-                          status: status?.toUpperCase(),
-                          school_id:
-                            schoolId && schoolId.length > 0 ? schoolId : null,
-                          vendor_id: vendorId || null,
-                          // school_id: selectSchool === "" ? null : schoolId,
-                          payment_modes: getPaymentMode(
-                            filters.paymentMode,
-                            type,
-                          )?.includes("qr")
-                            ? null
-                            : getPaymentMode(filters.paymentMode, type),
-                          gateway: getPaymentMode(filters.gateway, type),
-                        });
                       }}
-                      filters={filters}
-                      setFilters={setFilters}
+                      selectedRange={selectedRange}
+                      setSelectedRange={setSelectedRange}
+                      setIsDateRangeIsSelected={setIsDateRangeIsSelected}
                     />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <RowsPerPageSelect
-                  setItemsPerRow={setItemsPerRow}
-                  itemsPerRow={itemsPerRow}
-                  className=" justify-start"
-                />
-              </div>
-              <div className="flex items-center">
-                {type !== "" && (
-                  <div className=" text-sm m-2  max-w-fit ">
-                    <button
-                      onClick={async () => {
-                        setSelectedRange({
-                          startDate: startOfDay(new Date()),
-                          endDate: endOfDay(new Date()),
-                          key: "selection",
-                        });
-                        if (status || schoolId) {
-                          setType("");
-                          refetchDataFetch({
-                            start_date: startDate,
-                            end_date: endDate,
-                            // checking
-                            status: status?.toUpperCase(),
-                            school_id:
-                              schoolId && schoolId.length > 0 ? schoolId : null,
+                    <div className="w-full">
+                      <Select
+                        className="font-normal m-0 p-2 capitalize"
+                        options={[
+                          { label: "SUCCESS", value: "SUCCESS" },
+                          { label: "PENDING", value: "PENDING" },
+                          { label: "FAILED", value: "FAILED" },
+                          { label: "USER DROPPED", value: "USER_DROPPED" },
+                        ].map((status: any) => {
+                          return {
+                            label: status.label?.toLowerCase(),
+                            value: status.value?.toLowerCase(),
+                          };
+                        })}
+                        components={{
+                          DropdownIndicator: CustomDropdownIndicator,
+                          IndicatorSeparator: () => null,
+                        }}
+                        isSearchable={false}
+                        onChange={(e: any) => {
+                          setStatus(e.value);
+                          setCurrentPage(1);
+                          // refetchDataFetch({
+                          //   start_date: isDateRangeIsSelected
+                          //     ? formatDate(selectedRange.startDate)
+                          //     : startDate,
+                          //   end_date: isDateRangeIsSelected
+                          //     ? formatDate(selectedRange.endDate)
+                          //     : endDate,
+                          //   status: e.value?.toUpperCase(),
+                          //   isCustomSearch: isCustomSearch,
+                          //   searchFilter: searchFilter,
+                          //   searchParams: searchText,
+                          //   school_id: selectSchool === "" ? null : schoolId,
+                          //   payment_modes: getPaymentMode(
+                          //     filters.paymentMode,
+                          //     type
+                          //   ),
+                          //   isQrCode: getPaymentMode(
+                          //     filters.paymentMode,
+                          //     type
+                          //   )?.includes("qr"),
+                          // });
+                        }}
+                        placeholder={
+                          <div className="text-[#1E1B59] text-xs">Status</div>
+                        }
+                        value={null}
+                        styles={{
+                          control: (provided: any) => ({
+                            ...provided,
+                            backgroundColor: "#F6F8FA",
+                            border: "1px solid #1B163B",
+                            borderRadius: "6px",
+
+                            minHeight: "15px",
+                            margin: "0px",
+                            color: "#6687FF",
+                          }),
+                          valueContainer: (provided: any) => ({
+                            ...provided,
+                            padding: "4px",
+                            paddingLeft: "0.5rem",
+                          }),
+                          input: (provided: any) => ({
+                            ...provided,
+                            backgroundColor: "transparent",
+                            color: "#000",
+                            "::placeholder": {
+                              backgroundColor: "#YourDesiredColor",
+                              opacity: 1,
+                            },
+                            placeholder: (provided: any) => ({
+                              ...provided,
+                              color: "red", // Set the color of the placeholder text
+                            }),
+                          }),
+                        }}
+                      />
+                    </div>
+                    <div className="w-full">
+                      <MixFilter
+                        setSelectSchool={(id: any) => {
+                          const updatedSchoolIds = [...selectSchool, id];
+                          setSelectSchool(updatedSchoolIds);
+                        }}
+                        setSchoolId={(id: any) => {
+                          const updatedSchoolIds = [...schoolId, id];
+                          setSchoolId(updatedSchoolIds);
+                        }}
+                        setSelectVendor={(vendorName: any) => {
+                          setSelectVendor(vendorName);
+                        }}
+                        setVendorId={(newVendorId: any) => {
+                          setVendorId(newVendorId);
+                        }}
+                        // setSchoolId={setSchoolId}
+                        paymentModes={Object.keys(filters.paymentMode).filter(
+                          (key) => filters.paymentMode[key],
+                        )}
+                        gateway={Object.keys(filters.gateway).filter(
+                          (key) => filters.gateway[key],
+                        )}
+                        setType={setType}
+                        onCancel={() => {
+                          setUrlFilters({
+                            ...urlFilters,
                             payment_modes: null,
                             gateway: null,
                           });
+                          refetchDataFetch({
+                            start_date: isDateRangeIsSelected
+                              ? formatDate(selectedRange.startDate)
+                              : startDate,
+                            end_date: isDateRangeIsSelected
+                              ? formatDate(selectedRange.endDate)
+                              : endDate,
+                            status: status?.toUpperCase(),
+                            school_id:
+                              schoolId && schoolId.length > 0 ? schoolId : null,
+                            vendor_id: vendorId || null,
+                            gateway: null,
+                          });
+                        }}
+                        onApply={() => {
+                          setCurrentPage(1);
+                          setUrlFilters({
+                            ...urlFilters,
+                            school_id:
+                              schoolId && schoolId.length > 0 ? schoolId : null,
+                            school_name: selectSchool || null,
+                            vendor_id: vendorId || null,
+                            vendor_name: selectVendor || null,
+                            payment_modes: getPaymentMode(
+                              filters.paymentMode,
+                              type,
+                            ),
+                            gateway: getPaymentMode(filters.gateway, type),
+                          });
+                          refetchDataFetch({
+                            start_date: isDateRangeIsSelected
+                              ? formatDate(selectedRange.startDate)
+                              : startDate,
+                            end_date: isDateRangeIsSelected
+                              ? formatDate(selectedRange.endDate)
+                              : endDate,
+                            status: status?.toUpperCase(),
+                            school_id:
+                              schoolId && schoolId.length > 0 ? schoolId : null,
+                            vendor_id: vendorId || null,
+                            // school_id: selectSchool === "" ? null : schoolId,
+                            payment_modes: getPaymentMode(
+                              filters.paymentMode,
+                              type,
+                            )?.includes("qr")
+                              ? null
+                              : getPaymentMode(filters.paymentMode, type),
+                            gateway: getPaymentMode(filters.gateway, type),
+                          });
+                        }}
+                        filters={filters}
+                        setFilters={setFilters}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <RowsPerPageSelect
+                    setItemsPerRow={setItemsPerRow}
+                    itemsPerRow={itemsPerRow}
+                    className=" justify-start"
+                  />
+                </div>
+                <div className="flex items-center">
+                  {type !== "" && (
+                    <div className=" text-sm m-2  max-w-fit ">
+                      <button
+                        onClick={async () => {
+                          setSelectedRange({
+                            startDate: startOfDay(new Date()),
+                            endDate: endOfDay(new Date()),
+                            key: "selection",
+                          });
+                          if (status || schoolId) {
+                            setType("");
+                            refetchDataFetch({
+                              start_date: startDate,
+                              end_date: endDate,
+                              // checking
+                              status: status?.toUpperCase(),
+                              school_id:
+                                schoolId && schoolId.length > 0
+                                  ? schoolId
+                                  : null,
+                              payment_modes: null,
+                              gateway: null,
+                            });
 
-                          setIsDateRangeIsSelected(false);
-                        } else {
+                            setIsDateRangeIsSelected(false);
+                          } else {
+                            refetchDataFetch({
+                              start_date: startDate,
+                              end_date: endDate,
+                            });
+                            setType("");
+                            setIsDateRangeIsSelected(false);
+                          }
+                        }}
+                        className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
+                      >
+                        {type} <HiMiniXMark className=" text-lg ml-1" />
+                      </button>
+                    </div>
+                  )}
+                  {showCustomDate && (
+                    <div className=" text-sm m-2  max-w-fit ">
+                      <button
+                        onClick={async () => {
+                          setSelectedRange({
+                            startDate: startOfDay(new Date()),
+                            endDate: endOfDay(new Date()),
+                            key: "selection",
+                          });
                           refetchDataFetch({
                             start_date: startDate,
                             end_date: endDate,
+                            status: status?.toUpperCase(),
+                            school_id:
+                              schoolId && schoolId.length > 0 ? schoolId : null,
+                            vendor_id: vendorId || null,
+                            payment_modes: getPaymentMode(
+                              filters.paymentMode,
+                              type,
+                            ),
+                            gateway: getPaymentMode(filters.gateway, type),
                           });
-                          setType("");
+                          setDateRange("Today");
                           setIsDateRangeIsSelected(false);
-                        }
-                      }}
-                      className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
-                    >
-                      {type} <HiMiniXMark className=" text-lg ml-1" />
-                    </button>
-                  </div>
-                )}
-                {showCustomDate && (
-                  <div className=" text-sm m-2  max-w-fit ">
-                    <button
-                      onClick={async () => {
-                        setSelectedRange({
-                          startDate: startOfDay(new Date()),
-                          endDate: endOfDay(new Date()),
-                          key: "selection",
-                        });
-                        refetchDataFetch({
-                          start_date: startDate,
-                          end_date: endDate,
-                          status: status?.toUpperCase(),
-                          school_id:
-                            schoolId && schoolId.length > 0 ? schoolId : null,
-                          vendor_id: vendorId || null,
-                          payment_modes: getPaymentMode(
-                            filters.paymentMode,
-                            type,
-                          ),
-                          gateway: getPaymentMode(filters.gateway, type),
-                        });
-                        setDateRange("Today");
-                        setIsDateRangeIsSelected(false);
-                        setUrlFilters({
-                          ...urlFilters,
-                          start_date: "",
-                          end_date: "",
-                        });
-                      }}
-                      className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
-                    >
-                      Custom Date <HiMiniXMark className=" text-lg ml-1" />
-                    </button>
-                  </div>
-                )}
-                <div className="flex flex-wrap gap-2 max-w-full overflow-hidden">
-                  {selectSchool.map(
-                    (school: any, index: number) =>
-                      school !== null && (
-                        <div
-                          key={index}
-                          className="bg-[#6687FFCC] text-sm m-2 rounded-lg px-2 h-10 flex items-center gap-x-2 min-w-max max-w-[8em] sm:max-w-[10em] md:max-w-[12em] lg:max-w-[14em] xl:max-w-[16em]"
-                        >
-                          <span className="text-white truncate pl-2">
-                            {school}
-                          </span>
-                          <span>
-                            <FaX
-                              className="text-white cursor-pointer h-3"
-                              onClick={(e) => {
-                                e.stopPropagation(); // 🛑 prevent parent clicks
-                                removeSchoolFilter(index);
-                              }}
-                            />
-                          </span>
-                        </div>
-                      ),
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2 max-w-full overflow-hidden">
-                  {selectVendor && (
-                    <div className="bg-[#6687FFCC] text-sm m-2 rounded-lg px-2 h-10 flex items-center gap-x-2 min-w-max max-w-[8em] sm:max-w-[10em] md:max-w-[12em] lg:max-w-[14em] xl:max-w-[16em]">
-                      <span className="text-white truncate pl-2">
-                        {selectVendor}
-                      </span>
-                      <span>
-                        <FaX
-                          className="text-white cursor-pointer h-3"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeVendorFilter();
-                          }}
-                        />
-                      </span>
+                          setUrlFilters({
+                            ...urlFilters,
+                            start_date: "",
+                            end_date: "",
+                          });
+                        }}
+                        className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
+                      >
+                        Custom Date <HiMiniXMark className=" text-lg ml-1" />
+                      </button>
                     </div>
                   )}
-                </div>
-                {/* {selectSchool !== "" && (
+                  <div className="flex flex-wrap gap-2 max-w-full overflow-hidden">
+                    {selectSchool.map(
+                      (school: any, index: number) =>
+                        school !== null && (
+                          <div
+                            key={index}
+                            className="bg-[#6687FFCC] text-sm m-2 rounded-lg px-2 h-10 flex items-center gap-x-2 min-w-max max-w-[8em] sm:max-w-[10em] md:max-w-[12em] lg:max-w-[14em] xl:max-w-[16em]"
+                          >
+                            <span className="text-white truncate pl-2">
+                              {school}
+                            </span>
+                            <span>
+                              <FaX
+                                className="text-white cursor-pointer h-3"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // 🛑 prevent parent clicks
+                                  removeSchoolFilter(index);
+                                }}
+                              />
+                            </span>
+                          </div>
+                        ),
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2 max-w-full overflow-hidden">
+                    {selectVendor && (
+                      <div className="bg-[#6687FFCC] text-sm m-2 rounded-lg px-2 h-10 flex items-center gap-x-2 min-w-max max-w-[8em] sm:max-w-[10em] md:max-w-[12em] lg:max-w-[14em] xl:max-w-[16em]">
+                        <span className="text-white truncate pl-2">
+                          {selectVendor}
+                        </span>
+                        <span>
+                          <FaX
+                            className="text-white cursor-pointer h-3"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              removeVendorFilter();
+                            }}
+                          />
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  {/* {selectSchool !== "" && (
                   <div className=" text-sm m-2  max-w-fit ">
                     <button
                       onClick={() => {
@@ -795,315 +941,318 @@ function VendorTransaction() {
                     </button>
                   </div>
                 )} */}
-                {status && (
-                  <div className=" text-sm m-2  max-w-fit ">
-                    <button
-                      onClick={async () => {
-                        setCurrentPage(1);
-                        if (selectSchool || isDateRangeIsSelected) {
-                          refetchDataFetch({
-                            start_date: formatDate(selectedRange.startDate),
-                            end_date: formatDate(selectedRange.endDate),
-                            status: status?.toUpperCase(),
-                            school_id:
-                              schoolId && schoolId.length > 0 ? schoolId : null,
-                            payment_modes: getPaymentMode(
-                              filters.paymentMode,
-                              type,
-                            ),
-                            gateway: getPaymentMode(filters.gateway, type),
-                          });
-                          setStatus(null);
-                        } else {
-                          refetchDataFetch({
-                            start_date: startDate,
-                            end_date: endDate,
-                          });
-                          setStatus(null);
-                        }
-                      }}
-                      className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
-                    >
-                      {status} <HiMiniXMark className=" text-lg ml-1" />
-                    </button>
-                  </div>
-                )}
+                  {status && (
+                    <div className=" text-sm m-2  max-w-fit ">
+                      <button
+                        onClick={async () => {
+                          setCurrentPage(1);
+                          if (selectSchool || isDateRangeIsSelected) {
+                            refetchDataFetch({
+                              start_date: formatDate(selectedRange.startDate),
+                              end_date: formatDate(selectedRange.endDate),
+                              status: status?.toUpperCase(),
+                              school_id:
+                                schoolId && schoolId.length > 0
+                                  ? schoolId
+                                  : null,
+                              payment_modes: getPaymentMode(
+                                filters.paymentMode,
+                                type,
+                              ),
+                              gateway: getPaymentMode(filters.gateway, type),
+                            });
+                            setStatus(null);
+                          } else {
+                            refetchDataFetch({
+                              start_date: startDate,
+                              end_date: endDate,
+                            });
+                            setStatus(null);
+                          }
+                        }}
+                        className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
+                      >
+                        {status} <HiMiniXMark className=" text-lg ml-1" />
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          }
-          data={[
-            [
-              "Sr.No",
-              "Name",
-              "School name",
-              "Date & Time",
-              "Order ID",
-              "Transaction Amt",
-              "Vendor Order Amt",
-              "Payment Method",
-              "Status",
-              "Student Name",
-              "Student Id",
-              "Gateway",
-            ],
-            ...([
-              ...transactionData?.map((d: any, index: number) => {
-                return {
-                  ...d,
-                  payment_method:
-                    d.payment_method === "" || d.payment_method === null
-                      ? "NA"
-                      : payment_method_map[d.payment_method],
-                  serialNumber:
-                    (currentPage - 1) * itemsPerRow.name + 1 + index,
-                };
-              }),
-            ]
-              // .filter((d: any) => {
-              //   const arr = [
-              //     d.collect_id,
-              //     d.custom_id,
-              //     d.school_id,
-              //     d.name,
-              //   ].join(",");
-              //   return arr.toLowerCase().includes(searchText.toLowerCase());
-              // })
-              .map((transaction: any, index: number) => [
-                <div>{transaction?.serialNumber}</div>,
-                <Link
-                  state={{
-                    collect_id: transaction?.collect_id,
-                    amount: transaction?.amount,
-                    schoolName: transaction?.name,
-                    gateway:
-                      transaction.gateway === "EDVIRON_PG"
-                        ? "Cashfree"
-                        : transaction.gateway,
-                  }}
-                  to={`/payments/vendor-transaction-receipt/`}
-                >
-                  <div
-                    // onClick={(e) => {
-                    //   console.log(transaction)
-                    //   // e.preventDefault(); // Prevents any unwanted navigation issues
-                    //   // handelReciept(transaction); // Correctly passing the transaction object
-                    // }}
-                    className="truncate"
-                    key={transaction.orderID}
+            }
+            data={[
+              [
+                "Sr.No",
+                "Name",
+                "School name",
+                "Date & Time",
+                "Order ID",
+                "Transaction Amt",
+                "Vendor Order Amt",
+                "Payment Method",
+                "Status",
+                "Student Name",
+                "Student Id",
+                "Gateway",
+              ],
+              ...([
+                ...transactionData?.map((d: any, index: number) => {
+                  return {
+                    ...d,
+                    payment_method:
+                      d.payment_method === "" || d.payment_method === null
+                        ? "NA"
+                        : payment_method_map[d.payment_method],
+                    serialNumber:
+                      (currentPage - 1) * itemsPerRow.name + 1 + index,
+                  };
+                }),
+              ]
+                // .filter((d: any) => {
+                //   const arr = [
+                //     d.collect_id,
+                //     d.custom_id,
+                //     d.school_id,
+                //     d.name,
+                //   ].join(",");
+                //   return arr.toLowerCase().includes(searchText.toLowerCase());
+                // })
+                .map((transaction: any, index: number) => [
+                  <div>{transaction?.serialNumber}</div>,
+                  <Link
+                    state={{
+                      collect_id: transaction?.collect_id,
+                      amount: transaction?.amount,
+                      schoolName: transaction?.name,
+                      gateway:
+                        transaction.gateway === "EDVIRON_PG"
+                          ? "Cashfree"
+                          : transaction.gateway,
+                    }}
+                    to={`/payments/vendor-transaction-receipt/`}
                   >
-                    {transaction?.name}
-                  </div>
-                </Link>,
-                <Link
-                  state={{
-                    collect_id: transaction?.collect_id,
-                    amount: transaction?.amount,
-                    schoolName: transaction?.name,
-                    gateway:
-                      transaction.gateway === "EDVIRON_PG"
-                        ? "Cashfree"
-                        : transaction.gateway,
-                  }}
-                  to={`/payments/vendor-transaction-receipt/`}
-                >
-                  <div className="truncate">
-                    {transaction?.schoolName || "N/A"}
-                  </div>
-                </Link>,
-                <Link
-                  state={{
-                    collect_id: transaction?.collect_id,
-                    amount: transaction?.amount,
-                    schoolName: transaction?.name,
-                    gateway:
-                      transaction.gateway === "EDVIRON_PG"
-                        ? "Cashfree"
-                        : transaction.gateway,
-                  }}
-                  to={`/payments/vendor-transaction-receipt/`}
-                >
-                  <div className=" truncate">
-                    {new Date(transaction?.createdAt).toLocaleString("hi")}
-                  </div>
-                </Link>,
-                <Link
-                  state={{
-                    collect_id: transaction?.collect_id,
-                    amount: transaction?.amount,
-                    schoolName: transaction?.name,
-                    gateway:
-                      transaction.gateway === "EDVIRON_PG"
-                        ? "Cashfree"
-                        : transaction.gateway,
-                  }}
-                  to={`/payments/vendor-transaction-receipt/`}
-                >
-                  <div>
-                    {transaction.custom_order_id
-                      ? transaction?.custom_order_id
-                      : transaction?.collect_id}
-                  </div>
-                </Link>,
-                <Link
-                  state={{
-                    collect_id: transaction?.collect_id,
-                    amount: transaction?.amount,
-                    schoolName: transaction?.name,
-                    gateway:
-                      transaction.gateway === "EDVIRON_PG"
-                        ? "Cashfree"
-                        : transaction.gateway,
-                  }}
-                  to={`/payments/vendor-transaction-receipt/`}
-                >
-                  <div>{amountFormat(transaction.transaction_amount)}</div>
-                </Link>,
-                <Link
-                  state={{
-                    collect_id: transaction?.collect_id,
-                    amount: transaction?.amount,
-                    schoolName: transaction?.name,
-                    gateway:
-                      transaction.gateway === "EDVIRON_PG"
-                        ? "Cashfree"
-                        : transaction.gateway,
-                  }}
-                  to={`/payments/vendor-transaction-receipt/`}
-                >
-                  <div>{amountFormat(transaction.amount)}</div>
-                </Link>,
+                    <div
+                      // onClick={(e) => {
+                      //   console.log(transaction)
+                      //   // e.preventDefault(); // Prevents any unwanted navigation issues
+                      //   // handelReciept(transaction); // Correctly passing the transaction object
+                      // }}
+                      className="truncate"
+                      key={transaction.orderID}
+                    >
+                      {transaction?.name}
+                    </div>
+                  </Link>,
+                  <Link
+                    state={{
+                      collect_id: transaction?.collect_id,
+                      amount: transaction?.amount,
+                      schoolName: transaction?.name,
+                      gateway:
+                        transaction.gateway === "EDVIRON_PG"
+                          ? "Cashfree"
+                          : transaction.gateway,
+                    }}
+                    to={`/payments/vendor-transaction-receipt/`}
+                  >
+                    <div className="truncate">
+                      {transaction?.schoolName || "N/A"}
+                    </div>
+                  </Link>,
+                  <Link
+                    state={{
+                      collect_id: transaction?.collect_id,
+                      amount: transaction?.amount,
+                      schoolName: transaction?.name,
+                      gateway:
+                        transaction.gateway === "EDVIRON_PG"
+                          ? "Cashfree"
+                          : transaction.gateway,
+                    }}
+                    to={`/payments/vendor-transaction-receipt/`}
+                  >
+                    <div className=" truncate">
+                      {new Date(transaction?.createdAt).toLocaleString("hi")}
+                    </div>
+                  </Link>,
+                  <Link
+                    state={{
+                      collect_id: transaction?.collect_id,
+                      amount: transaction?.amount,
+                      schoolName: transaction?.name,
+                      gateway:
+                        transaction.gateway === "EDVIRON_PG"
+                          ? "Cashfree"
+                          : transaction.gateway,
+                    }}
+                    to={`/payments/vendor-transaction-receipt/`}
+                  >
+                    <div>
+                      {transaction.custom_order_id
+                        ? transaction?.custom_order_id
+                        : transaction?.collect_id}
+                    </div>
+                  </Link>,
+                  <Link
+                    state={{
+                      collect_id: transaction?.collect_id,
+                      amount: transaction?.amount,
+                      schoolName: transaction?.name,
+                      gateway:
+                        transaction.gateway === "EDVIRON_PG"
+                          ? "Cashfree"
+                          : transaction.gateway,
+                    }}
+                    to={`/payments/vendor-transaction-receipt/`}
+                  >
+                    <div>{amountFormat(transaction.transaction_amount)}</div>
+                  </Link>,
+                  <Link
+                    state={{
+                      collect_id: transaction?.collect_id,
+                      amount: transaction?.amount,
+                      schoolName: transaction?.name,
+                      gateway:
+                        transaction.gateway === "EDVIRON_PG"
+                          ? "Cashfree"
+                          : transaction.gateway,
+                    }}
+                    to={`/payments/vendor-transaction-receipt/`}
+                  >
+                    <div>{amountFormat(transaction.amount)}</div>
+                  </Link>,
 
-                <Link
-                  state={{
-                    collect_id: transaction?.collect_id,
-                    amount: transaction?.amount,
-                    schoolName: transaction?.name,
-                    gateway:
-                      transaction.gateway === "EDVIRON_PG"
-                        ? "Cashfree"
-                        : transaction.gateway,
-                  }}
-                  to={`/payments/vendor-transaction-receipt/`}
-                >
-                  <div>
-                    {transaction.payment_method !== null
-                      ? transaction.payment_method
-                      : "NA"}
-                  </div>
-                </Link>,
-                <Link
-                  state={{
-                    collect_id: transaction?.collect_id,
-                    amount: transaction?.amount,
-                    schoolName: transaction?.name,
-                    gateway:
-                      transaction.gateway === "EDVIRON_PG"
-                        ? "Cashfree"
-                        : transaction.gateway,
-                  }}
-                  to={`/payments/vendor-transaction-receipt/`}
-                >
-                  <div
-                    className={`flex items-center capitalize ${
-                      transaction.status.toLowerCase() === "success"
-                        ? "text-[#04B521]"
-                        : transaction.status.toLowerCase() === "failure" ||
-                            transaction.status.toLowerCase() === "failed"
-                          ? "text-[#E54F2F]"
-                          : transaction.status.toLowerCase() === "pending"
-                            ? "text-yellow-400"
-                            : transaction.status.toLowerCase() ===
-                                "USER_DROPPED"
-                              ? "text-yellow-400"
-                              : ""
-                    }`}
+                  <Link
+                    state={{
+                      collect_id: transaction?.collect_id,
+                      amount: transaction?.amount,
+                      schoolName: transaction?.name,
+                      gateway:
+                        transaction.gateway === "EDVIRON_PG"
+                          ? "Cashfree"
+                          : transaction.gateway,
+                    }}
+                    to={`/payments/vendor-transaction-receipt/`}
                   >
-                    {transaction.status.replace(/_/g, " ")}
-                  </div>
-                </Link>,
-                <Link
-                  state={{
-                    collect_id: transaction?.collect_id,
-                    amount: transaction?.amount,
-                    schoolName: transaction?.name,
-                    gateway:
-                      transaction.gateway === "EDVIRON_PG"
+                    <div>
+                      {transaction.payment_method !== null
+                        ? transaction.payment_method
+                        : "NA"}
+                    </div>
+                  </Link>,
+                  <Link
+                    state={{
+                      collect_id: transaction?.collect_id,
+                      amount: transaction?.amount,
+                      schoolName: transaction?.name,
+                      gateway:
+                        transaction.gateway === "EDVIRON_PG"
+                          ? "Cashfree"
+                          : transaction.gateway,
+                    }}
+                    to={`/payments/vendor-transaction-receipt/`}
+                  >
+                    <div
+                      className={`flex items-center capitalize ${
+                        transaction.status.toLowerCase() === "success"
+                          ? "text-[#04B521]"
+                          : transaction.status.toLowerCase() === "failure" ||
+                              transaction.status.toLowerCase() === "failed"
+                            ? "text-[#E54F2F]"
+                            : transaction.status.toLowerCase() === "pending"
+                              ? "text-yellow-400"
+                              : transaction.status.toLowerCase() ===
+                                  "USER_DROPPED"
+                                ? "text-yellow-400"
+                                : ""
+                      }`}
+                    >
+                      {transaction.status.replace(/_/g, " ")}
+                    </div>
+                  </Link>,
+                  <Link
+                    state={{
+                      collect_id: transaction?.collect_id,
+                      amount: transaction?.amount,
+                      schoolName: transaction?.name,
+                      gateway:
+                        transaction.gateway === "EDVIRON_PG"
+                          ? "Cashfree"
+                          : transaction.gateway,
+                    }}
+                    to={`/payments/vendor-transaction-receipt/`}
+                  >
+                    <div>
+                      {(() => {
+                        try {
+                          return (
+                            JSON.parse(transaction?.additional_data)
+                              ?.student_details?.student_name || "N/A"
+                          );
+                        } catch (error) {
+                          return "N/A";
+                        }
+                      })()}
+                    </div>
+                  </Link>,
+                  <Link
+                    state={{
+                      collect_id: transaction?.collect_id,
+                      amount: transaction?.amount,
+                      schoolName: transaction?.name,
+                      gateway:
+                        transaction.gateway === "EDVIRON_PG"
+                          ? "Cashfree"
+                          : transaction.gateway,
+                    }}
+                    to={`/payments/vendor-transaction-receipt/`}
+                  >
+                    <div>
+                      {(() => {
+                        try {
+                          return (
+                            JSON.parse(transaction?.additional_data)
+                              ?.student_details?.student_id || "N/A"
+                          );
+                        } catch (error) {
+                          return "N/A";
+                        }
+                      })()}
+                    </div>
+                  </Link>,
+                  <Link
+                    state={{
+                      collect_id: transaction?.collect_id,
+                      amount: transaction?.amount,
+                      schoolName: transaction?.name,
+                      gateway:
+                        transaction.gateway === "EDVIRON_PG"
+                          ? "Cashfree"
+                          : transaction.gateway,
+                    }}
+                    to={`/payments/vendor-transaction-receipt/`}
+                  >
+                    <div>
+                      {transaction.gateway === "EDVIRON_PG"
                         ? "Cashfree"
-                        : transaction.gateway,
-                  }}
-                  to={`/payments/vendor-transaction-receipt/`}
-                >
-                  <div>
-                    {(() => {
-                      try {
-                        return (
-                          JSON.parse(transaction?.additional_data)
-                            ?.student_details?.student_name || "N/A"
-                        );
-                      } catch (error) {
-                        return "N/A";
-                      }
-                    })()}
-                  </div>
-                </Link>,
-                <Link
-                  state={{
-                    collect_id: transaction?.collect_id,
-                    amount: transaction?.amount,
-                    schoolName: transaction?.name,
-                    gateway:
-                      transaction.gateway === "EDVIRON_PG"
-                        ? "Cashfree"
-                        : transaction.gateway,
-                  }}
-                  to={`/payments/vendor-transaction-receipt/`}
-                >
-                  <div>
-                    {(() => {
-                      try {
-                        return (
-                          JSON.parse(transaction?.additional_data)
-                            ?.student_details?.student_id || "N/A"
-                        );
-                      } catch (error) {
-                        return "N/A";
-                      }
-                    })()}
-                  </div>
-                </Link>,
-                <Link
-                  state={{
-                    collect_id: transaction?.collect_id,
-                    amount: transaction?.amount,
-                    schoolName: transaction?.name,
-                    gateway:
-                      transaction.gateway === "EDVIRON_PG"
-                        ? "Cashfree"
-                        : transaction.gateway,
-                  }}
-                  to={`/payments/vendor-transaction-receipt/`}
-                >
-                  <div>
-                    {transaction.gateway === "EDVIRON_PG"
-                      ? "Cashfree"
-                      : transaction.gateway}
-                  </div>
-                </Link>,
-              ]) || []),
-          ]}
-          footer={
-            <div className="flex justify-center items-center">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={
-                  vendorTransactions?.getAllSubtrusteeVendorTransaction
-                    ?.totalPages
-                }
-                onPageChange={handlePageChange}
-              />
-            </div>
-          }
-        />
+                        : transaction.gateway}
+                    </div>
+                  </Link>,
+                ]) || []),
+            ]}
+            footer={
+              <div className="flex justify-center items-center">
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={
+                    vendorTransactions?.getAllSubtrusteeVendorTransaction
+                      ?.totalPages
+                  }
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            }
+          />
+        </>
       )}
     </div>
   );

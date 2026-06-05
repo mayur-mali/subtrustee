@@ -795,3 +795,15 @@ export const RESET_MAIL = gql`
     }
   }
 `;
+
+export const SEND_OTP = gql`
+  mutation SendOtpForSubtrustee($type: String!) {
+    sendOtpForSubtrustee(type: $type)
+  }
+`;
+
+export const VERIFY_PASSWORD_OTP = gql`
+  mutation VerifyPasswordOtpForSubtrustee($otp: String!, $password: String!) {
+    verifyPasswordOtpForSubtrustee(otp: $otp, password: $password)
+  }
+`;
