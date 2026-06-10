@@ -138,6 +138,11 @@ export default function Transaction() {
   );
   const [schoolId, setSchoolId] = useState<any>(urlFilters.school_id || null);
 
+  const [selectVendor, setSelectVendor] = useState<string | null>(
+    urlFilters.vendor_name || null,
+  );
+  const [vendorId, setVendorId] = useState<any>(urlFilters.vendor_id || null);
+
   const [transactionAmountDetails, setTransactionAmountDetails] =
     useState<any>(null);
   const [selectedRange, setSelectedRange] = useState({
@@ -263,15 +268,17 @@ export default function Transaction() {
   const [transactionData, setTransactionData] = useState<any>([]);
 
   const { startDate, endDate } = getStartAndEndOfMonth();
+  const todayFormatted = formatDate(new Date());
   const {
     data: transactionReport,
     loading: transactionReportLoading,
     refetch,
   } = useQuery(GET_TRANSACTIONS, {
     variables: {
-      startDate: urlFilters.start_date ? urlFilters.start_date : startDate,
-      endDate: urlFilters?.end_date ? urlFilters.end_date : endDate,
+      startDate: urlFilters.start_date ? urlFilters.start_date : todayFormatted,
+      endDate: urlFilters?.end_date ? urlFilters.end_date : todayFormatted,
       page: currentPage.toString(),
+      vendor_id: vendorId || null,
       status: status?.toUpperCase(),
       school_id: selectSchool === "" ? null : schoolId,
       limit: itemsPerRow.name.toString(),
@@ -321,7 +328,7 @@ export default function Transaction() {
 
       setTransactionData(formattedData);
     }
-  }, [transactionReport]);
+  }, [transactionReport, currentPage, itemsPerRow.name]);
 
   const refetchDataFetch = async ({
     start_date,
@@ -334,6 +341,7 @@ export default function Transaction() {
     payment_modes,
     isQrCode,
     gateway,
+    vendor_id,
   }: {
     start_date?: any;
     end_date?: any;
@@ -345,6 +353,7 @@ export default function Transaction() {
     payment_modes?: string[] | null;
     isQrCode?: boolean;
     gateway?: string[] | null;
+    vendor_id?: string | null;
   }) => {
     setRefetchLoading(true);
 
@@ -362,6 +371,7 @@ export default function Transaction() {
         payment_modes: isQrCode ? null : payment_modes,
         isQRCode: isQrCode,
         gateway,
+        vendor_id: vendor_id !== undefined ? vendor_id : vendorId,
       });
       if (res) {
         setRefetchLoading(false);
@@ -422,12 +432,19 @@ export default function Transaction() {
 
   useEffect(() => {
     refetchDataFetch({
-      start_date: isDateRangeIsSelected
-        ? formatDate(selectedRange.startDate)
-        : startDate,
-      end_date: isDateRangeIsSelected
-        ? formatDate(selectedRange.endDate)
-        : endDate,
+      start_date:
+        isDateRangeIsSelected &&
+        selectedRange?.startDate &&
+        selectedRange?.endDate
+          ? formatDate(selectedRange.startDate)
+          : todayFormatted,
+
+      end_date:
+        isDateRangeIsSelected &&
+        selectedRange?.startDate &&
+        selectedRange?.endDate
+          ? formatDate(selectedRange.endDate)
+          : todayFormatted,
 
       status: status?.toUpperCase(),
 
@@ -442,6 +459,7 @@ export default function Transaction() {
           : null,
       isQrCode: getPaymentMode(filters.paymentMode, type)?.includes("qr"),
       gateway: getPaymentMode(filters.gateway, type),
+      vendor_id: vendorId === "" ? null : vendorId,
     });
 
     setUrlFilters({
@@ -478,6 +496,7 @@ export default function Transaction() {
     mode?: string[] | null,
     isQrCode?: boolean,
     gateway?: string[] | null,
+    vendor_id?: string | null,
   ) => {
     const token = localStorage.getItem("token");
     axios
@@ -493,6 +512,7 @@ export default function Transaction() {
           mode: isQrCode ? null : mode,
           isQRPayment: isQrCode,
           gateway,
+          vendor_id: vendor_id || null,
         },
         {
           headers: {
@@ -515,8 +535,17 @@ export default function Transaction() {
     if (!user_data?.getSubTrusteeQuery?.trustee_id) return;
 
     GET_TRANSACTION_AMOUNT(
-      isDateRangeIsSelected ? formatDate(selectedRange.startDate) : startDate,
-      isDateRangeIsSelected ? formatDate(selectedRange.endDate) : endDate,
+      isDateRangeIsSelected &&
+        selectedRange?.startDate &&
+        selectedRange?.endDate
+        ? formatDate(selectedRange.startDate)
+        : todayFormatted,
+
+      isDateRangeIsSelected &&
+        selectedRange?.startDate &&
+        selectedRange?.endDate
+        ? formatDate(selectedRange.endDate)
+        : todayFormatted,
       user_data.getSubTrusteeQuery.trustee_id,
       selectSchool !== "" ? schoolId : "",
       selectSchool === "" || selectSchool === null
@@ -528,6 +557,7 @@ export default function Transaction() {
       getPaymentMode(filters.paymentMode, type),
       getPaymentMode(filters.paymentMode, type)?.includes("qr"),
       getPaymentMode(filters.gateway, type),
+      vendorId,
     );
   }, [
     schoolsLoading,
@@ -544,6 +574,8 @@ export default function Transaction() {
     isDateRangeIsSelected,
     startDate,
     endDate,
+    todayFormatted,
+    vendorId,
   ]);
 
   return (
@@ -643,8 +675,8 @@ export default function Transaction() {
                           setSearchFilter("");
                           setSearchText("");
                           refetchDataFetch({
-                            start_date: startDate,
-                            end_date: endDate,
+                            start_date: todayFormatted,
+                            end_date: todayFormatted,
                           });
                         }}
                         className="text-[#1E1B59] cursor-pointer text-md mr-2 shrink-0"
@@ -748,10 +780,10 @@ export default function Transaction() {
                                 searchParams: searchText,
                                 start_date: isDateRangeIsSelected
                                   ? formatDate(selectedRange.startDate)
-                                  : startDate,
+                                  : todayFormatted,
                                 end_date: isDateRangeIsSelected
                                   ? formatDate(selectedRange.endDate)
-                                  : endDate,
+                                  : todayFormatted,
                                 status: status?.toUpperCase(),
                                 school_id: schoolId === "" ? null : schoolId,
                                 payment_modes: getPaymentMode(
@@ -831,10 +863,10 @@ export default function Transaction() {
                           refetchDataFetch({
                             start_date: isDateRangeIsSelected
                               ? formatDate(selectedRange.startDate)
-                              : startDate,
+                              : todayFormatted,
                             end_date: isDateRangeIsSelected
                               ? formatDate(selectedRange.endDate)
-                              : endDate,
+                              : todayFormatted,
                             status: e.value?.toUpperCase(),
                             isCustomSearch: isCustomSearch,
                             searchFilter: searchFilter,
@@ -891,6 +923,8 @@ export default function Transaction() {
                       <MixFilter
                         setSelectSchool={setSelectSchool}
                         setSchoolId={setSchoolId}
+                        setSelectVendor={setSelectVendor}
+                        setVendorId={setVendorId}
                         paymentModes={Object.keys(filters.paymentMode).filter(
                           (key) => filters.paymentMode[key],
                         )}
@@ -905,14 +939,16 @@ export default function Transaction() {
                             payment_modes: null,
 
                             gateway: null,
+                            vendor_id: null,
+                            vendor_name: "",
                           });
                           refetchDataFetch({
                             start_date: isDateRangeIsSelected
                               ? formatDate(selectedRange.startDate)
-                              : startDate,
+                              : todayFormatted,
                             end_date: isDateRangeIsSelected
                               ? formatDate(selectedRange.endDate)
-                              : endDate,
+                              : todayFormatted,
                             status: status?.toUpperCase(),
                             isCustomSearch: isCustomSearch,
                             searchFilter: searchFilter,
@@ -923,6 +959,7 @@ export default function Transaction() {
                               type,
                             )?.includes("qr"),
                             gateway: getPaymentMode(filters.gateway, type),
+                            vendor_id: null,
                           });
                         }}
                         onApply={(
@@ -944,14 +981,15 @@ export default function Transaction() {
                             school_name: selectSchool,
                             payment_modes: paymentModesResult,
                             gateway: gatewayResult,
+                            vendor_id: vendorId || null,
                           });
                           refetchDataFetch({
                             start_date: isDateRangeIsSelected
                               ? formatDate(selectedRange.startDate)
-                              : startDate,
+                              : todayFormatted,
                             end_date: isDateRangeIsSelected
                               ? formatDate(selectedRange.endDate)
-                              : endDate,
+                              : todayFormatted,
                             status: status?.toUpperCase(),
                             school_id: selectSchool === "" ? null : schoolId,
                             payment_modes: paymentModesResult?.includes("qr")
@@ -959,6 +997,7 @@ export default function Transaction() {
                               : paymentModesResult,
                             isQrCode: paymentModesResult?.includes("qr"),
                             gateway: gatewayResult,
+                            vendor_id: vendorId || null,
                           });
                         }}
                         filters={filters}
@@ -995,20 +1034,22 @@ export default function Transaction() {
                             gateway: null,
                             page: 1,
                             limit: itemsPerRow.name,
+                            vendor_id: vendorId || null,
                           });
                           setCurrentPage(1);
 
                           refetchDataFetch({
                             start_date: isDateRangeIsSelected
                               ? formatDate(selectedRange.startDate)
-                              : startDate,
+                              : todayFormatted,
                             end_date: isDateRangeIsSelected
                               ? formatDate(selectedRange.endDate)
-                              : endDate,
+                              : todayFormatted,
                             status: status?.toUpperCase(),
                             school_id: schoolId === "" ? null : schoolId,
                             payment_modes: null,
                             gateway: null,
+                            vendor_id: vendorId || null,
                           });
 
                           setFilters({
@@ -1028,6 +1069,7 @@ export default function Transaction() {
                               EDVIRON_PG: false,
                               EDVIRON_EASEBUZZ: false,
                             },
+                            vendor_id: vendorId || null,
                           });
                         }}
                         className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
@@ -1059,8 +1101,8 @@ export default function Transaction() {
                             key: "selection",
                           });
                           refetchDataFetch({
-                            start_date: startDate,
-                            end_date: endDate,
+                            start_date: todayFormatted,
+                            end_date: todayFormatted,
                             status: status?.toUpperCase(),
                             isCustomSearch: isCustomSearch,
                             searchFilter: searchFilter,
@@ -1100,10 +1142,10 @@ export default function Transaction() {
                           refetchDataFetch({
                             start_date: isDateRangeIsSelected
                               ? formatDate(selectedRange.startDate)
-                              : startDate,
+                              : todayFormatted,
                             end_date: isDateRangeIsSelected
                               ? formatDate(selectedRange.endDate)
-                              : endDate,
+                              : todayFormatted,
                             status: status?.toUpperCase(),
 
                             payment_modes: getPaymentMode(
@@ -1129,6 +1171,47 @@ export default function Transaction() {
                       </button>
                     </div>
                   )}
+                  {selectVendor !== "" && selectVendor !== null && (
+                    <div className=" text-sm m-2  max-w-fit ">
+                      <button
+                        onClick={() => {
+                          setUrlFilters({
+                            ...urlFilters,
+                            vendor_id: null,
+                            vendor_name: "",
+                            page: 1,
+                            limit: itemsPerRow.name,
+                          });
+                          refetchDataFetch({
+                            start_date: isDateRangeIsSelected
+                              ? formatDate(selectedRange.startDate)
+                              : todayFormatted,
+                            end_date: isDateRangeIsSelected
+                              ? formatDate(selectedRange.endDate)
+                              : todayFormatted,
+                            status: status?.toUpperCase(),
+                            school_id: schoolId === "" ? null : schoolId,
+                            payment_modes: getPaymentMode(
+                              filters.paymentMode,
+                              type,
+                            ),
+                            isQrCode: getPaymentMode(
+                              filters.paymentMode,
+                              type,
+                            )?.includes("qr"),
+                            gateway: getPaymentMode(filters.gateway, type),
+                            vendor_id: null,
+                          });
+                          setSelectVendor("");
+                          setVendorId(null);
+                          setCurrentPage(1);
+                        }}
+                        className="bg-[#6687FFCC] font-medium flex items-center rounded-lg text-white px-4 py-2 h-full w-full"
+                      >
+                        {selectVendor} <HiMiniXMark className=" text-lg ml-1" />
+                      </button>
+                    </div>
+                  )}
                   {status && (
                     <div className=" text-sm m-2  max-w-fit ">
                       <button
@@ -1136,10 +1219,10 @@ export default function Transaction() {
                           refetchDataFetch({
                             start_date: isDateRangeIsSelected
                               ? formatDate(selectedRange.startDate)
-                              : startDate,
+                              : todayFormatted,
                             end_date: isDateRangeIsSelected
                               ? formatDate(selectedRange.endDate)
-                              : endDate,
+                              : todayFormatted,
                             school_id: schoolId === "" ? null : schoolId,
                             payment_modes: getPaymentMode(
                               filters.paymentMode,
@@ -1193,171 +1276,180 @@ export default function Transaction() {
                 "Utr Number",
                 "Settlement Date",
               ],
-              ...transactionData?.map((row: any) => [
-                <div>{row?.serialNumber}</div>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
-                >
-                  <div className="truncate" key={row.orderID}>
-                    {row.schoolName}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
-                >
-                  <div className=" truncate" key={row.orderID}>
-                    {row.payment_time
-                      ? new Date(row?.payment_time).toLocaleString("hi", {
-                          timeZone: "Asia/Kolkata",
-                        })
-                      : new Date(row?.updatedAt).toLocaleString("hi", {
-                          timeZone: "Asia/Kolkata",
-                        })}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
-                >
-                  <div
-                    className="truncate"
-                    title={row.orderID}
-                    key={row.orderID}
-                  >
-                    {row.custom_order_id ? row.custom_order_id : "N/A"}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
-                >
-                  <div
-                    className="truncate"
-                    title={row.orderID}
-                    key={row.orderID}
-                  >
-                    {row.orderID}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
-                >
-                  <div
-                    key={row.orderID}
-                  >{`₹${row.orderAmount !== null ? Number(row?.orderAmount.toFixed(2)).toLocaleString("hi-IN") : 0}`}</div>
-                </Link>,
+              ...(transactionData
+                ? transactionData.map((row: any) => [
+                    <div>{row?.serialNumber}</div>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                    >
+                      <div className="truncate" key={row.orderID}>
+                        {row.schoolName}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                    >
+                      <div className=" truncate" key={row.orderID}>
+                        {row.payment_time
+                          ? new Date(row?.payment_time).toLocaleString("hi", {
+                              timeZone: "Asia/Kolkata",
+                            })
+                          : new Date(row?.updatedAt).toLocaleString("hi", {
+                              timeZone: "Asia/Kolkata",
+                            })}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                    >
+                      <div
+                        className="truncate"
+                        title={row.orderID}
+                        key={row.orderID}
+                      >
+                        {row.custom_order_id ? row.custom_order_id : "N/A"}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                    >
+                      <div
+                        className="truncate"
+                        title={row.orderID}
+                        key={row.orderID}
+                      >
+                        {row.orderID}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                    >
+                      <div
+                        key={row.orderID}
+                      >{`₹${row.orderAmount !== null ? Number(row?.orderAmount.toFixed(2)).toLocaleString("hi-IN") : 0}`}</div>
+                    </Link>,
 
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
-                >
-                  <div
-                    key={row.orderID}
-                  >{`₹${row.transactionAmount !== null ? Number(row?.transactionAmount.toFixed(2)).toLocaleString("hi-IN") : 0}`}</div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
-                >
-                  <div key={row.orderID}>
-                    {row.isQRPayment ? "Dynamic QR Code" : row.paymentMode}
-                  </div>
-                </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                    >
+                      <div
+                        key={row.orderID}
+                      >{`₹${row.transactionAmount !== null ? Number(row?.transactionAmount.toFixed(2)).toLocaleString("hi-IN") : 0}`}</div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                    >
+                      <div key={row.orderID}>
+                        {row.isQRPayment ? "Dynamic QR Code" : row.paymentMode}
+                      </div>
+                    </Link>,
 
-                // <div className="text-center pr-4">{row?.commission}</div>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
-                >
-                  <div
-                    className={`flex items-center capitalize ${
-                      row.transactionStatus === "success"
-                        ? "text-[#04B521]"
-                        : row.transactionStatus === "failure" ||
-                            row.transactionStatus === "failed"
-                          ? "text-[#E54F2F]"
-                          : row.transactionStatus === "pending"
-                            ? "text-yellow-400"
-                            : ""
-                    }`}
-                    key={row.orderID}
-                  >
-                    {row.transactionStatus?.replaceAll("_", " ")}
-                    {row.isAutoRefund ? (
-                      <img className="w-5 h-5 ml-[10px]" src={Aword} alt="a" />
-                    ) : null}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
-                >
-                  <div key={row.orderID}>
-                    {row.student_name ? row.student_name : "NA"}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
-                >
-                  <div key={row.orderID}>
-                    {row.student_id ? row.student_id : "NA"}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
-                >
-                  <div key={row.orderID}>
-                    {row.student_phone ? row.student_phone : "NA"}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
-                >
-                  <div>
-                    {row.vendors_info?.length > 0
-                      ? amountFormat(
-                          getVendorAmount({
-                            array: row?.vendors_info,
-                            orderAmount: row?.orderAmount,
-                          }),
-                        )
-                      : "NA"}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
-                >
-                  <div className="truncate" key={row.orderID}>
-                    {row?.gateway}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
-                >
-                  <div className="truncate " key={row.orderID}>
-                    {row?.capture_status || "NA"}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
-                >
-                  <div className="truncate " key={row.orderID}>
-                    {row?.bank_reference || "NA"}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
-                >
-                  <div className="truncate " key={row.orderID}>
-                    {row?.utr_number || "NA"}
-                  </div>
-                </Link>,
-                <Link
-                  to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
-                >
-                  <div className="truncate" key={row.orderID}>
-                    {row?.settlement_date
-                      ? new Date(row.settlement_date).toLocaleString("en-IN", {
-                          timeZone: "Asia/Kolkata",
-                        })
-                      : "NA"}
-                  </div>
-                </Link>,
-              ]),
+                    // <div className="text-center pr-4">{row?.commission}</div>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                    >
+                      <div
+                        className={`flex items-center capitalize ${
+                          row.transactionStatus === "success"
+                            ? "text-[#04B521]"
+                            : row.transactionStatus === "failure" ||
+                                row.transactionStatus === "failed"
+                              ? "text-[#E54F2F]"
+                              : row.transactionStatus === "pending"
+                                ? "text-yellow-400"
+                                : ""
+                        }`}
+                        key={row.orderID}
+                      >
+                        {row.transactionStatus?.replaceAll("_", " ")}
+                        {row.isAutoRefund ? (
+                          <img
+                            className="w-5 h-5 ml-[10px]"
+                            src={Aword}
+                            alt="a"
+                          />
+                        ) : null}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                    >
+                      <div key={row.orderID}>
+                        {row.student_name ? row.student_name : "NA"}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                    >
+                      <div key={row.orderID}>
+                        {row.student_id ? row.student_id : "NA"}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                    >
+                      <div key={row.orderID}>
+                        {row.student_phone ? row.student_phone : "NA"}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                    >
+                      <div>
+                        {row.vendors_info?.length > 0
+                          ? amountFormat(
+                              getVendorAmount({
+                                array: row?.vendors_info,
+                                orderAmount: row?.orderAmount,
+                              }),
+                            )
+                          : "NA"}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                    >
+                      <div className="truncate" key={row.orderID}>
+                        {row?.gateway}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                    >
+                      <div className="truncate " key={row.orderID}>
+                        {row?.capture_status || "NA"}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                    >
+                      <div className="truncate " key={row.orderID}>
+                        {row?.bank_reference || "NA"}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                    >
+                      <div className="truncate " key={row.orderID}>
+                        {row?.utr_number || "NA"}
+                      </div>
+                    </Link>,
+                    <Link
+                      to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                    >
+                      <div className="truncate" key={row.orderID}>
+                        {row?.settlement_date
+                          ? new Date(row.settlement_date).toLocaleString(
+                              "en-IN",
+                              {
+                                timeZone: "Asia/Kolkata",
+                              },
+                            )
+                          : "NA"}
+                      </div>
+                    </Link>,
+                  ])
+                : []),
             ]}
             footer={
               <div className="flex justify-center items-center">

@@ -111,6 +111,7 @@ export const GET_TRANSACTIONS = gql`
     $searchParams: String
     $payment_modes: [String!]
     $gateway: [String!]
+    $vendor_id: String
   ) {
     getSubtrusteeTransactionReport(
       startDate: $startDate
@@ -125,6 +126,7 @@ export const GET_TRANSACTIONS = gql`
       searchParams: $searchParams
       payment_modes: $payment_modes
       gateway: $gateway
+      vendor_id: $vendor_id
     ) {
       total_pages
       current_page

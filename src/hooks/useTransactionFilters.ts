@@ -13,6 +13,8 @@ export function useTransactionFilters() {
     status: searchParams.get("status") || "",
     page: searchParams.get("page") || 1,
     limit: searchParams.get("limit") || 10,
+    vendor_id: searchParams.get("vendor_id") || null,
+    vendor_name: searchParams.get("vendor_name") || null,
   };
 
   function setUrlFilters(newFilters: any) {
