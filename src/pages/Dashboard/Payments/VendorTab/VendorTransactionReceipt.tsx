@@ -272,7 +272,7 @@ function VendorTransactionReceipt() {
       </Modal> */}
       <div className="flex justify-between items-center">
         <h3 className="flex items-center text-lg font-semibold text-[#1B163B]">
-          <Link to="/payments">
+          <Link to="/payments/vendor-transaction">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
