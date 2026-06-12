@@ -982,6 +982,7 @@ export default function Transaction() {
                             payment_modes: paymentModesResult,
                             gateway: gatewayResult,
                             vendor_id: vendorId || null,
+                            vendor_name: selectVendor || null,
                           });
                           refetchDataFetch({
                             start_date: isDateRangeIsSelected
