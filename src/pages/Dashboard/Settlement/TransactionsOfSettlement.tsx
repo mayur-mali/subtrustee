@@ -66,7 +66,7 @@ function TransactionsOfSettlement() {
     <div className="min-h-[80vh] rounded-lg mt-4 bg-[#F6F8FA] p-4">
       <div className="flex justify-between items-center">
         <h3 className="flex items-center text-lg font-semibold text-[#1B163B]">
-          <Link to="/payments">
+          <Link to={state?.from || "/payments?tab=settlements"}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"

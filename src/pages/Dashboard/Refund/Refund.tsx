@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { GET_INSTITUTES, SUBTRUSTEE_REFUND_REQUESTS } from "../../../Qurries";
 import {
   _Table,
@@ -14,7 +14,7 @@ import DateFilter from "./DateFilter";
 import { HiMiniXMark } from "react-icons/hi2";
 import { CustomDropdownIndicator } from "../Settlement/Settlement";
 import { endOfDay, startOfDay } from "date-fns";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { IoSearchOutline } from "react-icons/io5";
 import { getStartAndEndOfMonth } from "../../../utils/getStartAndEndOfMonth";
 import RefundDateFilter, { formatDate } from "./RefundDateFilter";
@@ -23,6 +23,8 @@ import { useTransactionFilters } from "../../../hooks/useTransactionFilters";
 import Institute from "../Transaction/components/AllFilter/Institute";
 import TransactionDateFilter from "../Transaction/components/TransactionDateFilter";
 function Refund() {
+  const [urlFilters, setUrlFilters] = useTransactionFilters();
+  const location = useLocation();
   const [searchText, setSearchText] = useState<string>("");
   // const { data } = useQuery(GET_SCHOOLS);
   const [status, setStatus] = useState<any>("");
@@ -30,34 +32,96 @@ function Refund() {
   const [type, setType] = useState("");
   const { startDate, endDate } = getStartAndEndOfMonth();
   const [selectedRange, setSelectedRange] = useState({
-    startDate: new Date(),
-    endDate: new Date(),
+    startDate: urlFilters.start_date
+      ? new Date(urlFilters.start_date)
+      : new Date(),
+    endDate: urlFilters.end_date ? new Date(urlFilters.end_date) : new Date(),
     key: "selection",
   });
-  const [searchQuery, setSearchQuery] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState(urlFilters.search || "");
+  const [currentPage, setCurrentPage] = useState(Number(urlFilters.page) || 1);
   const [filters, setFilters] = useState<any>([]);
-  const [settlementStatusFilter, setSettlementStatusFilter] = useState("");
-  const [selectDays, setSelectDays] = useState(0);
-  const [schoolId, setSchoolId] = useState<any[]>([]);
-  const [schoolFilterData, setSchoolFilterData] = useState<any[]>([]);
+  const [settlementStatusFilter, setSettlementStatusFilter] = useState(
+    urlFilters.status || "",
+  );
+  const [selectDays, setSelectDays] = useState(Number(urlFilters.days) || 0);
+  const [schoolId, setSchoolId] = useState<any[]>(
+    urlFilters.school_id ? urlFilters.school_id.split(",") : [],
+  );
+  const [schoolFilterData, setSchoolFilterData] = useState<any[]>(
+    urlFilters.school_name ? urlFilters.school_name.split(",") : [],
+  );
   const [SettlementReportsData, setSettlementReportsData] = useState([]);
   const [unsettledAmount, setUnsettledAmount] = useState(null);
   const [showCustomDateModel, setShowCustomDateModelset] = useState(false);
   const [dateDropDown, setDateDropDown] = useState(false);
-  const [dateFilterType, setDateFilterType] = useState<string>("");
+  const [dateFilterType, setDateFilterType] = useState<string>(
+    urlFilters.date_filter_type || "",
+  );
   const [totalPages, setTotalPages] = useState(1);
-  const [itemsPerRow, setItemsPerRow] = useState({ name: 10 });
-  const [isDateRangeIsSelected, setIsDateRangeIsSelected] = useState(false);
-  const [urlFilters, setUrlFilters] = useTransactionFilters();
+  const [itemsPerRow, setItemsPerRow] = useState({
+    name: Number(urlFilters.limit) || 10,
+  });
+  const [isDateRangeIsSelected, setIsDateRangeIsSelected] = useState(
+    !!urlFilters.start_date,
+  );
   const [checkboxFilter, setCheckboxFilter] = useState<any>({
     size: 0,
     status: 0,
     mode: 0,
   });
-  const [dateRange, setDateRange] = useState("");
+  const [dateRange, setDateRange] = useState(urlFilters.date_filter_type || "");
   const [refetchLoading, setRefetchLoading] = useState(false);
 
+  // Sync state changes back to URL (skip initial mount to avoid parameter overwrites)
+  const isFirstRenderSync = useRef(true);
+  useEffect(() => {
+    if (isFirstRenderSync.current) {
+      isFirstRenderSync.current = false;
+      return;
+    }
+    setUrlFilters({
+      search: searchQuery || "",
+      status: settlementStatusFilter || "",
+      school_id: schoolId && schoolId.length > 0 ? schoolId.join(",") : "",
+      school_name:
+        schoolFilterData && schoolFilterData.length > 0
+          ? schoolFilterData.join(",")
+          : "",
+      page: currentPage,
+      limit: itemsPerRow.name,
+      start_date: isDateRangeIsSelected
+        ? formatDate(selectedRange.startDate)
+        : "",
+      end_date: isDateRangeIsSelected ? formatDate(selectedRange.endDate) : "",
+      date_filter_type: dateRange || "",
+    });
+  }, [
+    searchQuery,
+    settlementStatusFilter,
+    schoolId,
+    schoolFilterData,
+    currentPage,
+    itemsPerRow,
+    isDateRangeIsSelected,
+    selectedRange,
+    dateRange,
+  ]);
+  // Sync page changes from URL to state
+  useEffect(() => {
+    const pageFromUrl = Number(urlFilters.page) || 1;
+    if (pageFromUrl !== currentPage) {
+      setCurrentPage(pageFromUrl);
+    }
+  }, [urlFilters.page]);
+
+  // Sync limit changes from URL to state
+  useEffect(() => {
+    const limitFromUrl = Number(urlFilters.limit) || 10;
+    if (limitFromUrl !== itemsPerRow.name) {
+      setItemsPerRow({ name: limitFromUrl });
+    }
+  }, [urlFilters.limit]);
   const [refundRequestData, setRefundRequestData] = useState<any>([]);
 
   const {
@@ -66,10 +130,15 @@ function Refund() {
     refetch,
   } = useQuery(SUBTRUSTEE_REFUND_REQUESTS, {
     variables: {
-      page: 1,
+      page: currentPage,
       limit: itemsPerRow.name,
-      startDate: startDate,
-      endDate: endDate,
+      startDate: urlFilters.start_date ? urlFilters.start_date : startDate,
+      endDate: urlFilters.end_date ? urlFilters.end_date : endDate,
+      status: urlFilters.status || undefined,
+      school_id: urlFilters.school_id
+        ? urlFilters.school_id.split(",")
+        : undefined,
+      searchQuery: urlFilters.search || undefined,
     },
   });
 
@@ -632,6 +701,7 @@ function Refund() {
                   <div>{index + 1}</div>,
                   <Link
                     to={`/payments/transaction-receipt/${data.order_id}?sid=${data.school_id}`}
+                    state={{ from: location.pathname + location.search }}
                   >
                     <div className="truncate max-w-[10rem]">
                       {data.school_name}
@@ -639,12 +709,14 @@ function Refund() {
                   </Link>,
                   <Link
                     to={`/payments/transaction-receipt/${data.order_id}?sid=${data.school_id}`}
+                    state={{ from: location.pathname + location.search }}
                     className="truncate"
                   >
                     {data._id}
                   </Link>,
                   <Link
                     to={`/payments/transaction-receipt/${data.order_id}?sid=${data.school_id}`}
+                    state={{ from: location.pathname + location.search }}
                     className="truncate"
                   >
                     {data.custom_id?.toLowerCase() === "na" ||
@@ -654,24 +726,28 @@ function Refund() {
                   </Link>,
                   <Link
                     to={`/payments/transaction-receipt/${data.order_id}?sid=${data.school_id}`}
+                    state={{ from: location.pathname + location.search }}
                     className="truncate"
                   >
                     {amountFormat(data.refund_amount)}
                   </Link>,
                   <Link
                     to={`/payments/transaction-receipt/${data.order_id}?sid=${data.school_id}`}
+                    state={{ from: location.pathname + location.search }}
                     className="truncate"
                   >
                     {amountFormat(data.order_amount)}
                   </Link>,
                   <Link
                     to={`/payments/transaction-receipt/${data.order_id}?sid=${data.school_id}`}
+                    state={{ from: location.pathname + location.search }}
                     className="truncate"
                   >
                     {amountFormat(data.transaction_amount)}
                   </Link>,
                   <Link
                     to={`/payments/transaction-receipt/${data.order_id}?sid=${data.school_id}`}
+                    state={{ from: location.pathname + location.search }}
                     className="truncate"
                   >
                     {data.status !== "APPROVED"
@@ -680,18 +756,21 @@ function Refund() {
                   </Link>,
                   <Link
                     to={`/payments/transaction-receipt/${data.order_id}?sid=${data.school_id}`}
+                    state={{ from: location.pathname + location.search }}
                     className="truncate"
                   >
                     {new Date(Number(data?.createdAt)).toLocaleString("hi")}
                   </Link>,
                   <Link
                     to={`/payments/transaction-receipt/${data.order_id}?sid=${data.school_id}`}
+                    state={{ from: location.pathname + location.search }}
                     className="truncate"
                   >
                     {new Date(Number(data?.updatedAt)).toLocaleString("hi")}
                   </Link>,
                   <Link
                     to={`/payments/transaction-receipt/${data.order_id}?sid=${data.school_id}`}
+                    state={{ from: location.pathname + location.search }}
                     className="truncate"
                   >
                     <div

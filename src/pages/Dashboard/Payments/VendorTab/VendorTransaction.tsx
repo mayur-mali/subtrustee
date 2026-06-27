@@ -1,5 +1,5 @@
 import { useQuery } from "@apollo/client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { GET_VENDOR_ALL_SUBTRUSTEE_TRANSACTION } from "../../../../Qurries";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import {
@@ -16,7 +16,7 @@ import Select from "react-select";
 import { endOfDay, startOfDay } from "date-fns";
 import { HiMiniXMark } from "react-icons/hi2";
 import { getStartAndEndOfMonth } from "../../../../utils/getStartAndEndOfMonth";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { payment_method_map } from "../../Transaction/Transaction";
 import { IoSearchOutline } from "react-icons/io5";
 import MixFilter from "../../Transaction/components/MixFilter";
@@ -29,30 +29,130 @@ import { GET_USER } from "../../../../Qurries";
 import { GET_ALL_SCHOOLS_QUERY_FOR_REPORT } from "../../../../Qurries";
 
 function VendorTransaction() {
-  const [searchText, setSearchText] = useState<any>("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerRow, setItemsPerRow] = useState({ name: 10 });
+  const location = useLocation();
+  const [urlFilters, setUrlFilters] = useTransactionFilters();
+  const [searchText, setSearchText] = useState<any>(urlFilters.search || "");
+  const [currentPage, setCurrentPage] = useState(Number(urlFilters.page) || 1);
+  const [itemsPerRow, setItemsPerRow] = useState({
+    name: Number(urlFilters.limit) || 10,
+  });
   const [selectedRange, setSelectedRange] = useState({
-    startDate: new Date(),
-    endDate: new Date(),
+    startDate: urlFilters.start_date
+      ? new Date(urlFilters.start_date)
+      : new Date(),
+    endDate: urlFilters.end_date ? new Date(urlFilters.end_date) : new Date(),
     key: "selection",
   });
   const [type, setType] = useState("");
-  const [dateRange, setDateRange] = useState("Today");
+  const [dateRange, setDateRange] = useState(
+    urlFilters.date_filter_type ||
+      (urlFilters.start_date ? "Custom Date" : "Today"),
+  );
+
+  // Sync page changes from URL to state
+  useEffect(() => {
+    const pageFromUrl = Number(urlFilters.page) || 1;
+    if (pageFromUrl !== currentPage) {
+      setCurrentPage(pageFromUrl);
+    }
+  }, [urlFilters.page]);
+
+  // Sync limit changes from URL to state
+  useEffect(() => {
+    const limitFromUrl = Number(urlFilters.limit) || 10;
+    if (limitFromUrl !== itemsPerRow.name) {
+      setItemsPerRow({ name: limitFromUrl });
+    }
+  }, [urlFilters.limit]);
+
+  // Sync URL filters back to states on change
+  useEffect(() => {
+    if (urlFilters.status !== undefined && urlFilters.status !== status) {
+      setStatus(urlFilters.status || null);
+    }
+  }, [urlFilters.status]);
+
+  useEffect(() => {
+    const nextSchoolId = urlFilters.school_id
+      ? urlFilters.school_id.split(",")
+      : [];
+    if (
+      urlFilters.school_id !== undefined &&
+      JSON.stringify(nextSchoolId) !== JSON.stringify(schoolId)
+    ) {
+      setSchoolId(nextSchoolId);
+      setSelectSchool(
+        urlFilters.school_name ? urlFilters.school_name.split(",") : [],
+      );
+    }
+  }, [urlFilters.school_id, urlFilters.school_name]);
+
+  useEffect(() => {
+    if (
+      urlFilters.vendor_id !== undefined &&
+      urlFilters.vendor_id !== vendorId
+    ) {
+      setVendorId(urlFilters.vendor_id || null);
+      setSelectVendor(urlFilters.vendor_name || null);
+    }
+  }, [urlFilters.vendor_id, urlFilters.vendor_name]);
+
+  useEffect(() => {
+    if (urlFilters.search !== undefined && urlFilters.search !== searchText) {
+      setSearchText(urlFilters.search || "");
+    }
+  }, [urlFilters.search]);
+
+  useEffect(() => {
+    if (
+      urlFilters.start_date !== undefined &&
+      urlFilters.start_date !==
+        (selectedRange.startDate ? formatDate(selectedRange.startDate) : "")
+    ) {
+      setSelectedRange({
+        startDate: urlFilters.start_date
+          ? new Date(urlFilters.start_date)
+          : new Date(),
+        endDate: urlFilters.end_date
+          ? new Date(urlFilters.end_date)
+          : new Date(),
+        key: "selection",
+      });
+      setIsDateRangeIsSelected(
+        !!(urlFilters.start_date && urlFilters.end_date),
+      );
+      setDateRange(
+        urlFilters.date_filter_type ||
+          (urlFilters.start_date ? "Custom Date" : "Today"),
+      );
+    }
+  }, [urlFilters.start_date, urlFilters.end_date, urlFilters.date_filter_type]);
 
   const [transactionData, setTransactionData] = useState<any>([]);
-  const [isDateRangeIsSelected, setIsDateRangeIsSelected] = useState(false);
-  const [status, setStatus] = useState<any>(null);
+  const isFirstRenderSync = useRef(true);
+  const [isDateRangeIsSelected, setIsDateRangeIsSelected] = useState(
+    !!(urlFilters.start_date && urlFilters.end_date),
+  );
+  const [status, setStatus] = useState<any>(urlFilters.status || null);
   const [vendorAmountDetails, setVendorAmountDetails] = useState<any>(null);
-  const [schoolId, setSchoolId] = useState<any>([]);
-  const [selectSchool, setSelectSchool] = useState<any[]>([]);
-  const [vendorId, setVendorId] = useState<string | null>(null);
-  const [selectVendor, setSelectVendor] = useState<string | null>(null);
+  const [schoolId, setSchoolId] = useState<any>(
+    urlFilters.school_id ? urlFilters.school_id.split(",") : [],
+  );
+  const [selectSchool, setSelectSchool] = useState<any[]>(
+    urlFilters.school_name ? urlFilters.school_name.split(",") : [],
+  );
+  const [vendorId, setVendorId] = useState<string | null>(
+    urlFilters.vendor_id || null,
+  );
+  const [selectVendor, setSelectVendor] = useState<string | null>(
+    urlFilters.vendor_name || null,
+  );
   const [refetching, setRefetching] = useState(false);
   const { startDate, endDate } = getStartAndEndOfMonth();
   const todayFormatted = formatDate(new Date());
-  const [urlFilters, setUrlFilters] = useTransactionFilters();
-  const [searchFilter, setSearchFilter] = useState<any>("");
+  const [searchFilter, setSearchFilter] = useState<any>(
+    urlFilters.search_filter || "",
+  );
 
   const showCustomDate =
     isDateRangeIsSelected && urlFilters.start_date && urlFilters.end_date;
@@ -137,6 +237,12 @@ function VendorTransaction() {
       limit: itemsPerRow.name,
       startDate: todayFormatted,
       endDate: todayFormatted,
+      order_id:
+        urlFilters.search_filter === "order_id" ? urlFilters.search : null,
+      custom_id:
+        urlFilters.search_filter === "custom_order_id"
+          ? urlFilters.search
+          : null,
     },
   });
 
@@ -221,7 +327,7 @@ function VendorTransaction() {
         selectedRange?.endDate
           ? formatDate(selectedRange.endDate)
           : todayFormatted,
-      status: status?.toUpperCase(),
+      status: status ? status.toUpperCase() : null,
       school_id: schoolId && schoolId.length > 0 ? schoolId : null,
       payment_modes:
         Object.keys(filters.paymentMode).filter(
@@ -236,12 +342,44 @@ function VendorTransaction() {
       vendor_id: vendorId || null,
     });
 
+    // Sync all state changes back to URL (skip initial mount to avoid parameter overwrites)
+    if (isFirstRenderSync.current) {
+      isFirstRenderSync.current = false;
+      return;
+    }
     setUrlFilters({
       ...urlFilters,
       page: currentPage,
       limit: itemsPerRow.name,
+      status: status || "",
+      school_id: Array.isArray(schoolId) ? schoolId.join(",") : schoolId || "",
+      school_name: Array.isArray(selectSchool)
+        ? selectSchool.join(",")
+        : selectSchool || "",
+      vendor_id: vendorId || "",
+      vendor_name: selectVendor || "",
+      start_date: isDateRangeIsSelected
+        ? formatDate(selectedRange.startDate)
+        : "",
+      end_date: isDateRangeIsSelected ? formatDate(selectedRange.endDate) : "",
+      date_filter_type: dateRange || "",
+      search: searchText || "",
+      search_filter: searchFilter || "",
     });
-  }, [currentPage, itemsPerRow]);
+  }, [
+    currentPage,
+    itemsPerRow,
+    status,
+    schoolId,
+    selectSchool,
+    vendorId,
+    selectVendor,
+    isDateRangeIsSelected,
+    selectedRange,
+    dateRange,
+    searchText,
+    searchFilter,
+  ]);
 
   const handlePageChange = (page: any) => {
     setCurrentPage(page);
@@ -465,6 +603,12 @@ function VendorTransaction() {
                         onClick={async () => {
                           setSearchFilter("");
                           setSearchText("");
+                          setUrlFilters({
+                            ...urlFilters,
+                            search: "",
+                            search_filter: "",
+                            page: 1,
+                          });
                           refetchDataFetch({
                             start_date: todayFormatted,
                             end_date: todayFormatted,
@@ -485,8 +629,13 @@ function VendorTransaction() {
                         IndicatorSeparator: () => null,
                       }}
                       onChange={(e: any) => {
-                        setSearchFilter(e.value.toLowerCase());
+                        const newFilter = e.value.toLowerCase();
+                        setSearchFilter(newFilter);
                         setCurrentPage(1);
+                        setUrlFilters({
+                          ...urlFilters,
+                          search_filter: newFilter,
+                        });
                       }}
                       placeholder={
                         <div className="text-[#1E1B59] -mt-1 capitalize text-[10px]">
@@ -555,6 +704,12 @@ function VendorTransaction() {
                           onClick={() => {
                             if (searchText.length > 3 && searchFilter !== "") {
                               setCurrentPage(1);
+                              setUrlFilters({
+                                ...urlFilters,
+                                search: searchText,
+                                search_filter: searchFilter,
+                                page: 1,
+                              });
                               refetchDataFetch({
                                 order_id:
                                   searchFilter === "order_id"
@@ -606,6 +761,7 @@ function VendorTransaction() {
                           ...urlFilters,
                           start_date: formatDate(selectedRange.startDate),
                           end_date: formatDate(selectedRange.endDate),
+                          date_filter_type: dateRange,
                         });
                         refetchDataFetch({
                           start_date: formatDate(selectedRange.startDate),
@@ -1142,6 +1298,7 @@ function VendorTransaction() {
                     transaction.gateway === "EDVIRON_PG"
                       ? "Cashfree"
                       : transaction.gateway,
+                  from: location.pathname + location.search,
                 };
                 const to = `/payments/vendor-transaction-receipt/`;
                 return [

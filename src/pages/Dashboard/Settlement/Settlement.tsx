@@ -24,9 +24,10 @@ import { IoSearchOutline } from "react-icons/io5";
 import { IoIosArrowDown } from "react-icons/io";
 // import Filters from "../Transaction/components/Filters";
 import { amountFormat } from "../../../utils/amountFormat";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import Filters from "../Transaction/components/Filters";
+import { useTransactionFilters } from "../../../hooks/useTransactionFilters";
 
 // Custom dropdown indicator (unchanged)
 export const CustomDropdownIndicator = () => {
@@ -38,44 +39,131 @@ export const CustomDropdownIndicator = () => {
 };
 
 const Settlement = () => {
-  const [searchInput, setSearchInput] = useState("");
-  const [activeSearch, setActiveSearch] = useState<string | null>(null);
+  const [urlFilters, setUrlFilters] = useTransactionFilters();
+  const location = useLocation();
+
+  const [searchInput, setSearchInput] = useState(urlFilters.search || "");
+  const [activeSearch, setActiveSearch] = useState<string | null>(
+    urlFilters.search || null,
+  );
 
   // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(Number(urlFilters.page) || 1);
   const [itemsPerPage, setItemsPerRow] = useState({
-    name: 10,
+    name: Number(urlFilters.limit) || 10,
   });
-  const [schoolName, setSchoolName] = useState("");
+  const [schoolName, setSchoolName] = useState(urlFilters.school_name || "");
 
   // UI filters
   const [filters, setFilters] = useState<(string | null)[]>([null]);
-  const [settlementStatusFilter, setSettlementStatusFilter] = useState("");
-  const [selectDays, setSelectDays] = useState(0);
-  const [schoolId, setSchoolId] = useState<string | null>("");
+  const [settlementStatusFilter, setSettlementStatusFilter] = useState(
+    urlFilters.status || "",
+  );
+  const [selectDays, setSelectDays] = useState(Number(urlFilters.days) || 0);
+
+  const [schoolId, setSchoolId] = useState<string | null>(
+    urlFilters.school_id || "",
+  );
   const [unsettledAmountExplicit, setUnsettledAmountExplicit] = useState<
     number | null
   >(null);
 
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [startDate, setStartDate] = useState(urlFilters.start_date || "");
+  const [endDate, setEndDate] = useState(urlFilters.end_date || "");
   const [showCustomDateModel, setShowCustomDateModelset] = useState(false);
   const [dateDropDown, setDateDropDown] = useState(false);
-  const [dateFilterType, setDateFilterType] = useState<string>("");
+  const [dateFilterType, setDateFilterType] = useState<string>(
+    urlFilters.date_filter_type || "",
+  );
 
   // Other UI state (unchanged behavior)
   const [selectedTime, setSelectedTime] = useState<string>("Date");
   const [dateRange, setDateRange] = useState([
     {
-      startDate: new Date(),
-      endDate: new Date(""),
+      startDate: urlFilters.start_date
+        ? new Date(urlFilters.start_date)
+        : new Date(),
+      endDate: urlFilters.end_date
+        ? new Date(urlFilters.end_date)
+        : new Date(""),
       key: "selection",
     },
   ]);
 
+  // Sync page changes from URL to state
   useEffect(() => {
+    const pageFromUrl = Number(urlFilters.page) || 1;
+    if (pageFromUrl !== currentPage) {
+      setCurrentPage(pageFromUrl);
+    }
+  }, [urlFilters.page]);
+
+  // Sync limit changes from URL to state
+  useEffect(() => {
+    const limitFromUrl = Number(urlFilters.limit) || 10;
+    if (limitFromUrl !== itemsPerPage.name) {
+      setItemsPerRow({ name: limitFromUrl });
+    }
+  }, [urlFilters.limit]);
+
+  // Reset page to 1 when filters change (skip initial mount)
+  const handleStatusFilterChange = (status: string) => {
+    setSettlementStatusFilter(status);
     setCurrentPage(1);
-  }, [settlementStatusFilter]);
+  };
+
+  const handleStartDateChange = (date: string) => {
+    setStartDate(date);
+    setCurrentPage(1);
+  };
+
+  const handleEndDateChange = (date: string) => {
+    setEndDate(date);
+    setCurrentPage(1);
+  };
+
+  const handleSelectDaysChange = (days: number) => {
+    setSelectDays(days);
+    setCurrentPage(1);
+  };
+
+  const handleDateFilterTypeChange = (type: string) => {
+    setDateFilterType(type);
+    setCurrentPage(1);
+  };
+
+  // Sync all state changes back to URL
+  // Sync all state changes back to URL (skip initial mount to avoid parameter overwrites)
+  const isFirstRenderSync = useRef(true);
+  useEffect(() => {
+    if (isFirstRenderSync.current) {
+      isFirstRenderSync.current = false;
+      return;
+    }
+    setUrlFilters({
+      page: currentPage,
+      limit: itemsPerPage.name,
+      status: settlementStatusFilter || "",
+      school_id: schoolId || "",
+      school_name: schoolName || "",
+      start_date: startDate || "",
+      end_date: endDate || "",
+      days: selectDays || "",
+      date_filter_type: dateFilterType || "",
+      search: activeSearch || "",
+    });
+  }, [
+    currentPage,
+    itemsPerPage.name,
+    settlementStatusFilter,
+    schoolId,
+    schoolName,
+    startDate,
+    endDate,
+    selectDays,
+    dateFilterType,
+    activeSearch,
+  ]);
 
   const { data, loading } = useQuery(GET_SETTLEMENT_REPORTS, {
     variables: {
@@ -213,6 +301,7 @@ const Settlement = () => {
 
   const handlePageChange = (page: any) => {
     setCurrentPage(page);
+    setUrlFilters({ page });
   };
 
   const handleClearTimeRange = () => {
@@ -234,11 +323,19 @@ const Settlement = () => {
     setCurrentPage(1);
   };
 
-  const handleSchoolFilterChange = useCallback((selectedFilter: any) => {
-    setSchoolId(selectedFilter.id);
-    setSchoolName(selectedFilter.value);
-    setCurrentPage(1);
-  }, []);
+  const handleSchoolFilterChange = useCallback(
+    (selectedFilter: any) => {
+      setSchoolId(selectedFilter.id);
+      setSchoolName(selectedFilter.value);
+      setCurrentPage(1);
+      setUrlFilters({
+        school_id: selectedFilter.id,
+        school_name: selectedFilter.value,
+        page: 1,
+      });
+    },
+    [urlFilters, setUrlFilters],
+  );
 
   const removeFilter = (index: number) => {
     setFilters((prev) => prev.filter((_, i) => i !== index));
@@ -249,6 +346,7 @@ const Settlement = () => {
     setSchoolId("");
     setSchoolName("");
     setCurrentPage(1);
+    setUrlFilters({ school_id: "", school_name: "", page: 1 });
   };
 
   const handleApplyClick = () => {
@@ -268,8 +366,10 @@ const Settlement = () => {
   };
 
   const performSearch = () => {
-    setActiveSearch(searchInput.trim() || null);
+    const val = searchInput.trim() || null;
+    setActiveSearch(val);
     setCurrentPage(1);
+    setUrlFilters({ search: val || "", page: 1 });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -325,6 +425,7 @@ const Settlement = () => {
                         setSearchInput("");
                         setActiveSearch(null);
                         setCurrentPage(1);
+                        setUrlFilters({ search: "", page: 1 });
                       }}
                       className="text-[#1E1B59] cursor-pointer text-md ml-2 shrink-0"
                     />
@@ -332,8 +433,10 @@ const Settlement = () => {
                   <div className="w-10 z-50 shrink-0 flex justify-center items-center">
                     <IoSearchOutline
                       onClick={() => {
-                        setActiveSearch(searchInput.trim() || null);
+                        const val = searchInput.trim() || null;
+                        setActiveSearch(val);
                         setCurrentPage(1);
+                        setUrlFilters({ search: val || "", page: 1 });
                       }}
                       className="cursor-pointer text-edvion_black text-opacity-50 text-md"
                     />
@@ -346,15 +449,15 @@ const Settlement = () => {
                     dateRange={dateRange}
                     setDateRange={setDateRange}
                     transaction={false}
-                    setSettlementStatusFilter={setSettlementStatusFilter}
-                    setStartDate={setStartDate}
-                    setEndDate={setEndDate}
+                    setSettlementStatusFilter={handleStatusFilterChange}
+                    setStartDate={handleStartDateChange}
+                    setEndDate={handleEndDateChange}
                     startDate={startDate}
                     endDate={endDate}
-                    setSelectDays={setSelectDays}
+                    setSelectDays={handleSelectDaysChange}
                     setDateDropDown={setDateDropDown}
                     dateDropDown={dateDropDown}
-                    setDateFilterType={setDateFilterType}
+                    setDateFilterType={handleDateFilterTypeChange}
                     dateFilterType={dateFilterType}
                   />
 
@@ -433,6 +536,11 @@ const Settlement = () => {
                         onClick={() => {
                           setSchoolId("");
                           setSchoolName("");
+                          setUrlFilters({
+                            school_id: "",
+                            school_name: "",
+                            page: 1,
+                          });
                         }}
                       />
                     </span>
@@ -457,6 +565,13 @@ const Settlement = () => {
                           setStartDate("");
                           setEndDate("");
                           setSelectDays(0);
+                          setUrlFilters({
+                            start_date: "",
+                            end_date: "",
+                            days: "",
+                            date_filter_type: "",
+                            page: 1,
+                          });
                         }}
                       />
                     </span>
@@ -469,7 +584,10 @@ const Settlement = () => {
                     <span>
                       <FaX
                         className="text-white cursor-pointer h-3"
-                        onClick={() => setSettlementStatusFilter("")}
+                        onClick={() => {
+                          setSettlementStatusFilter("");
+                          setUrlFilters({ status: "", page: 1 });
+                        }}
                       />
                     </span>
                   </div>
@@ -480,6 +598,7 @@ const Settlement = () => {
                   setItemsPerRow={(e: any) => {
                     setCurrentPage(1);
                     setItemsPerRow(e);
+                    setUrlFilters({ limit: e.name, page: 1 });
                   }}
                   itemsPerRow={itemsPerPage}
                   className=" justify-start"
@@ -508,6 +627,7 @@ const Settlement = () => {
                   state={{
                     utrno: data.utrNumber,
                     settlementDate: data.settlementDate,
+                    from: location.pathname + location.search,
                   }}
                 >
                   <div className="truncate">{data.schoolName}</div>

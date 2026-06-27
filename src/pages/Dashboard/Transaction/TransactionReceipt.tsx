@@ -25,6 +25,7 @@ import { toast } from "react-toastify";
 import {
   Link,
   Navigate,
+  useLocation,
   useNavigate,
   useParams,
   useSearchParams,
@@ -65,6 +66,7 @@ function TransactionReceipt() {
   const [remarkEdit, setRemarkEdit] = useState(false);
   // const { transaction } = useContext(dashboardContext);
   const navigate = useNavigate();
+  const location = useLocation();
   //   const { data: transactionRefundsRequest } = useQuery(GET_TRANSACTION_REFUND, {
   //     variables: {
   //       order_id: collectId,
@@ -307,7 +309,11 @@ function TransactionReceipt() {
             stroke="currentColor"
             className=" h-6 mr-2 cursor-pointer"
             onClick={() => {
-              navigate(-1);
+              if (location.state?.from) {
+                navigate(location.state.from);
+              } else {
+                navigate("/payments");
+              }
             }}
           >
             <path
