@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import {
   _Table,
@@ -19,29 +19,90 @@ import Vendor from "../../Transaction/components/AllFilter/Vendor";
 import { CustomDropdownIndicator } from "../../Settlement/Settlement";
 import Select from "react-select";
 import { IoSearchOutline } from "react-icons/io5";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { useTransactionFilters } from "../../../../hooks/useTransactionFilters";
 function VendorSettlement() {
-  const [searchText, setSearchText] = useState<any>("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerRow, setItemsPerRow] = useState({ name: 10 });
+  const [urlFilters, setUrlFilters] = useTransactionFilters();
+  const location = useLocation();
+  const [searchText, setSearchText] = useState<any>(urlFilters.search || "");
+  const [currentPage, setCurrentPage] = useState(Number(urlFilters.page) || 1);
+  const [itemsPerRow, setItemsPerRow] = useState({
+    name: Number(urlFilters.limit) || 10,
+  });
   const [selectedRange, setSelectedRange] = useState({
-    startDate: new Date(),
-    endDate: new Date(),
+    startDate: urlFilters.start_date
+      ? new Date(urlFilters.start_date)
+      : new Date(),
+    endDate: urlFilters.end_date ? new Date(urlFilters.end_date) : new Date(),
     key: "selection",
   });
   const [type, setType] = useState("");
-  const [dateRange, setDateRange] = useState("");
+  const [dateRange, setDateRange] = useState(urlFilters.date_filter_type || "");
   const [settlementData, setSettlementData] = useState<any>([]);
-  const [isDateRangeIsSelected, setIsDateRangeIsSelected] = useState(false);
-  const [status, setStatus] = useState<any>(null);
-  const [schoolId, setSchoolId] = useState<any>([]);
-  const [selectSchool, setSelectSchool] = useState("");
+  const [isDateRangeIsSelected, setIsDateRangeIsSelected] = useState(
+    !!urlFilters.start_date,
+  );
+  const [status, setStatus] = useState<any>(urlFilters.status || null);
+  const [schoolId, setSchoolId] = useState<any>(
+    urlFilters.school_id ? urlFilters.school_id.split(",") : [],
+  );
+  const [selectSchool, setSelectSchool] = useState(
+    urlFilters.school_name || "",
+  );
   const [refetching, setRefetching] = useState(false);
   const { startDate, endDate } = getStartAndEndOfMonth();
-  const [searchFilter, setSearchFilter] = useState<any>("");
-  const [selectVendor, setSelectVendor] = useState("");
-  const [vendorId, setVendorId] = useState<any>(null);
+  const [searchFilter, setSearchFilter] = useState<any>(
+    urlFilters.search_filter || "",
+  );
+  const [selectVendor, setSelectVendor] = useState(
+    urlFilters.vendor_name || "",
+  );
+  const [vendorId, setVendorId] = useState<any>(urlFilters.vendor_id || null);
 
+  // Sync state changes back to URL (skip initial mount to avoid parameter overwrites)
+  const isFirstRenderSync = useRef(true);
+  useEffect(() => {
+    if (isFirstRenderSync.current) {
+      isFirstRenderSync.current = false;
+      return;
+    }
+    setUrlFilters({
+      school_id: Array.isArray(schoolId) ? schoolId.join(",") : schoolId || "",
+      school_name: selectSchool || "",
+      vendor_id: vendorId || "",
+      vendor_name: selectVendor || "",
+      status: status || "",
+      start_date: isDateRangeIsSelected
+        ? formatDate(selectedRange.startDate)
+        : "",
+      end_date: isDateRangeIsSelected ? formatDate(selectedRange.endDate) : "",
+      date_filter_type: dateRange || "",
+    });
+  }, [
+    schoolId,
+    selectSchool,
+    vendorId,
+    selectVendor,
+    status,
+    isDateRangeIsSelected,
+    selectedRange,
+    dateRange,
+  ]);
+  // Sync page changes from URL to state
+  useEffect(() => {
+    const pageFromUrl = Number(urlFilters.page) || 1;
+    if (pageFromUrl !== currentPage) {
+      setCurrentPage(pageFromUrl);
+    }
+  }, [urlFilters.page]);
+
+  // Sync limit changes from URL to state
+  useEffect(() => {
+    const limitFromUrl = Number(urlFilters.limit) || 10;
+    if (limitFromUrl !== itemsPerRow.name) {
+      setItemsPerRow({ name: limitFromUrl });
+    }
+  }, [urlFilters.limit]);
   const { data, loading, refetch } = useQuery(
     GET_ALL_VENDOR_SUBTRUSTEE_SETTLEMENT,
     {
@@ -55,8 +116,8 @@ function VendorSettlement() {
       variables: {
         page: currentPage,
         limit: itemsPerRow.name,
-        startDate: startDate,
-        endDate: endDate,
+        startDate: urlFilters.start_date ? urlFilters.start_date : startDate,
+        endDate: urlFilters.end_date ? urlFilters.end_date : endDate,
       },
     },
   );
@@ -120,6 +181,7 @@ function VendorSettlement() {
 
   const handlePageChange = (page: any) => {
     setCurrentPage(page);
+    setUrlFilters({ page });
   };
 
   return (
@@ -154,6 +216,11 @@ function VendorSettlement() {
                       onClick={async () => {
                         setSearchFilter("");
                         setSearchText("");
+                        setUrlFilters({
+                          search: "",
+                          search_filter: "",
+                          page: 1,
+                        });
                         refetchDataFetch({
                           start_date: startDate,
                           end_date: endDate,
@@ -177,8 +244,10 @@ function VendorSettlement() {
                       IndicatorSeparator: () => null,
                     }}
                     onChange={(e: any) => {
-                      setSearchFilter(e.value.toLowerCase());
+                      const newFilter = e.value.toLowerCase();
+                      setSearchFilter(newFilter);
                       setCurrentPage(1);
+                      setUrlFilters({ search_filter: newFilter });
                     }}
                     placeholder={
                       <div className="text-[#1E1B59] -mt-1 capitalize text-[10px]">
@@ -248,6 +317,11 @@ function VendorSettlement() {
                         onClick={() => {
                           if (searchText.length > 3 && searchFilter !== "") {
                             setCurrentPage(1);
+                            setUrlFilters({
+                              search: searchText,
+                              search_filter: searchFilter,
+                              page: 1,
+                            });
                             refetchDataFetch({
                               vendor_id:
                                 searchFilter === "vendor_id"
@@ -298,7 +372,11 @@ function VendorSettlement() {
               </div>
               <div>
                 <RowsPerPageSelect
-                  setItemsPerRow={setItemsPerRow}
+                  setItemsPerRow={(e: any) => {
+                    setCurrentPage(1);
+                    setItemsPerRow(e);
+                    setUrlFilters({ limit: e.name, page: 1 });
+                  }}
                   itemsPerRow={itemsPerRow}
                   className=" justify-start"
                 />
@@ -508,6 +586,7 @@ function VendorSettlement() {
                 state={{
                   utrno: settlement.utr,
                   settlementDate: settlement.settled_on,
+                  from: location.pathname + location.search,
                 }}
               >
                 <div className="truncate">{settlement?.school_name}</div>

@@ -1,4 +1,4 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -61,15 +61,31 @@ function App() {
           <Route path="reports" element={<Reports />} />
           <Route index element={<Overview />} />
           <Route path="institute/*" element={<Institute />} />
-          <Route path="payments" element={<PaymentLayout menu={true} />}>
-            <Route index element={<Transaction />} />
-            <Route path="transaction" element={<Transaction />} />
-            <Route path="settlements" element={<Settlement />} />
-            <Route path="refunds" element={<Refund />} />
-            <Route path="disputes" element={<Disputes />} />
-            <Route path="vendor-transaction" element={<VendorTransaction />} />
-            <Route path="vendor-settlement" element={<VendorSettlement />} />
-          </Route>
+          <Route path="payments" element={<PaymentLayout menu={true} />} />
+          <Route
+            path="payments/transaction"
+            element={<Navigate to="/payments?tab=transactions" replace />}
+          />
+          <Route
+            path="payments/settlements"
+            element={<Navigate to="/payments?tab=settlements" replace />}
+          />
+          <Route
+            path="payments/refunds"
+            element={<Navigate to="/payments?tab=refunds" replace />}
+          />
+          <Route
+            path="payments/disputes"
+            element={<Navigate to="/payments?tab=disputes" replace />}
+          />
+          <Route
+            path="payments/vendor-transaction"
+            element={<Navigate to="/payments?tab=vendor-transaction" replace />}
+          />
+          <Route
+            path="payments/vendor-settlement"
+            element={<Navigate to="/payments?tab=vendor-settlement" replace />}
+          />
           <Route
             path="/payments/transaction-receipt/:collectId"
             element={<TransactionReceipt />}

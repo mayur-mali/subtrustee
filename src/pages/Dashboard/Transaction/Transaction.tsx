@@ -12,9 +12,9 @@ import {
 // import { Pagination, RowsPerPageSelect } from "../../../../components/Table/Table";
 import { amountFormat } from "../../../utils/amountFormat";
 import { getVendorAmount } from "../../../utils/getVendorAmount";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useTransactionFilters } from "../../../hooks/useTransactionFilters";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { getStartAndEndOfMonth } from "../../../utils/getStartAndEndOfMonth";
 import Select from "react-select";
 import { HiMiniXMark } from "react-icons/hi2";
@@ -109,6 +109,7 @@ export const CustomDropdownIndicator = () => {
 
 export default function Transaction() {
   const [urlFilters, setUrlFilters] = useTransactionFilters();
+  const location = useLocation();
   const [currentPage, setCurrentPage] = useState<any>(
     Number(urlFilters.page) || 1,
   );
@@ -116,17 +117,25 @@ export default function Transaction() {
     name: Number(urlFilters.limit) || 10,
   });
 
-  const [searchText, setSearchText] = useState<string>("");
+  const [searchText, setSearchText] = useState<string>(urlFilters.search || "");
   const [isCustomSearch, setIsCustomSearch] = useState(false);
-  const [searchFilter, setSearchFilter] = useState<any>("");
+  const [searchFilter, setSearchFilter] = useState<any>(
+    urlFilters.search_filter || "",
+  );
 
   const [transactionReportData, settransactionReportData] = useState<any>([]);
-  const [isDateRangeIsSelected, setIsDateRangeIsSelected] = useState(false);
+  const isFirstRenderSync = useRef(true);
+  const [isDateRangeIsSelected, setIsDateRangeIsSelected] = useState(
+    !!(urlFilters.start_date && urlFilters.end_date),
+  );
   const [transactionTotal, setTransactionAmount] = useState(0);
   const [orderAmountTotal, setOrderAmountTotal] = useState(0);
 
   const [type, setType] = useState("");
-  const [dateRange, setDateRange] = useState("Today");
+  const [dateRange, setDateRange] = useState(
+    urlFilters.date_filter_type ||
+      (urlFilters.start_date ? "Custom Date" : "Today"),
+  );
   const showCustomDate =
     isDateRangeIsSelected && urlFilters.start_date && urlFilters.end_date;
 
@@ -146,8 +155,10 @@ export default function Transaction() {
   const [transactionAmountDetails, setTransactionAmountDetails] =
     useState<any>(null);
   const [selectedRange, setSelectedRange] = useState({
-    startDate: new Date(),
-    endDate: new Date(),
+    startDate: urlFilters.start_date
+      ? new Date(urlFilters.start_date)
+      : new Date(),
+    endDate: urlFilters.end_date ? new Date(urlFilters.end_date) : new Date(),
     key: "selection",
   });
 
@@ -285,6 +296,13 @@ export default function Transaction() {
       payment_modes: getPaymentMode(filters.paymentMode, type),
       isQRCode: getPaymentMode(filters.paymentMode, type)?.includes("qr"),
       gateway: getPaymentMode(filters.gateway, type),
+      isCustomSearch:
+        urlFilters.search &&
+        ["order_id", "custom_order_id"].includes(urlFilters.search_filter)
+          ? true
+          : false,
+      searchFilter: urlFilters.search_filter || null,
+      searchParams: urlFilters.search || null,
     },
     fetchPolicy: "network-only",
   });
@@ -446,9 +464,9 @@ export default function Transaction() {
           ? formatDate(selectedRange.endDate)
           : todayFormatted,
 
-      status: status?.toUpperCase(),
+      status: status ? status.toUpperCase() : null,
 
-      school_id: selectSchool === "" ? null : schoolId,
+      school_id: schoolId || null,
       payment_modes:
         Object.keys(filters.paymentMode).filter(
           (key) => filters.paymentMode[key],
@@ -459,16 +477,118 @@ export default function Transaction() {
           : null,
       isQrCode: getPaymentMode(filters.paymentMode, type)?.includes("qr"),
       gateway: getPaymentMode(filters.gateway, type),
-      vendor_id: vendorId === "" ? null : vendorId,
+      vendor_id: vendorId || null,
     });
 
+    // Sync all state changes back to URL (skip initial mount to avoid parameter overwrites)
+    if (isFirstRenderSync.current) {
+      isFirstRenderSync.current = false;
+      return;
+    }
     setUrlFilters({
       ...urlFilters,
       page: currentPage,
       limit: itemsPerRow.name,
+      status: status || "",
+      school_id: schoolId || "",
+      school_name: selectSchool || "",
+      vendor_id: vendorId || "",
+      vendor_name: selectVendor || "",
+      start_date: isDateRangeIsSelected
+        ? formatDate(selectedRange.startDate)
+        : "",
+      end_date: isDateRangeIsSelected ? formatDate(selectedRange.endDate) : "",
+      date_filter_type: dateRange || "",
+      search: searchText || "",
+      search_filter: searchFilter || "",
     });
-  }, [currentPage, itemsPerRow]);
+  }, [
+    currentPage,
+    itemsPerRow,
+    status,
+    schoolId,
+    selectSchool,
+    vendorId,
+    selectVendor,
+    isDateRangeIsSelected,
+    selectedRange,
+    dateRange,
+    searchText,
+    searchFilter,
+  ]);
+  // Sync page changes from URL to state
+  useEffect(() => {
+    const pageFromUrl = Number(urlFilters.page) || 1;
+    if (pageFromUrl !== currentPage) {
+      setCurrentPage(pageFromUrl);
+    }
+  }, [urlFilters.page]);
 
+  // Sync limit changes from URL to state
+  useEffect(() => {
+    const limitFromUrl = Number(urlFilters.limit) || 10;
+    if (limitFromUrl !== itemsPerRow.name) {
+      setItemsPerRow({ name: limitFromUrl });
+    }
+  }, [urlFilters.limit]);
+
+  // Sync URL filters back to states on change
+  useEffect(() => {
+    if (urlFilters.status !== undefined && urlFilters.status !== status) {
+      setStatus(urlFilters.status || null);
+    }
+  }, [urlFilters.status]);
+
+  useEffect(() => {
+    if (
+      urlFilters.school_id !== undefined &&
+      urlFilters.school_id !== schoolId
+    ) {
+      setSchoolId(urlFilters.school_id || null);
+      setSelectSchool(urlFilters.school_name || null);
+    }
+  }, [urlFilters.school_id, urlFilters.school_name]);
+
+  useEffect(() => {
+    if (
+      urlFilters.vendor_id !== undefined &&
+      urlFilters.vendor_id !== vendorId
+    ) {
+      setVendorId(urlFilters.vendor_id || null);
+      setSelectVendor(urlFilters.vendor_name || null);
+    }
+  }, [urlFilters.vendor_id, urlFilters.vendor_name]);
+
+  useEffect(() => {
+    if (urlFilters.search !== undefined && urlFilters.search !== searchText) {
+      setSearchText(urlFilters.search || "");
+    }
+  }, [urlFilters.search]);
+
+  useEffect(() => {
+    if (
+      urlFilters.start_date !== undefined &&
+      urlFilters.start_date !==
+        (selectedRange.startDate ? formatDate(selectedRange.startDate) : "")
+    ) {
+      setSelectedRange({
+        startDate: urlFilters.start_date
+          ? new Date(urlFilters.start_date)
+          : new Date(),
+        endDate: urlFilters.end_date
+          ? new Date(urlFilters.end_date)
+          : new Date(),
+        key: "selection",
+      });
+      setIsDateRangeIsSelected(
+        !!(urlFilters.start_date && urlFilters.end_date),
+      );
+      setDateRange(
+        urlFilters.date_filter_type ||
+          (urlFilters.start_date ? "Custom Date" : "Today"),
+      );
+    }
+  }, [urlFilters.start_date, urlFilters.end_date, urlFilters.date_filter_type]);
   useEffect(() => {
     if (
       searchText.length > 3 &&
@@ -674,6 +794,12 @@ export default function Transaction() {
                         onClick={async () => {
                           setSearchFilter("");
                           setSearchText("");
+                          setUrlFilters({
+                            ...urlFilters,
+                            search: "",
+                            search_filter: "",
+                            page: 1,
+                          });
                           refetchDataFetch({
                             start_date: todayFormatted,
                             end_date: todayFormatted,
@@ -703,8 +829,13 @@ export default function Transaction() {
                         IndicatorSeparator: () => null,
                       }}
                       onChange={(e: any) => {
-                        setSearchFilter(e.value.toLowerCase());
+                        const newFilter = e.value.toLowerCase();
+                        setSearchFilter(newFilter);
                         setCurrentPage(1);
+                        setUrlFilters({
+                          ...urlFilters,
+                          search_filter: newFilter,
+                        });
                       }}
                       placeholder={
                         <div className="text-[#1E1B59] -mt-1 capitalize text-[10px]">
@@ -774,6 +905,12 @@ export default function Transaction() {
                           onClick={() => {
                             if (searchText.length > 3 && searchFilter !== "") {
                               setCurrentPage(1);
+                              setUrlFilters({
+                                ...urlFilters,
+                                search: searchText,
+                                search_filter: searchFilter,
+                                page: 1,
+                              });
                               refetchDataFetch({
                                 isCustomSearch,
                                 searchFilter: searchFilter,
@@ -814,6 +951,7 @@ export default function Transaction() {
                           ...urlFilters,
                           start_date: formatDate(selectedRange.startDate),
                           end_date: formatDate(selectedRange.endDate),
+                          date_filter_type: dateRange,
                         });
                         refetchDataFetch({
                           start_date: formatDate(selectedRange.startDate),
@@ -1282,6 +1420,7 @@ export default function Transaction() {
                     <div>{row?.serialNumber}</div>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div className="truncate" key={row.orderID}>
                         {row.schoolName}
@@ -1289,6 +1428,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div className=" truncate" key={row.orderID}>
                         {row.payment_time
@@ -1302,6 +1442,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div
                         className="truncate"
@@ -1313,6 +1454,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div
                         className="truncate"
@@ -1324,6 +1466,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div
                         key={row.orderID}
@@ -1332,6 +1475,7 @@ export default function Transaction() {
 
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div
                         key={row.orderID}
@@ -1339,6 +1483,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div key={row.orderID}>
                         {row.isQRPayment ? "Dynamic QR Code" : row.paymentMode}
@@ -1348,6 +1493,7 @@ export default function Transaction() {
                     // <div className="text-center pr-4">{row?.commission}</div>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div
                         className={`flex items-center capitalize ${
@@ -1374,6 +1520,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div key={row.orderID}>
                         {row.student_name ? row.student_name : "NA"}
@@ -1381,6 +1528,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div key={row.orderID}>
                         {row.student_id ? row.student_id : "NA"}
@@ -1388,6 +1536,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}&isVba=${row?.isVBAPaymentComplete}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div key={row.orderID}>
                         {row.student_phone ? row.student_phone : "NA"}
@@ -1395,6 +1544,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div>
                         {row.vendors_info?.length > 0
@@ -1409,6 +1559,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div className="truncate" key={row.orderID}>
                         {row?.gateway}
@@ -1416,6 +1567,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div className="truncate " key={row.orderID}>
                         {row?.capture_status || "NA"}
@@ -1423,6 +1575,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div className="truncate " key={row.orderID}>
                         {row?.bank_reference || "NA"}
@@ -1430,6 +1583,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div className="truncate " key={row.orderID}>
                         {row?.utr_number || "NA"}
@@ -1437,6 +1591,7 @@ export default function Transaction() {
                     </Link>,
                     <Link
                       to={`/payments/transaction-receipt/${row?.orderID}?sid=${row?.schoolId}`}
+                      state={{ from: location.pathname + location.search }}
                     >
                       <div className="truncate" key={row.orderID}>
                         {row?.settlement_date
