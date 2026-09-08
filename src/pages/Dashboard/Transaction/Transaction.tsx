@@ -323,7 +323,7 @@ export default function Transaction() {
 
             return {
               schoolName: row.school_name,
-              transactionTime: row.createdAt,
+              transactionTime: row.payment_time || row.createdAt,
               orderID: row.collect_id,
               transactionAmount:
                 row.transaction_amount === null ? "--" : row.transaction_amount,
@@ -408,7 +408,7 @@ export default function Transaction() {
 
               return {
                 schoolName: row.school_name,
-                transactionTime: row.createdAt,
+                transactionTime: row.payment_time || row.createdAt,
                 orderID: row.collect_id,
                 transactionAmount:
                   row.transaction_amount === null
