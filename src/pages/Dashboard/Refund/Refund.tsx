@@ -143,11 +143,11 @@ function Refund() {
   });
 
   useEffect(() => {
-    if (refundData?.getSubTrusteeRefundRequest) {
-      setRefundRequestData(refundData?.getSubTrusteeRefundRequest?.refund);
-      setTotalPages(refundData?.getSubTrusteeRefundRequest?.totalPages);
+    if (refundData?.getSubTrusteeRefundRequests) {
+      setRefundRequestData(refundData?.getSubTrusteeRefundRequests?.refund);
+      setTotalPages(refundData?.getSubTrusteeRefundRequests?.totalPages);
     }
-  }, [refundData?.getSubTrusteeRefundRequest]);
+  }, [refundData?.getSubTrusteeRefundRequests]);
   useEffect(() => {}, [refundRequestData]);
 
   const refetchDateFetch = async ({
@@ -182,8 +182,8 @@ function Refund() {
       if (res) {
         console.log(res, "res");
         setRefetchLoading(false);
-        setRefundRequestData(res?.data?.getSubTrusteeRefundRequest?.refund);
-        setTotalPages(res?.data?.getSubTrusteeRefundRequest?.totalPages);
+        setRefundRequestData(res?.data?.getSubTrusteeRefundRequests?.refund);
+        setTotalPages(res?.data?.getSubTrusteeRefundRequests?.totalPages);
       }
     } catch (error) {
       if (error) {
@@ -303,7 +303,7 @@ function Refund() {
         </div>
       ) : (
         <>
-          {refundData?.getSubTrusteeRefundRequest?.refund ? (
+          {refundData?.getSubTrusteeRefundRequests?.refund ? (
             <_Table
               pagination={false}
               heading={"Refund"}
@@ -789,7 +789,7 @@ function Refund() {
                     onPageChange={handlePageChange}
                     currentPage={currentPage}
                     totalPages={Math.ceil(
-                      refundData?.getSubTrusteeRefundRequest?.totalPages,
+                      refundData?.getSubTrusteeRefundRequests?.totalPages,
                     )}
                   />
                 </div>

@@ -3,8 +3,8 @@ import { IoIosArrowDown } from "react-icons/io";
 import { Link, useSearchParams } from "react-router-dom";
 import Transaction from "../Transaction/Transaction";
 import Settlement from "../Settlement/Settlement";
-import Refund from "../Refund/Refund";
-import Disputes from "./Disputes";
+import NewRefundTable from "../Refund/NewRefundTable";
+import NewDisputes from "./NewDisputes";
 import VendorTransaction from "./VendorTab/VendorTransaction";
 import VendorSettlement from "./VendorTab/VendorSettlement";
 
@@ -120,9 +120,9 @@ export default function PaymentLayout({ menu = true }: { menu: boolean }) {
         ) : tab === "settlements" ? (
           <Settlement />
         ) : tab === "refunds" ? (
-          <Refund />
+          <NewRefundTable />
         ) : tab === "disputes" ? (
-          <Disputes />
+          <NewDisputes />
         ) : tab === "vendor-transaction" || tab === "vendor-transactions" ? (
           <VendorTransaction />
         ) : tab === "vendor-settlement" || tab === "vendor-settlements" ? (

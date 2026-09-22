@@ -1,0 +1,63 @@
+table.nt-sticky-actions {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th.nt-sticky-action,
+td.nt-sticky-action {
+  position: sticky;
+  right: 0;
+  overflow: visible;
+  background-clip: padding-box;
+  box-shadow: none;
+  width: 88px;
+  min-width: 88px;
+  max-width: 88px;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+  text-align: center;
+}
+
+th.nt-sticky-action {
+  z-index: 30;
+  background-color: #f9fafb !important;
+  border-left: none;
+}
+
+td.nt-sticky-action {
+  z-index: 20;
+  background-color: #ffffff !important;
+  border-left: none;
+  border-bottom: 1px solid #eaecf0;
+}
+
+table.nt-can-scroll-right th.nt-sticky-action {
+  box-shadow: -6px 0 12px -8px rgba(16, 24, 40, 0.18);
+}
+
+table.nt-can-scroll-right td.nt-sticky-action {
+  box-shadow: -6px 0 12px -8px rgba(16, 24, 40, 0.12);
+}
+
+/* Empty state: eye/action column must not cover centered empty message */
+table.nt-sticky-actions.nt-is-empty th.nt-sticky-action,
+table.nt-sticky-actions.nt-is-empty td.nt-sticky-action {
+  position: sticky;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  pointer-events: none;
+}
+
+tr.group:hover td.nt-sticky-action {
+  background-color: #f9fafb !important;
+}
+
+td.nt-sticky-action .nt-action-eye {
+  color: #344054;
+}
+
+td.nt-sticky-action .nt-action-eye:hover {
+  color: #101828;
+  background-color: #f2f4f7;
+}

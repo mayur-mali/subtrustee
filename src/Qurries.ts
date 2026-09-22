@@ -9,8 +9,16 @@ export const LOG_IN_TRUSTEE = gql`
 `;
 
 export const GET_SCHOOLS = gql`
-  query GetSchools($searchQuery: String, $page: Float, $limit: Float) {
-    getSchoolQuery(searchQuery: $searchQuery, page: $page, limit: $limit) {
+  query GetSubTrusteeSchoolsList(
+    $searchQuery: String
+    $page: Float
+    $limit: Float
+  ) {
+    getSubTrusteeSchools(
+      searchQuery: $searchQuery
+      page: $page
+      limit: $limit
+    ) {
       total_pages
       page
       totalItems
@@ -318,7 +326,7 @@ export const GET_TRANSACTION_REFUND = gql`
 `;
 
 export const SUBTRUSTEE_REFUND_REQUESTS = gql`
-  query GetSubTrusteeRefundRequest(
+  query GetSubTrusteeRefundRequests(
     $page: Float
     $limit: Float
     $school_id: [String!]
@@ -326,8 +334,13 @@ export const SUBTRUSTEE_REFUND_REQUESTS = gql`
     $status: String
     $startDate: String
     $endDate: String
+    $gateway: [String!]
+    $payment_channel: [String!]
+    $payment_mode: [String!]
+    $account_type: [String!]
+    $searchFilter: String
   ) {
-    getSubTrusteeRefundRequest(
+    getSubTrusteeRefundRequests(
       page: $page
       limit: $limit
       searchQuery: $searchQuery
@@ -335,6 +348,11 @@ export const SUBTRUSTEE_REFUND_REQUESTS = gql`
       startDate: $startDate
       endDate: $endDate
       school_id: $school_id
+      gateway: $gateway
+      payment_channel: $payment_channel
+      payment_mode: $payment_mode
+      account_type: $account_type
+      searchFilter: $searchFilter
     ) {
       currentPage
       totalPages
@@ -353,6 +371,334 @@ export const SUBTRUSTEE_REFUND_REQUESTS = gql`
         school_name
         custom_id
         reason
+        payment_channel
+        payment_mode
+        account_type
+        refund_origin
+        refund_speed
+        gateway
+        gateway_refund_id
+        processingTimeInMinutes
+        refund_arn
+        utrNumber
+        batch_number
+        batch_size
+        isAutoRedund
+        timeline {
+          event
+          status
+        }
+      }
+    }
+  }
+`;
+
+export const GET_SUBTRUSTEE_REFUND_METRICS = gql`
+  query GetSubTrusteeRefundMetrics(
+    $school_id: [String!]
+    $gateway: [String!]
+    $startDate: String
+    $endDate: String
+    $searchQuery: String
+    $status: String
+    $payment_channel: [String!]
+    $payment_mode: [String!]
+    $account_type: [String!]
+    $searchFilter: String
+  ) {
+    getSubTrusteeRefundMetrics(
+      school_id: $school_id
+      gateway: $gateway
+      startDate: $startDate
+      endDate: $endDate
+      searchQuery: $searchQuery
+      status: $status
+      payment_channel: $payment_channel
+      payment_mode: $payment_mode
+      account_type: $account_type
+      searchFilter: $searchFilter
+    ) {
+      avgProcessingTimeInMinutes
+      totalRefunded {
+        count
+        amount
+      }
+      failedOrRejected {
+        count
+        amount
+      }
+      pendingRefunds {
+        count
+        amount
+      }
+    }
+  }
+`;
+
+export const GET_SUBTRUSTEE_REFUND_RECEIPT = gql`
+  query GetSubtrusteeRefundRequestReceipt(
+    $order_id: String!
+    $refund_id: String!
+  ) {
+    getSubtrusteeRefundRequestReceipt(
+      order_id: $order_id
+      refund_id: $refund_id
+    ) {
+      charges {
+        collect_id
+        order_amount
+        gateway
+        platform_type
+        payment_mode
+        base_mdr
+        baseMdrChargeType
+        final_mdr
+        finalMdrChargeType
+        convenienceFee
+        gstOnConvenienceFee
+        commission
+      }
+      refundRequests {
+        _id
+        trustee_id
+        createdAt
+        updatedAt
+        school_id
+        order_id
+        status
+        refund_amount
+        order_amount
+        transaction_amount
+        custom_id
+        reason
+        payment_channel
+        payment_mode
+        account_type
+        refund_origin
+        refund_speed
+        gateway_refund_id
+        gateway
+        isAutoRedund
+        gateway_payment_txnid
+        processingTimeInMinutes
+        refund_arn
+        utrNumber
+        split_refund_details {
+          vendor_id
+          amount
+        }
+        timeline {
+          event
+          status
+          triggered_by
+          user_id
+          role
+          triggered_at
+          ipAddress
+          browser
+          os
+          location
+          remarks
+        }
+      }
+      transaction {
+        collect_id
+        currency
+        payment_id
+        updatedAt
+        createdAt
+        order_amount
+        transaction_amount
+        payment_method
+        school_name
+        additional_data
+        class_name
+        school_id
+        status
+        student_id
+        student_name
+        student_email
+        student_phone
+        student_receipt
+        bank_reference
+        remarks
+        details
+        isAutoRefund
+        isQRPayment
+        commission
+        custom_order_id
+        payment_time
+        reason
+        gateway
+        capture_status
+        virtual_account_id
+        virtual_account_number
+        virtual_account_ifsc
+        isVBAPaymentComplete
+        utr_number
+        settlement_transfer_time
+        payment_origin
+        settlement_date
+        vendors_info {
+          vendor_id
+          percentage
+          amount
+          name
+          edv_vendor_id
+        }
+        error_details {
+          error_description
+          error_reason
+          error_source
+        }
+        insurance_detail {
+          policy_id
+          premium_amount
+          status
+          certificate_number
+          certificate_link
+        }
+      }
+      settlement {
+        settlementAmount
+        settlementAmountActual
+        adjustment
+        adjustmentActual
+        netSettlementAmount
+        netSettlementAmountActual
+        fromDate
+        createdAt
+        updatedAt
+        settlementInitiatedOn
+        tillDate
+        settlement_initiated_on
+        status
+        utrNumber
+        settlementDate
+        clientId
+        gateway
+        razorpay_id
+        remarks
+        is_cf_label
+        trustee
+        schoolId
+        worldline_merchant_code
+      }
+      adjustedSettlement {
+        settlementAmount
+        settlementAmountActual
+        adjustment
+        adjustmentActual
+        netSettlementAmount
+        netSettlementAmountActual
+        fromDate
+        createdAt
+        updatedAt
+        settlementInitiatedOn
+        tillDate
+        settlement_initiated_on
+        status
+        utrNumber
+        settlementDate
+        clientId
+        gateway
+        razorpay_id
+        remarks
+        is_cf_label
+        trustee
+        schoolId
+        worldline_merchant_code
+      }
+      merchantAccount {
+        name
+        merchant_id
+        bank_details {
+          account_holder_name
+          account_number
+          ifsc_code
+          beneficiary_bank_and_address
+        }
+      }
+      vendorAccount {
+        name
+        vendor_id
+        bank_details {
+          account_holder_name
+          account_number
+          ifsc_code
+          beneficiary_bank_and_address
+        }
+      }
+    }
+  }
+`;
+
+export const GET_SCHOOLS_LIMITED_DATA = gql`
+  query GetSubTrusteeSchoolsLimited(
+    $searchQuery: String
+    $page: Float
+    $limit: Float
+    $kycStatus: [String!]
+  ) {
+    getSubTrusteeSchools(
+      searchQuery: $searchQuery
+      page: $page
+      limit: $limit
+      kycStatus: $kycStatus
+    ) {
+      total_pages
+      page
+      totalItems
+      schools {
+        updatedAt
+        school_name
+        phone_number
+        school_id
+        pg_key
+        email
+        merchantStatus
+        disabled_modes
+        bank_details {
+          account_holder_name
+          account_number
+          ifsc_code
+        }
+      }
+    }
+  }
+`;
+
+export const GET_SCHOOL_DETAILS_FOR_REFUND = gql`
+  query GetSubTrusteeSchoolDetailsForRefund(
+    $searchQuery: String
+    $page: Float
+    $limit: Float
+  ) {
+    getSubTrusteeSchools(
+      searchQuery: $searchQuery
+      page: $page
+      limit: $limit
+    ) {
+      total_pages
+      page
+      totalItems
+      schools {
+        school_name
+        school_id
+        pg_key
+        email
+        phone_number
+        merchantStatus
+        disabled_modes
+        updatedAt
+        gstIn
+        residence_state
+        bank_details {
+          account_holder_name
+          account_number
+          ifsc_code
+          beneficiary_bank_and_address
+        }
       }
     }
   }
@@ -651,6 +997,7 @@ export const GET_SUBTRUSTEE_DISPUTES = gql`
       dispute_status: $dispute_status
     ) {
       totalCount
+      totalPages
       disputes {
         _id
         school_id
@@ -659,6 +1006,10 @@ export const GET_SUBTRUSTEE_DISPUTES = gql`
         custom_order_id
         school_name
         student_name
+        student_id
+        student_phone
+        payment_channel
+        payment_mode
         dispute_id
         dispute_type
         reason_description
@@ -670,7 +1021,6 @@ export const GET_SUBTRUSTEE_DISPUTES = gql`
         dispute_settled_date
         dispute_respond_by_date
         dispute_resolved_at_date
-        dispute_status
         dispute_remark
         platform_type
         remarks
@@ -684,6 +1034,112 @@ export const GET_SUBTRUSTEE_DISPUTES = gql`
           name
           document_type
         }
+        event_steps {
+          status
+          remark
+          settlement_id
+          utr_no
+          event_date
+        }
+        dispute_status
+        dispute_deduction_settlement_utr
+      }
+    }
+  }
+`;
+
+export const GET_SUBTRUSTEE_SINGLE_DISPUTES = gql`
+  query GetSubTrusteeSingleDisputes($dispute_id: String, $collect_id: String) {
+    getSubTrusteeSingleDisputes(
+      dispute_id: $dispute_id
+      collect_id: $collect_id
+    ) {
+      _id
+      school_id
+      trustee_id
+      collect_id
+      custom_order_id
+      school_name
+      student_name
+      student_id
+      student_phone
+      payment_channel
+      payment_mode
+      dispute_id
+      dispute_type
+      reason_description
+      dispute_amount
+      order_amount
+      payment_amount
+      dispute_created_date
+      dispute_updated_date
+      dispute_settled_date
+      dispute_respond_by_date
+      dispute_resolved_at_date
+      dispute_status
+      dispute_remark
+      platform_type
+      remarks
+      gateway
+      case_id
+      settlement_id
+      utr_number
+      bank_reference
+      dispute_deduction_settlement_utr
+      event_steps {
+        status
+        remark
+        settlement_id
+        utr_no
+        event_date
+      }
+      documents {
+        file_url
+        name
+        document_type
+      }
+    }
+  }
+`;
+
+export const GET_SUBTRUSTEE_DISPUTE_METRICS = gql`
+  query GetSubTrusteeDisputeMetrics(
+    $page: Int!
+    $limit: Int!
+    $school_id: [String!]
+    $collect_id: String
+    $custom_id: String
+    $dispute_id: String
+    $startDate: String
+    $endDate: String
+    $dispute_status: String
+  ) {
+    getSubTrusteeDisputeMetrics(
+      page: $page
+      limit: $limit
+      school_id: $school_id
+      collect_id: $collect_id
+      custom_id: $custom_id
+      dispute_id: $dispute_id
+      startDate: $startDate
+      endDate: $endDate
+      dispute_status: $dispute_status
+    ) {
+      lostDisputes {
+        sum
+        count
+      }
+      wonDisputes {
+        sum
+        count
+      }
+      pendingResponse {
+        sum
+        count
+      }
+      totalChargebacks {
+        sum
+        count
       }
     }
   }
