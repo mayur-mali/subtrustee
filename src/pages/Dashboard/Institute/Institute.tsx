@@ -20,6 +20,15 @@ import Modal from "../../../components/Modal/Modal";
 import Vendor from "../components/school/Vendor";
 import { useAuth } from "../../../context/AuthContext";
 import { Access } from "../TeamMember/TeamMembers";
+import leafGreen from "../../../assets/leaf-green.png";
+import leafBlue from "../../../assets/leaf-blue.png";
+
+const PAYOUT_ENABLED_SCHOOL_IDS = new Set([
+  "6a196faba9f064826f887a27",
+  "6a196faba9f064826f887a21",
+  "6a196faba9f064826f887a25",
+  "6a196faba9f064826f887a79",
+]);
 
 const preventNegativeValues = (e: React.KeyboardEvent<HTMLInputElement>) => {
   if (e.key === "-" || e.key === "+") {
@@ -215,13 +224,20 @@ function InstituteList() {
                 "S.No.",
                 "Institute Name",
                 "Email",
+                "Product Active",
                 "KYC Status",
                 "Action",
                 "PG Key",
                 "KYC Dashboard",
                 "Merchant Dashboard",
               ]
-            : ["S.No.", "Institute Name", "Email", "KYC Status"],
+            : [
+                "S.No.",
+                "Institute Name",
+                "Email",
+                "Product Active",
+                "KYC Status",
+              ],
           ...(data?.getSubTrusteeSchools?.schools?.map(
             (school: any, index: number) => [
               <div className="ml-4">
@@ -265,6 +281,33 @@ function InstituteList() {
               </div>,
               <div className="truncate" title={school.email}>
                 {school.email ? school.email : "NA"}
+              </div>,
+              <div className="inline-flex items-center gap-0.5">
+                {school.pg_key ? (
+                  PAYOUT_ENABLED_SCHOOL_IDS.has(school.school_id) ? (
+                    <>
+                      <img
+                        src={leafGreen}
+                        alt="Payment gateway "
+                        title="Payment Gateway "
+                        className="w-[18px] h-[18px] object-contain cursor-pointer shrink-0"
+                      />
+                      <img
+                        src={leafBlue}
+                        alt="Payout "
+                        title="Payout "
+                        className="w-[18px] h-[18px] object-contain cursor-pointer shrink-0"
+                      />
+                    </>
+                  ) : (
+                    <img
+                      src={leafGreen}
+                      alt="Payment gateway "
+                      title="Payment Gateway "
+                      className="w-[18px] h-[18px] object-contain cursor-pointer shrink-0"
+                    />
+                  )
+                ) : null}
               </div>,
               <div className="truncate">
                 {" "}
